@@ -78,3 +78,9 @@ Changelog
 - Initial application created.
 ===========================================================
 """
+
+db = get_session()
+
+print(db)
+
+db.close()
