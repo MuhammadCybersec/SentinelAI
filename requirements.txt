@@ -1,0 +1,16 @@
+# ==========================================================
+# Sentinel AI
+# Python Package Requirements
+# Version : 0.0.1
+# ==========================================================
+
+ollama
+requests
+rich
+python-dotenv
+pydantic
+loguru
+playwright
+beautifulsoup4
+lxml
+httpx
