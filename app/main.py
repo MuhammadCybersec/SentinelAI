@@ -24,6 +24,7 @@ import os
 from core.logger import sentinel_logger
 from core.config import config
 from core.ai.client import ai_client
+from database.session import get_session
 
 
 # ===========================================================

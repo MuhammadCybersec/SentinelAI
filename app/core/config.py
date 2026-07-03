@@ -41,6 +41,13 @@ class Config:
     VERSION: str = os.getenv("VERSION", "0.0.1")
     MODEL: str = os.getenv("OLLAMA_MODEL", "llama3")
     DEBUG: bool = os.getenv("DEBUG", "False").lower() == "true"
+    DATABASE_TYPE: str = os.getenv("DATABASE_TYPE", "sqlite")
+
+    DATABASE_NAME: str = os.getenv("DATABASE_NAME", "sentinel.db")
+    DATABASE_PATH: str = os.getenv(
+        "DATABASE_PATH",
+        "data/sentinel.db"
+)
 
 # ===========================================================
 # CONFIG-004
