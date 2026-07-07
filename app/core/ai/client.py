@@ -1,16 +1,13 @@
-# Ollama connection
-
 """
 ===========================================================
 Project : Sentinel AI
 Module  : AI Client
 File ID : AI-CLIENT-001
-Version : 0.0.1
+Version : 0.0.2
 ===========================================================
 
 Description:
 Handles communication with the local Ollama server.
-
 ===========================================================
 """
 
@@ -21,8 +18,9 @@ Handles communication with the local Ollama server.
 
 import ollama
 
-from core.config import config
-from core.logger import sentinel_logger
+from app.core.config import config
+from app.core.logger import sentinel_logger
+
 
 # ===========================================================
 # AI-CLIENT-002
@@ -35,9 +33,6 @@ class AIClient:
     """
 
     def __init__(self):
-        """
-        Initialize the AI client.
-        """
 
         self.model = config.MODEL
 
@@ -45,18 +40,43 @@ class AIClient:
             f"AI Client initialized with model: {self.model}"
         )
 
+    # =======================================================
+    # AI-CLIENT-003
+    # Generate Response
+    # =======================================================
+
+    def generate(self, prompt: str) -> str:
+        """
+        Send a prompt to Ollama and return the response.
+        """
+
+        try:
+
+            response = ollama.chat(
+
+                model=self.model,
+
+                messages=[
+                    {
+                        "role": "user",
+                        "content": prompt
+                    }
+                ]
+
+            )
+
+            return response["message"]["content"]
+
+        except Exception as e:
+
+            sentinel_logger.exception(e)
+
+            return ""
+
+
 # ===========================================================
-# AI-CLIENT-003
+# AI-CLIENT-004
 # Export AI Client
 # ===========================================================
 
 ai_client = AIClient()
-
-"""
-===========================================================
-Changelog
-
-0.0.1
-- Initial AI client created.
-===========================================================
-"""

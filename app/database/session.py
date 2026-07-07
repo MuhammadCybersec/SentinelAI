@@ -19,7 +19,7 @@ Creates SQLAlchemy session factory and session helper.
 
 from sqlalchemy.orm import sessionmaker
 
-from database.connection import engine
+from app.database.connection import engine
 
 # ===========================================================
 # DB-SESSION-002

@@ -19,8 +19,8 @@ Creates and manages the SQLAlchemy engine.
 
 from sqlalchemy import create_engine
 
-from core.config import config
-from core.logger import sentinel_logger
+from app.core.config import config
+from app.core.logger import sentinel_logger
 
 # ===========================================================
 # DB-CONNECTION-002
