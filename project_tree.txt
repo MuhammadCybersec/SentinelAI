@@ -1,0 +1,730 @@
+Folder PATH listing for volume New Volume
+Volume serial number is 52EA-DD8A
+E:.
+³   .env
+³   .gitignore
+³   AI_CONTEXT.md
+³   alembic.ini
+³   LICENSE
+³   project_tree.txt
+³   README.md
+³   requirements.txt
+³   sentinel_report.pdf
+³   structure.txt
+³   
+ÃÄÄÄapp
+³   ³   main.py
+³   ³   __init__.py
+³   ³   
+³   ÃÄÄÄagents
+³   ³   ³   analyzer_agent.py
+³   ³   ³   browser_agent.py
+³   ³   ³   evidence_agent.py
+³   ³   ³   manager_agent.py
+³   ³   ³   memory_agent.py
+³   ³   ³   orchestrator_agent.py
+³   ³   ³   planner_agent.py
+³   ³   ³   post_exploitation_agent.py
+³   ³   ³   recon_agent.py
+³   ³   ³   report_agent.py
+³   ³   ³   __init__.py
+³   ³   ³   
+³   ³   ÀÄÄÄ__pycache__
+³   ³           analyzer_agent.cpython-314.pyc
+³   ³           browser_agent.cpython-314.pyc
+³   ³           evidence_agent.cpython-314.pyc
+³   ³           manager_agent.cpython-314.pyc
+³   ³           memory_agent.cpython-314.pyc
+³   ³           planner_agent.cpython-314.pyc
+³   ³           post_exploitation_agent.cpython-314.pyc
+³   ³           recon_agent.cpython-314.pyc
+³   ³           report_agent.cpython-314.pyc
+³   ³           __init__.cpython-314.pyc
+³   ³           
+³   ÃÄÄÄapi
+³   ³   ³   dependencies.py
+³   ³   ³   main.py
+³   ³   ³   __init__.py
+³   ³   ³   
+³   ³   ÃÄÄÄmiddleware
+³   ³   ÃÄÄÄrouters
+³   ³   ³   ³   analysis.py
+³   ³   ³   ³   findings.py
+³   ³   ³   ³   findings_new.py
+³   ³   ³   ³   project.py
+³   ³   ³   ³   recon.py
+³   ³   ³   ³   __init__.py
+³   ³   ³   ³   
+³   ³   ³   ÀÄÄÄ__pycache__
+³   ³   ³           analysis.cpython-314.pyc
+³   ³   ³           findings.cpython-314.pyc
+³   ³   ³           findings_new.cpython-314.pyc
+³   ³   ³           project.cpython-314.pyc
+³   ³   ³           project_new.cpython-314.pyc
+³   ³   ³           recon.cpython-314.pyc
+³   ³   ³           __init__.cpython-314.pyc
+³   ³   ³           
+³   ³   ÃÄÄÄschemas
+³   ³   ³   ³   finding.py
+³   ³   ³   ³   project.py
+³   ³   ³   ³   
+³   ³   ³   ÀÄÄÄ__pycache__
+³   ³   ³           finding.cpython-314.pyc
+³   ³   ³           project.cpython-314.pyc
+³   ³   ³           
+³   ³   ÀÄÄÄ__pycache__
+³   ³           dependencies.cpython-314.pyc
+³   ³           main.cpython-314.pyc
+³   ³           __init__.cpython-314.pyc
+³   ³           
+³   ÃÄÄÄcore
+³   ³   ³   config.py
+³   ³   ³   logger.py
+³   ³   ³   __init__.py
+³   ³   ³   
+³   ³   ÃÄÄÄai
+³   ³   ³   ³   client.py
+³   ³   ³   ³   conversation.py
+³   ³   ³   ³   exceptions.py
+³   ³   ³   ³   intent_classifier.py
+³   ³   ³   ³   models.py
+³   ³   ³   ³   response.py
+³   ³   ³   ³   __init__.py
+³   ³   ³   ³   
+³   ³   ³   ÀÄÄÄ__pycache__
+³   ³   ³           client.cpython-314.pyc
+³   ³   ³           conversation.cpython-314.pyc
+³   ³   ³           exceptions.cpython-314.pyc
+³   ³   ³           intent_classifier.cpython-314.pyc
+³   ³   ³           models.cpython-314.pyc
+³   ³   ³           response.cpython-314.pyc
+³   ³   ³           __init__.cpython-314.pyc
+³   ³   ³           
+³   ³   ÃÄÄÄcontainer
+³   ³   ³   ³   container.py
+³   ³   ³   ³   __init__.py
+³   ³   ³   ³   
+³   ³   ³   ÀÄÄÄ__pycache__
+³   ³   ³           container.cpython-314.pyc
+³   ³   ³           __init__.cpython-314.pyc
+³   ³   ³           
+³   ³   ÃÄÄÄexceptions
+³   ³   ³   ³   base.py
+³   ³   ³   ³   __init__.py
+³   ³   ³   ³   
+³   ³   ³   ÀÄÄÄ__pycache__
+³   ³   ³           base.cpython-314.pyc
+³   ³   ³           __init__.cpython-314.pyc
+³   ³   ³           
+³   ³   ÃÄÄÄmodels
+³   ³   ³   ³   recon_result.py
+³   ³   ³   ³   
+³   ³   ³   ÀÄÄÄ__pycache__
+³   ³   ³           recon_result.cpython-314.pyc
+³   ³   ³           
+³   ³   ÃÄÄÄprompt
+³   ³   ³   ³   loader.py
+³   ³   ³   ³   __init__.py
+³   ³   ³   ³   
+³   ³   ³   ÀÄÄÄ__pycache__
+³   ³   ³           loader.cpython-314.pyc
+³   ³   ³           __init__.cpython-314.pyc
+³   ³   ³           
+³   ³   ÃÄÄÄstartup
+³   ³   ³   ³   bootstrap.py
+³   ³   ³   ³   __init__.py
+³   ³   ³   ³   
+³   ³   ³   ÀÄÄÄ__pycache__
+³   ³   ³           bootstrap.cpython-314.pyc
+³   ³   ³           __init__.cpython-314.pyc
+³   ³   ³           
+³   ³   ÀÄÄÄ__pycache__
+³   ³           config.cpython-314.pyc
+³   ³           logger.cpython-314.pyc
+³   ³           __init__.cpython-314.pyc
+³   ³           
+³   ÃÄÄÄdatabase
+³   ³   ³   base.py
+³   ³   ³   connection.py
+³   ³   ³   repository.py
+³   ³   ³   session.py
+³   ³   ³   __init__.py
+³   ³   ³   
+³   ³   ÃÄÄÄmodels
+³   ³   ³   ³   base_model.py
+³   ³   ³   ³   finding.py
+³   ³   ³   ³   project.py
+³   ³   ³   ³   recon_result.py
+³   ³   ³   ³   __init__.py
+³   ³   ³   ³   
+³   ³   ³   ÀÄÄÄ__pycache__
+³   ³   ³           base_model.cpython-314.pyc
+³   ³   ³           finding.cpython-314.pyc
+³   ³   ³           project.cpython-314.pyc
+³   ³   ³           recon_result.cpython-314.pyc
+³   ³   ³           __init__.cpython-314.pyc
+³   ³   ³           
+³   ³   ÃÄÄÄrepositories
+³   ³   ³   ³   base_repository.py
+³   ³   ³   ³   finding_repository.py
+³   ³   ³   ³   project_repository.py
+³   ³   ³   ³   recon_result_repository.py
+³   ³   ³   ³   __init__.py
+³   ³   ³   ³   
+³   ³   ³   ÀÄÄÄ__pycache__
+³   ³   ³           base_repository.cpython-314.pyc
+³   ³   ³           finding_repository.cpython-314.pyc
+³   ³   ³           project_repository.cpython-314.pyc
+³   ³   ³           recon_result_repository.cpython-314.pyc
+³   ³   ³           __init__.cpython-314.pyc
+³   ³   ³           
+³   ³   ÀÄÄÄ__pycache__
+³   ³           base.cpython-314.pyc
+³   ³           connection.cpython-314.pyc
+³   ³           project_repository.cpython-314.pyc
+³   ³           repository.cpython-314.pyc
+³   ³           session.cpython-314.pyc
+³   ³           __init__.cpython-314.pyc
+³   ³           
+³   ÃÄÄÄdispatcher
+³   ³   ³   dispatcher.py
+³   ³   ³   __init__.py
+³   ³   ³   
+³   ³   ÀÄÄÄ__pycache__
+³   ³           dispatcher.cpython-314.pyc
+³   ³           __init__.cpython-314.pyc
+³   ³           
+³   ÃÄÄÄengines
+³   ³   ³   recon_engine.py
+³   ³   ³   
+³   ³   ÀÄÄÄ__pycache__
+³   ³           recon_engine.cpython-314.pyc
+³   ³           
+³   ÃÄÄÄevents
+³   ³   ³   bus.py
+³   ³   ³   events.py
+³   ³   ³   handlers.py
+³   ³   ³   __init__.py
+³   ³   ³   
+³   ³   ÀÄÄÄ__pycache__
+³   ³           bus.cpython-314.pyc
+³   ³           events.cpython-314.pyc
+³   ³           handlers.cpython-314.pyc
+³   ³           __init__.cpython-314.pyc
+³   ³           
+³   ÃÄÄÄmodules
+³   ³   ÃÄÄÄanalysis
+³   ³   ³   ³   analysis_engine.py
+³   ³   ³   ³   analyzer.py
+³   ³   ³   ³   findings.py
+³   ³   ³   ³   recommendation.py
+³   ³   ³   ³   risk_score.py
+³   ³   ³   ³   templates.py
+³   ³   ³   ³   __init__.py
+³   ³   ³   ³   
+³   ³   ³   ÀÄÄÄ__pycache__
+³   ³   ³           analysis_engine.cpython-314.pyc
+³   ³   ³           analyzer.cpython-314.pyc
+³   ³   ³           findings.cpython-314.pyc
+³   ³   ³           recommendation.cpython-314.pyc
+³   ³   ³           risk_score.cpython-314.pyc
+³   ³   ³           templates.cpython-314.pyc
+³   ³   ³           __init__.cpython-314.pyc
+³   ³   ³           
+³   ³   ÃÄÄÄbrowser
+³   ³   ³   ³   cookies.py
+³   ³   ³   ³   forms.py
+³   ³   ³   ³   screenshots.py
+³   ³   ³   ³   session.py
+³   ³   ³   ³   __init__.py
+³   ³   ³   ³   
+³   ³   ³   ÀÄÄÄ__pycache__
+³   ³   ³           cookies.cpython-314.pyc
+³   ³   ³           forms.cpython-314.pyc
+³   ³   ³           screenshots.cpython-314.pyc
+³   ³   ³           session.cpython-314.pyc
+³   ³   ³           __init__.cpython-314.pyc
+³   ³   ³           
+³   ³   ÃÄÄÄdashboard
+³   ³   ³   ³   dashboard_engine.py
+³   ³   ³   ³   statistics_engine.py
+³   ³   ³   ³   __init__.py
+³   ³   ³   ³   
+³   ³   ³   ÀÄÄÄ__pycache__
+³   ³   ³           dashboard_engine.cpython-314.pyc
+³   ³   ³           statistics_engine.cpython-314.pyc
+³   ³   ³           __init__.cpython-314.pyc
+³   ³   ³           
+³   ³   ÃÄÄÄevidence
+³   ³   ³   ³   collector.py
+³   ³   ³   ³   screenshots.py
+³   ³   ³   ³   storage.py
+³   ³   ³   ³   __init__.py
+³   ³   ³   ³   
+³   ³   ³   ÀÄÄÄ__pycache__
+³   ³   ³           collector.cpython-314.pyc
+³   ³   ³           screenshots.cpython-314.pyc
+³   ³   ³           storage.cpython-314.pyc
+³   ³   ³           __init__.cpython-314.pyc
+³   ³   ³           
+³   ³   ÃÄÄÄmemory
+³   ³   ³   ³   cache.py
+³   ³   ³   ³   context.py
+³   ³   ³   ³   history.py
+³   ³   ³   ³   knowledge.py
+³   ³   ³   ³   memory_store.py
+³   ³   ³   ³   session_memory.py
+³   ³   ³   ³   __init__.py
+³   ³   ³   ³   
+³   ³   ³   ÀÄÄÄ__pycache__
+³   ³   ³           cache.cpython-314.pyc
+³   ³   ³           context.cpython-314.pyc
+³   ³   ³           history.cpython-314.pyc
+³   ³   ³           knowledge.cpython-314.pyc
+³   ³   ³           memory_store.cpython-314.pyc
+³   ³   ³           session_memory.cpython-314.pyc
+³   ³   ³           __init__.cpython-314.pyc
+³   ³   ³           
+³   ³   ÃÄÄÄplanner
+³   ³   ³   ³   __init__.py
+³   ³   ³   ³   
+³   ³   ³   ÀÄÄÄ__pycache__
+³   ³   ³           __init__.cpython-314.pyc
+³   ³   ³           
+³   ³   ÃÄÄÄrecon
+³   ³   ³   ³   api_discovery.py
+³   ³   ³   ³   crawler.py
+³   ³   ³   ³   endpoints.py
+³   ³   ³   ³   headers.py
+³   ³   ³   ³   http_methods.py
+³   ³   ³   ³   interesting_urls.py
+³   ³   ³   ³   javascript.py
+³   ³   ³   ³   js_endpoints.py
+³   ³   ³   ³   js_secrets.py
+³   ³   ³   ³   parameter_discovery.py
+³   ³   ³   ³   risk_scoring.py
+³   ³   ³   ³   scope_manager.py
+³   ³   ³   ³   target_validator.py
+³   ³   ³   ³   technology.py
+³   ³   ³   ³   url_normalizer.py
+³   ³   ³   ³   waf.py
+³   ³   ³   ³   wayback.py
+³   ³   ³   ³   __init__.py
+³   ³   ³   ³   
+³   ³   ³   ÃÄÄÄengine
+³   ³   ³   ³   ³   recon_engine.py
+³   ³   ³   ³   ³   
+³   ³   ³   ³   ÀÄÄÄ__pycache__
+³   ³   ³   ³           recon_engine.cpython-314.pyc
+³   ³   ³   ³           
+³   ³   ³   ÀÄÄÄ__pycache__
+³   ³   ³           api_discovery.cpython-314.pyc
+³   ³   ³           crawler.cpython-314.pyc
+³   ³   ³           endpoints.cpython-314.pyc
+³   ³   ³           headers.cpython-314.pyc
+³   ³   ³           http_methods.cpython-314.pyc
+³   ³   ³           interesting_urls.cpython-314.pyc
+³   ³   ³           javascript.cpython-314.pyc
+³   ³   ³           js_endpoints.cpython-314.pyc
+³   ³   ³           js_secrets.cpython-314.pyc
+³   ³   ³           parameter_discovery.cpython-314.pyc
+³   ³   ³           risk_scoring.cpython-314.pyc
+³   ³   ³           scope_manager.cpython-314.pyc
+³   ³   ³           target_validator.cpython-314.pyc
+³   ³   ³           technology.cpython-314.pyc
+³   ³   ³           url_normalizer.cpython-314.pyc
+³   ³   ³           waf.cpython-314.pyc
+³   ³   ³           wayback.cpython-314.pyc
+³   ³   ³           __init__.cpython-314.pyc
+³   ³   ³           
+³   ³   ÃÄÄÄreporting
+³   ³   ³   ³   ai_report.py
+³   ³   ³   ³   builder.py
+³   ³   ³   ³   export.py
+³   ³   ³   ³   html_report.py
+³   ³   ³   ³   markdown.py
+³   ³   ³   ³   pdf.py
+³   ³   ³   ³   pdf_report.py
+³   ³   ³   ³   report_engine.py
+³   ³   ³   ³   __init__.py
+³   ³   ³   ³   
+³   ³   ³   ÀÄÄÄ__pycache__
+³   ³   ³           ai_report.cpython-314.pyc
+³   ³   ³           builder.cpython-314.pyc
+³   ³   ³           export.cpython-314.pyc
+³   ³   ³           html_report.cpython-314.pyc
+³   ³   ³           markdown.cpython-314.pyc
+³   ³   ³           pdf.cpython-314.pyc
+³   ³   ³           pdf_report.cpython-314.pyc
+³   ³   ³           report_engine.cpython-314.pyc
+³   ³   ³           __init__.cpython-314.pyc
+³   ³   ³           
+³   ³   ÃÄÄÄscanner
+³   ³   ³   ³   union_sqli.py
+³   ³   ³   ³   __init__.py
+³   ³   ³   ³   
+³   ³   ³   ÃÄÄÄcommon
+³   ³   ³   ³       html_parser.py
+³   ³   ³   ³       payload_builder.py
+³   ³   ³   ³       regex_utils.py
+³   ³   ³   ³       response_diff.py
+³   ³   ³   ³       __init__.py
+³   ³   ³   ³       
+³   ³   ³   ÃÄÄÄcore
+³   ³   ³   ³   ³   base_scanner.py
+³   ³   ³   ³   ³   comparison.py
+³   ³   ³   ³   ³   dom_detector.py
+³   ³   ³   ³   ³   form_parser.py
+³   ³   ³   ³   ³   payload_encoder.py
+³   ³   ³   ³   ³   payload_injector.py
+³   ³   ³   ³   ³   reflection_detector.py
+³   ³   ³   ³   ³   request_engine.py
+³   ³   ³   ³   ³   response_analyzer.py
+³   ³   ³   ³   ³   response_analyzer_v2.py
+³   ³   ³   ³   ³   session_manager.py
+³   ³   ³   ³   ³   waf_bypass.py
+³   ³   ³   ³   ³   
+³   ³   ³   ³   ÃÄÄÄutils
+³   ³   ³   ³   ÀÄÄÄ__pycache__
+³   ³   ³   ³           base_scanner.cpython-314.pyc
+³   ³   ³   ³           comparison.cpython-314.pyc
+³   ³   ³   ³           dom_detector.cpython-314.pyc
+³   ³   ³   ³           form_parser.cpython-314.pyc
+³   ³   ³   ³           payload_encoder.cpython-314.pyc
+³   ³   ³   ³           payload_injector.cpython-314.pyc
+³   ³   ³   ³           reflection_detector.cpython-314.pyc
+³   ³   ³   ³           request_engine.cpython-314.pyc
+³   ³   ³   ³           response_analyzer.cpython-314.pyc
+³   ³   ³   ³           response_analyzer_v2.cpython-314.pyc
+³   ³   ³   ³           session_manager.cpython-314.pyc
+³   ³   ³   ³           waf_bypass.cpython-314.pyc
+³   ³   ³   ³           
+³   ³   ³   ÃÄÄÄdbms
+³   ³   ³   ³   ÃÄÄÄmysql
+³   ³   ³   ³   ÀÄÄÄoracle
+³   ³   ³   ³           login.py
+³   ³   ³   ³           oracle_enum.py
+³   ³   ³   ³           payloads.py
+³   ³   ³   ³           scorer.py
+³   ³   ³   ³           __init__.py
+³   ³   ³   ³           
+³   ³   ³   ÃÄÄÄengine
+³   ³   ³   ³   ³   scan_engine.py
+³   ³   ³   ³   ³   
+³   ³   ³   ³   ÀÄÄÄ__pycache__
+³   ³   ³   ³           scan_engine.cpython-314.pyc
+³   ³   ³   ³           
+³   ³   ³   ÃÄÄÄmodules
+³   ³   ³   ³   ³   blind_boolean.py
+³   ³   ³   ³   ³   blind_extractor.py
+³   ³   ³   ³   ³   blind_payloads.py
+³   ³   ³   ³   ³   blind_sqli.py
+³   ³   ³   ³   ³   blind_time.py
+³   ³   ³   ³   ³   clickjacking.py
+³   ³   ³   ³   ³   cmd_injection.py
+³   ³   ³   ³   ³   cors.py
+³   ³   ³   ³   ³   crlf.py
+³   ³   ³   ³   ³   csrf.py
+³   ³   ³   ³   ³   error_detector.py
+³   ³   ³   ³   ³   error_extractor.py
+³   ³   ³   ³   ³   error_payloads.py
+³   ³   ³   ³   ³   error_sqli.py
+³   ³   ³   ³   ³   file_upload.py
+³   ³   ³   ³   ³   host_header.py
+³   ³   ³   ³   ³   idor.py
+³   ³   ³   ³   ³   jwt.py
+³   ³   ³   ³   ³   lab6_handler.py
+³   ³   ³   ³   ³   lfi.py
+³   ³   ³   ³   ³   login_bypass.py
+³   ³   ³   ³   ³   login_manager.py
+³   ³   ³   ³   ³   open_redirect.py
+³   ³   ³   ³   ³   oracle_enum.py
+³   ³   ³   ³   ³   prototype_pollution.py
+³   ³   ³   ³   ³   rfi.py
+³   ³   ³   ³   ³   sqli.py
+³   ³   ³   ³   ³   sqli_v1.py
+³   ³   ³   ³   ³   sqli_v2.py
+³   ³   ³   ³   ³   ssrf.py
+³   ³   ³   ³   ³   union_sqli.py
+³   ³   ³   ³   ³   xss.py
+³   ³   ³   ³   ³   xss_v1.py
+³   ³   ³   ³   ³   __init__.py
+³   ³   ³   ³   ³   
+³   ³   ³   ³   ÃÄÄÄoracle
+³   ³   ³   ³   ÀÄÄÄ__pycache__
+³   ³   ³   ³           blind_boolean.cpython-314.pyc
+³   ³   ³   ³           blind_extractor.cpython-314.pyc
+³   ³   ³   ³           blind_payloads.cpython-314.pyc
+³   ³   ³   ³           blind_sqli.cpython-314.pyc
+³   ³   ³   ³           blind_time.cpython-314.pyc
+³   ³   ³   ³           clickjacking.cpython-314.pyc
+³   ³   ³   ³           cmd_injection.cpython-314.pyc
+³   ³   ³   ³           cors.cpython-314.pyc
+³   ³   ³   ³           crlf.cpython-314.pyc
+³   ³   ³   ³           csrf.cpython-314.pyc
+³   ³   ³   ³           error_detector.cpython-314.pyc
+³   ³   ³   ³           error_extractor.cpython-314.pyc
+³   ³   ³   ³           error_payloads.cpython-314.pyc
+³   ³   ³   ³           error_sqli.cpython-314.pyc
+³   ³   ³   ³           file_upload.cpython-314.pyc
+³   ³   ³   ³           host_header.cpython-314.pyc
+³   ³   ³   ³           idor.cpython-314.pyc
+³   ³   ³   ³           jwt.cpython-314.pyc
+³   ³   ³   ³           lab6_handler.cpython-314.pyc
+³   ³   ³   ³           lfi.cpython-314.pyc
+³   ³   ³   ³           login_bypass.cpython-314.pyc
+³   ³   ³   ³           login_manager.cpython-314.pyc
+³   ³   ³   ³           open_redirect.cpython-314.pyc
+³   ³   ³   ³           oracle_enum.cpython-314.pyc
+³   ³   ³   ³           prototype_pollution.cpython-314.pyc
+³   ³   ³   ³           rfi.cpython-314.pyc
+³   ³   ³   ³           sqli.cpython-314.pyc
+³   ³   ³   ³           sqli_v1.cpython-314.pyc
+³   ³   ³   ³           ssrf.cpython-314.pyc
+³   ³   ³   ³           union_sqli.cpython-314.pyc
+³   ³   ³   ³           xss.cpython-314.pyc
+³   ³   ³   ³           xss_v1.cpython-314.pyc
+³   ³   ³   ³           __init__.cpython-314.pyc
+³   ³   ³   ³           
+³   ³   ³   ÃÄÄÄmssql
+³   ³   ³   ÃÄÄÄpayloads
+³   ³   ³   ³   ³   sql_payloads.py
+³   ³   ³   ³   ³   xss_payloads.py
+³   ³   ³   ³   ³   
+³   ³   ³   ³   ÀÄÄÄ__pycache__
+³   ³   ³   ³           sql_payloads.cpython-314.pyc
+³   ³   ³   ³           xss_payloads.cpython-314.pyc
+³   ³   ³   ³           
+³   ³   ³   ÃÄÄÄpostgres
+³   ³   ³   ÀÄÄÄ__pycache__
+³   ³   ³           __init__.cpython-314.pyc
+³   ³   ³           
+³   ³   ÃÄÄÄscope
+³   ³   ³   ³   parser.py
+³   ³   ³   ³   rules.py
+³   ³   ³   ³   validator.py
+³   ³   ³   ³   __init__.py
+³   ³   ³   ³   
+³   ³   ³   ÀÄÄÄ__pycache__
+³   ³   ³           parser.cpython-314.pyc
+³   ³   ³           rules.cpython-314.pyc
+³   ³   ³           validator.cpython-314.pyc
+³   ³   ³           __init__.cpython-314.pyc
+³   ³   ³           
+³   ³   ÀÄÄÄvulnerability
+³   ³       ³   evidence_manager.py
+³   ³       ³   finding_manager.py
+³   ³       ³   notes_manager.py
+³   ³       ³   search_engine.py
+³   ³       ³   status_engine.py
+³   ³       ³   tags_manager.py
+³   ³       ³   __init__.py
+³   ³       ³   
+³   ³       ÀÄÄÄ__pycache__
+³   ³               evidence_manager.cpython-314.pyc
+³   ³               finding_manager.cpython-314.pyc
+³   ³               notes_manager.cpython-314.pyc
+³   ³               search_engine.cpython-314.pyc
+³   ³               status_engine.cpython-314.pyc
+³   ³               tags_manager.cpython-314.pyc
+³   ³               __init__.cpython-314.pyc
+³   ³               
+³   ÃÄÄÄplugins
+³   ³   ³   __init__.py
+³   ³   ³   
+³   ³   ÃÄÄÄcloud
+³   ³   ³   ³   __init__.py
+³   ³   ³   ³   
+³   ³   ³   ÀÄÄÄ__pycache__
+³   ³   ³           __init__.cpython-314.pyc
+³   ³   ³           
+³   ³   ÃÄÄÄcustom
+³   ³   ³   ³   __init__.py
+³   ³   ³   ³   
+³   ³   ³   ÀÄÄÄ__pycache__
+³   ³   ³           __init__.cpython-314.pyc
+³   ³   ³           
+³   ³   ÃÄÄÄgraphql
+³   ³   ³   ³   __init__.py
+³   ³   ³   ³   
+³   ³   ³   ÀÄÄÄ__pycache__
+³   ³   ³           __init__.cpython-314.pyc
+³   ³   ³           
+³   ³   ÃÄÄÄjwt
+³   ³   ³   ³   __init__.py
+³   ³   ³   ³   
+³   ³   ³   ÀÄÄÄ__pycache__
+³   ³   ³           __init__.cpython-314.pyc
+³   ³   ³           
+³   ³   ÃÄÄÄmobile
+³   ³   ³   ³   __init__.py
+³   ³   ³   ³   
+³   ³   ³   ÀÄÄÄ__pycache__
+³   ³   ³           __init__.cpython-314.pyc
+³   ³   ³           
+³   ³   ÀÄÄÄ__pycache__
+³   ³           __init__.cpython-314.pyc
+³   ³           
+³   ÃÄÄÄschemas
+³   ÃÄÄÄservices
+³   ³   ³   ai_service.py
+³   ³   ³   evidence_service.py
+³   ³   ³   finding_service.py
+³   ³   ³   project_service.py
+³   ³   ³   recon_service.py
+³   ³   ³   report_service.py
+³   ³   ³   scope_service.py
+³   ³   ³   __init__.py
+³   ³   ³   
+³   ³   ÀÄÄÄ__pycache__
+³   ³           ai_service.cpython-314.pyc
+³   ³           evidence_service.cpython-314.pyc
+³   ³           finding_service.cpython-314.pyc
+³   ³           project_service.cpython-314.pyc
+³   ³           recon_service.cpython-314.pyc
+³   ³           report_service.cpython-314.pyc
+³   ³           scope_service.cpython-314.pyc
+³   ³           __init__.cpython-314.pyc
+³   ³           
+³   ÃÄÄÄtools
+³   ³   ³   browser.py
+³   ³   ³   database.py
+³   ³   ³   filesystem.py
+³   ³   ³   git.py
+³   ³   ³   http_client.py
+³   ³   ³   ollama.py
+³   ³   ³   playwright.py
+³   ³   ³   terminal.py
+³   ³   ³   zap.py
+³   ³   ³   __init__.py
+³   ³   ³   
+³   ³   ÀÄÄÄ__pycache__
+³   ³           browser.cpython-314.pyc
+³   ³           database.cpython-314.pyc
+³   ³           filesystem.cpython-314.pyc
+³   ³           git.cpython-314.pyc
+³   ³           http.cpython-314.pyc
+³   ³           http_client.cpython-314.pyc
+³   ³           ollama.cpython-314.pyc
+³   ³           playwright.cpython-314.pyc
+³   ³           terminal.cpython-314.pyc
+³   ³           zap.cpython-314.pyc
+³   ³           __init__.cpython-314.pyc
+³   ³           
+³   ÃÄÄÄutils
+³   ³   ³   constants.py
+³   ³   ³   enums.py
+³   ³   ³   helpers.py
+³   ³   ³   validators.py
+³   ³   ³   __init__.py
+³   ³   ³   
+³   ³   ÀÄÄÄ__pycache__
+³   ³           constants.cpython-314.pyc
+³   ³           enums.cpython-314.pyc
+³   ³           helpers.cpython-314.pyc
+³   ³           validators.cpython-314.pyc
+³   ³           __init__.cpython-314.pyc
+³   ³           
+³   ÃÄÄÄworkflows
+³   ³   ³   bugcrowd.py
+³   ³   ³   cli.py
+³   ³   ³   hackerone.py
+³   ³   ³   project.py
+³   ³   ³   recon.py
+³   ³   ³   reporting.py
+³   ³   ³   __init__.py
+³   ³   ³   
+³   ³   ÀÄÄÄ__pycache__
+³   ³           bugcrowd.cpython-314.pyc
+³   ³           cli.cpython-314.pyc
+³   ³           hackerone.cpython-314.pyc
+³   ³           project.cpython-314.pyc
+³   ³           recon.cpython-314.pyc
+³   ³           reporting.cpython-314.pyc
+³   ³           __init__.cpython-314.pyc
+³   ³           
+³   ÀÄÄÄ__pycache__
+³           main.cpython-314.pyc
+³           __init__.cpython-314.pyc
+³           
+ÃÄÄÄconfig
+ÃÄÄÄdata
+³       sentinel.db
+³       
+ÃÄÄÄdocs
+³   ÃÄÄÄadr
+³   ³       ADR-001-project-structure.md
+³   ³       ADR-002-sqlalchemy.md
+³   ³       ADR-003-event-bus.md
+³   ³       ADR-004-prompt-loader.md
+³   ³       
+³   ÃÄÄÄapi
+³   ÃÄÄÄarchitecture
+³   ÃÄÄÄimages
+³   ÀÄÄÄroadmap
+ÃÄÄÄlogs
+³       sentinel.log
+³       
+ÃÄÄÄmemory
+ÃÄÄÄmigrations
+³   ³   env.py
+³   ³   README
+³   ³   script.py.mako
+³   ³   
+³   ÃÄÄÄversions
+³   ÀÄÄÄ__pycache__
+³           env.cpython-314.pyc
+³           
+ÃÄÄÄmodels
+³       __init__.py
+³       
+ÃÄÄÄprompts
+³   ÀÄÄÄsystem
+³           browser.md
+³           manager.md
+³           planner.md
+³           recon.md
+³           reporter.md
+³           
+ÃÄÄÄreports
+³   ÀÄÄÄbugcrowd.com_20260712_224652
+³           ai_report.txt
+³           report.html
+³           report.pdf
+³           
+ÃÄÄÄscreenshots
+ÀÄÄÄtests
+    ³   portswigger_lab1.py
+    ³   portswigger_lab2.py
+    ³   portswigger_lab3.py
+    ³   portswigger_lab4.py
+    ³   portswigger_lab5.py
+    ³   portswigger_lab7.py
+    ³   test_dbms_detection.py
+    ³   test_error_oracle.py
+    ³   test_error_sqli.py
+    ³   test_lab6.py
+    ³   test_lfi.py
+    ³   test_oracle_enum.py
+    ³   test_oracle_enum_phase1.py
+    ³   test_portswigger_error.py
+    ³   test_portswigger_lab6.py
+    ³   test_sqli.py
+    ³   test_ssrf.py
+    ³   test_xss.py
+    ³   __init__.py
+    ³   
+    ÃÄÄÄfixtures
+    ÃÄÄÄintegration
+    ÃÄÄÄunit
+    ³       test_payload_injector.py
+    ³       
+    ÀÄÄÄ__pycache__
+            portswigger_lab1.cpython-314.pyc
+            portswigger_lab2.cpython-314.pyc
+            portswigger_lab3.cpython-314.pyc
+            portswigger_lab4.cpython-314.pyc
+            portswigger_lab5.cpython-314.pyc
+            portswigger_lab7.cpython-314.pyc
+            __init__.cpython-314.pyc
+            

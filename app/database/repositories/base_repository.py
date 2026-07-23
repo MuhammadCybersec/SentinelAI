@@ -33,6 +33,7 @@ ModelType = TypeVar("ModelType")
 # Base Repository
 # ===========================================================
 
+
 class BaseRepository(Generic[ModelType]):
     """
     Generic repository used by all database entities.
@@ -49,19 +50,42 @@ class BaseRepository(Generic[ModelType]):
 
         self.session = session
 
-
     # ===========================================================
-# DB-REPOSITORY-004
-# Create Entity
-# ===========================================================
+    # DB-REPOSITORY-004
+    # Create Entity
+    # ===========================================================
 
     def create(self, entity: ModelType) -> ModelType:
-       """
-       Save a new entity into the database.
-       """
+        """
+        Save a new entity into the database.
+        """
 
-       self.session.add(entity)
-       self.session.commit()
-       self.session.refresh(entity)
+        self.session.add(entity)
+        self.session.commit()
+        self.session.refresh(entity)
 
-       return entity
+        return entity
+
+    # ===========================================================
+    # DB-REPOSITORY-005
+    # Get All Entities
+    # ===========================================================
+
+    def get_all(self, model):
+        """
+        Return all records of a model.
+        """
+
+        return self.session.query(model).all()
+
+    # ===========================================================
+    # DB-REPOSITORY-006
+    # Get By ID
+    # ===========================================================
+
+    def get_by_id(self, model, entity_id):
+        """
+        Return a single entity by ID.
+        """
+
+        return self.session.query(model).filter(model.id == entity_id).first()

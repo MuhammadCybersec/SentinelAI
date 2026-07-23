@@ -21,8 +21,6 @@ from dotenv import load_dotenv
 from app.core.logger import sentinel_logger
 from app.core.config import config
 
-
-
 from app.database.base import Base
 from app.database.connection import engine
 from app.database.session import get_session
@@ -30,9 +28,12 @@ from app.database.session import get_session
 from app.database.repositories.project_repository import ProjectRepository
 from app.services.project_service import ProjectService
 
-
 from app.agents.manager_agent import ManagerAgent
+from app.workflows.cli import CLI
 
+from app.modules.recon import TargetValidator
+from app.services.recon_service import ReconService
+from app.database.repositories.recon_result_repository import ReconResultRepository
 
 # ===========================================================
 # MAIN-002
@@ -54,6 +55,7 @@ MODEL = config.MODEL
 # MAIN-004
 # Main Application
 # ===========================================================
+
 
 def main() -> None:
     """
@@ -77,34 +79,43 @@ def main() -> None:
 
     try:
 
-        repo = ProjectRepository(db)
+        project_repo = ProjectRepository(db)
 
-        service = ProjectService(repo)
+        recon_repo = ReconResultRepository(db)
 
-                # ==========================================
+        # ==========================================
         # Create Manager Agent
         # ==========================================
 
-        manager = ManagerAgent(service)
-
-        # ==========================================
-        # Send Command to AI Manager
-        # ==========================================
-
-        result = manager.handle(
-            "Create a project named OWASP Juice Shop with target https://demo.owasp-juice.shop"
+        project_service = ProjectService(project_repo)
+        recon_service = ReconService(recon_repo)
+        manager = ManagerAgent(
+            project_service,
+            recon_service,
         )
 
         # ==========================================
-        # Print Result
+        # Recon Validator Test
         # ==========================================
 
-        print("\nProject Created Successfully")
+        print("\nRecon Validator Test")
         print("-" * 40)
-        print(f"ID          : {result.id}")
-        print(f"Name        : {result.name}")
-        print(f"Target      : {result.target}")
-        print(f"Description : {result.description}")
+
+        print(
+            "https://bugcrowd.com :", TargetValidator.is_valid("https://bugcrowd.com")
+        )
+
+        print("bugcrowd.com :", TargetValidator.is_valid("bugcrowd.com"))
+
+        print("hello world :", TargetValidator.is_valid("hello world"))
+
+        # ==========================================
+        # Start Interactive CLI
+        # ==========================================
+
+        cli = CLI(manager)
+
+        cli.start()
 
     except Exception as e:
 
@@ -116,7 +127,6 @@ def main() -> None:
 
     sentinel_logger.success("Application started successfully.")
 
-  
 
 # ===========================================================
 # MAIN-005
