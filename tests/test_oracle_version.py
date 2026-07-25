@@ -96,34 +96,32 @@ class TestOracleVersionResult(unittest.TestCase):
             summary, "Oracle detected but version unknown (Confidence: 25)"
         )
 
+    # tests/test_oracle_version.py
+    # Only showing the fixed test method, rest of file unchanged
 
-# tests/test_oracle_version.py
-# Only showing the fixed test method, rest of file unchanged
+    def test_to_dict(self):
+        """Test conversion to dictionary."""
+        result = OracleVersionResult(
+            version="19c",
+            display_name="Oracle 19c",
+            edition="Enterprise Edition",
+            full_version="Oracle 19c Enterprise Edition",
+            is_xe=False,
+            confidence=50,
+        )
+        # FIXED: Don't add indicators that would change confidence
 
+        data = result.to_dict()
 
-def test_to_dict(self):
-    """Test conversion to dictionary."""
-    result = OracleVersionResult(
-        version="19c",
-        display_name="Oracle 19c",
-        edition="Enterprise Edition",
-        full_version="Oracle 19c Enterprise Edition",
-        is_xe=False,
-        confidence=50,
-    )
-    # FIXED: Don't add indicators that would change confidence
-
-    data = result.to_dict()
-
-    self.assertEqual(data["version"], "19c")
-    self.assertEqual(data["display_name"], "Oracle 19c")
-    self.assertEqual(data["edition"], "Enterprise Edition")
-    self.assertEqual(data["full_version"], "Oracle 19c Enterprise Edition")
-    self.assertFalse(data["is_xe"])
-    self.assertEqual(data["confidence"], 50)  # ✅ Fixed
-    self.assertEqual(data["version_indicators"], {})  # ✅ Fixed
-    self.assertEqual(data["edition_indicators"], {})  # ✅ Fixed
-    self.assertIn("summary", data)
+        self.assertEqual(data["version"], "19c")
+        self.assertEqual(data["display_name"], "Oracle 19c")
+        self.assertEqual(data["edition"], "Enterprise Edition")
+        self.assertEqual(data["full_version"], "Oracle 19c Enterprise Edition")
+        self.assertFalse(data["is_xe"])
+        self.assertEqual(data["confidence"], 50)  # ✅ Fixed
+        self.assertEqual(data["version_indicators"], {})  # ✅ Fixed
+        self.assertEqual(data["edition_indicators"], {})  # ✅ Fixed
+        self.assertIn("summary", data)
 
     def test_is_detected(self):
         """Test is_detected method."""

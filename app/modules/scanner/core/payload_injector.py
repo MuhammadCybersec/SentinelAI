@@ -115,6 +115,9 @@ class PayloadInjector:
         """
         if not url or not isinstance(url, str):
             raise ValueError(f"Invalid URL: {url}")
+        parsed = urlparse(url)
+        if not parsed.scheme or not parsed.netloc:
+            raise ValueError(f"Invalid URL: {url}")
 
         self.original_url: str = url
         self._parsed_url = urlparse(url)
@@ -147,7 +150,9 @@ class PayloadInjector:
         transformed_params = self._query_params.copy()
         transformed_params[parameter] = [new_value]
 
-        new_url = self._build_url(transformed_params)
+        self._query_params = transformed_params
+
+        new_url = self._build_url(self._query_params)
 
         injection_point = InjectionPoint(
             location="query",
@@ -222,16 +227,18 @@ class PayloadInjector:
         form_data = {field_name: new_value}
 
         injection_point = InjectionPoint(
-            location="form",
+            location="body",
             parameter=field_name,
             position=position,
             original_value=original_value,
             payload=payload,
         )
+        body = urlencode(form_data)
 
         return TransformedRequest(
             url=self.original_url,
             method="POST",
+            body=body,
             form_data=form_data,
             original_url=self.original_url,
             injection_points=[injection_point],
@@ -258,15 +265,15 @@ class PayloadInjector:
         if position not in ["replace", "prefix", "suffix", "append"]:
             raise ValueError(f"Invalid position: {position}")
 
-        path_segments = self._parsed_url.path.split("/")
-        if segment_index >= len(path_segments):
+        segments = self._parsed_url.path.strip("/").split("/")
+        if segment_index >= len(segments):
             raise IndexError(f"Segment index {segment_index} out of range.")
 
-        original_value = path_segments[segment_index]
+        original_value = segments[segment_index]
         new_value = self._transform_value(original_value, payload, position)
-        path_segments[segment_index] = new_value
+        segments[segment_index] = new_value
 
-        new_path = "/".join(path_segments)
+        new_path = "/" + "/".join(segments)
         new_url = self._parsed_url._replace(path=new_path).geturl()
 
         injection_point = InjectionPoint(
@@ -473,7 +480,9 @@ class PayloadInjector:
 
     def _build_url(self, params: Dict[str, List[str]]) -> str:
         """Build a URL from parsed components."""
-        query = urlencode(params, doseq=True)
+        from urllib.parse import quote
+
+        query = urlencode(params, doseq=True, quote_via=quote)
         return urlunparse(
             (
                 self._parsed_url.scheme,
