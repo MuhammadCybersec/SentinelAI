@@ -1,0 +1,24 @@
+{
+  "title": "SentinelAI Security Scan Report",
+  "scan_id": "16a0aa1b-d5ed-43a3-821d-138602760b52",
+  "generated_at": "2026-07-31T14:29:18.480850+00:00",
+  "executive_summary": "No security vulnerabilities were detected during the scan.",
+  "statistics": {
+    "total_findings": 0,
+    "critical": 0,
+    "high": 0,
+    "medium": 0,
+    "low": 0,
+    "scanners_used": [
+      "xss",
+      "sqli"
+    ],
+    "duration": "0.00s"
+  },
+  "findings": [],
+  "recommendations": [
+    "Keep dependencies and libraries updated",
+    "Follow secure coding best practices",
+    "Implement regular security scanning and testing"
+  ]
+}

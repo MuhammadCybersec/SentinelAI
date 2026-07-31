@@ -19,7 +19,8 @@ from typing import Any
 from uuid import UUID, uuid4
 
 from app.modules.scanner.core.base_scanner import ScanResult
-from app.modules.scanner.core.scanner_manager import ScannerManager
+
+# from app.modules.scanner.core.scanner_manager import ScannerManager
 
 
 class ScannerStatus(Enum):

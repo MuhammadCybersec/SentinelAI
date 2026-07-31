@@ -1,668 +1,612 @@
 """
-===========================================================
-Project : Sentinel AI
-Module  : Scanner Manager
-File ID : SCANNER-CORE-MANAGER-001
-Version : 2.0.0
-===========================================================
+Scanner Manager - Orchestrates multiple scanners for comprehensive security scanning.
 
-Description:
-
-Centralized manager for all vulnerability scanners.
-
-Provides:
-- Scanner registration
-- Scanner removal
-- Scanner listing
-- Single scanner execution
-- Bulk scanner execution
-- Thread safety
-- Comprehensive logging
-- Error handling
-
-===========================================================
+This module provides centralized management of all security scanners with
+parallel execution, result aggregation, reporting, and statistics generation.
 """
 
 from __future__ import annotations
 
+import asyncio
+import json
 import logging
 import threading
 from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, List, Optional, Type
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any
+from uuid import UUID, uuid4
 
-from app.modules.scanner.core.base_scanner import BaseScanner, ScanResult
-
-
-class ScannerManagerError(Exception):
-    """
-    Base exception for ScannerManager errors.
-
-    Attributes:
-        message: Error message
-        scanner_name: Name of the scanner (if applicable)
-    """
-
-    __slots__ = ("message", "scanner_name")
-
-    def __init__(self, message: str, scanner_name: Optional[str] = None) -> None:
-        self.message = message
-        self.scanner_name = scanner_name
-        super().__init__(message)
-
-
-class ScannerNotFoundError(ScannerManagerError):
-    """Raised when a scanner is not found."""
-
-    pass
-
-
-class ScannerRegistrationError(ScannerManagerError):
-    """Raised when scanner registration fails."""
-
-    pass
-
-
-class ScannerExecutionError(ScannerManagerError):
-    """Raised when scanner execution fails."""
-
-    pass
+from app.modules.scanner.modules.sqli_v2 import SQLiV2Scanner
+from app.modules.scanner.modules.xss_scanner import XSSScanner
+from app.modules.scanner.modules.secrets_scanner import SecretsScanner
 
 
 @dataclass(slots=True)
-class ScannerInfo:
+class ScanFinding:
     """
-    Information about a registered scanner.
+    Unified scan finding with all metadata.
 
     Attributes:
-        name: Scanner name
-        scanner_class: The scanner class
-        description: Scanner description
-        version: Scanner version
-        enabled: Whether the scanner is enabled
-        tags: List of tags for categorization
+        id: Unique identifier
+        scanner: Scanner name
+        title: Finding title
+        description: Detailed description
+        severity: Critical, High, Medium, Low
+        cwe: CWE identifier
+        owasp: OWASP category
+        cvss: CVSS score
+        url: Target URL
+        payload: Payload used
+        evidence: List of evidence items
+        remediation: Remediation steps
+        references: List of references
+        timestamp: When found
+        metadata: Additional metadata
     """
 
-    name: str
-    scanner_class: Type[BaseScanner]
+    id: UUID = field(default_factory=uuid4)
+    scanner: str = ""
+    title: str = ""
     description: str = ""
-    version: str = "1.0.0"
-    enabled: bool = True
-    tags: List[str] = field(default_factory=list)
-
-    def to_dict(self) -> Dict[str, Any]:
-        """Convert to dictionary."""
-        return {
-            "name": self.name,
-            "description": self.description,
-            "version": self.version,
-            "enabled": self.enabled,
-            "tags": self.tags,
-        }
+    severity: str = "Medium"
+    cwe: str = ""
+    owasp: str = ""
+    cvss: str = ""
+    url: str = ""
+    payload: str = ""
+    evidence: list[str] = field(default_factory=list)
+    remediation: str = ""
+    references: list[str] = field(default_factory=list)
+    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass(slots=True)
-class ScannerExecutionResult:
+class ScanStatistics:
     """
-    Result of a scanner execution.
+    Statistics for a scan session.
 
     Attributes:
-        scanner_name: Name of the scanner
-        success: Whether execution was successful
-        findings: List of findings
-        error: Error message if failed
-        execution_time: Time taken in seconds
-        status: Status of execution
+        total_findings: Total findings count
+        critical: Critical severity count
+        high: High severity count
+        medium: Medium severity count
+        low: Low severity count
+        scanners_used: List of scanner names
+        total_scanners: Number of scanners used
+        start_time: Session start time
+        end_time: Session end time
+        duration: Duration in seconds
+        findings_by_scanner: Breakdown by scanner
     """
 
-    scanner_name: str
-    success: bool
-    findings: List[ScanResult]
-    error: Optional[str] = None
-    execution_time: float = 0.0
-    status: str = "completed"
-
-    def to_dict(self) -> Dict[str, Any]:
-        """
-        Convert execution result to dictionary.
-
-        Returns:
-            Dict[str, Any]: Dictionary representation
-        """
-        return {
-            "scanner_name": self.scanner_name,
-            "success": self.success,
-            "findings": [f.to_dict() for f in self.findings],
-            "error": self.error,
-            "execution_time": self.execution_time,
-            "status": self.status,
-        }
+    total_findings: int = 0
+    critical: int = 0
+    high: int = 0
+    medium: int = 0
+    low: int = 0
+    scanners_used: list[str] = field(default_factory=list)
+    total_scanners: int = 0
+    start_time: datetime | None = None
+    end_time: datetime | None = None
+    duration: float = 0.0
+    findings_by_scanner: dict[str, int] = field(default_factory=dict)
 
 
 class ScannerManager:
     """
-    Centralized manager for all vulnerability scanners.
-
-    This class manages the lifecycle of all scanners including
-    registration, execution, and result aggregation.
+    Centralized manager for orchestrating all security scanners.
 
     Features:
+        - Parallel scanner execution
+        - Result aggregation
+        - Database persistence
+        - PDF report generation
+        - Statistics collection
         - Thread-safe operations
-        - Scanner registration and removal
-        - Single and bulk execution
-        - Comprehensive error handling
-        - Detailed logging
-
-    Example:
-        >>> manager = ScannerManager()
-        >>> manager.register(XSSScanner)
-        >>> manager.register(SQLiScanner)
-        >>> results = manager.run_all("https://example.com")
-        >>> for result in results:
-        ...     print(result.scanner_name, len(result.findings))
     """
 
     def __init__(
         self,
-        logger: Optional[logging.Logger] = None,
-        enable_auto_discovery: bool = False,
+        base_manager: Any | None = None,
+        max_workers: int = 4,
+        timeout: float = 60.0,
+        db_path: str | None = None,
     ) -> None:
         """
-        Initialize the ScannerManager.
+        Initialize the Scanner Manager.
 
         Args:
-            logger: Optional logger instance
-            enable_auto_discovery: Enable auto-discovery of scanners
+            base_manager: BaseScannerManager instance (not used, kept for compatibility)
+            max_workers: Maximum parallel workers
+            timeout: Default timeout per scanner
+            db_path: Database path for storing findings
         """
-        self._logger = logger or self._setup_logger()
-        self._scanners: Dict[str, ScannerInfo] = {}
+        self._base_manager = base_manager
+        self._max_workers = max_workers
+        self._timeout = timeout
+        self._db_path = db_path or "scan_results.json"
+        self._logger = logging.getLogger(__name__)
+
+        # Thread-safe state
         self._lock = threading.RLock()
-        self._enable_auto_discovery = enable_auto_discovery
+        self._findings: list[ScanFinding] = []
+        self._statistics = ScanStatistics()
+        self._scan_id: UUID | None = None
+        self._is_running: bool = False
 
-        self._logger.info("ScannerManager initialized")
+        # Scanner registry - only existing scanners
+        self._scanners = {
+            "xss": XSSScanner,
+            "sqli": SQLiV2Scanner,
+            "secrets": SecretsScanner,
+        }
+        self._scanner_names = list(self._scanners.keys())
 
-    def _setup_logger(self) -> logging.Logger:
-        """Set up default logger."""
-        logger = logging.getLogger("ScannerManager")
-        logger.setLevel(logging.INFO)
-        if not logger.handlers:
-            ch = logging.StreamHandler()
-            ch.setLevel(logging.INFO)
-            formatter = logging.Formatter(
-                "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-            )
-            ch.setFormatter(formatter)
-            logger.addHandler(ch)
-        return logger
-
-    def register(
+    def run_scan(
         self,
-        scanner_class: Type[BaseScanner],
-        name: Optional[str] = None,
-        description: str = "",
-        version: str = "1.0.0",
-        enabled: bool = True,
-        tags: Optional[List[str]] = None,
-    ) -> None:
+        target: str,
+        scanners: list[str] | None = None,
+        save_to_db: bool = True,
+        generate_report: bool = True,
+    ) -> tuple[list[ScanFinding], ScanStatistics]:
         """
-        Register a scanner with the manager.
+        Run a complete security scan using all or specified scanners.
 
         Args:
-            scanner_class: The scanner class to register
-            name: Optional custom name (defaults to class name)
-            description: Scanner description
-            version: Scanner version
-            enabled: Whether the scanner is enabled
-            tags: List of tags for categorization
+            target: Target URL to scan
+            scanners: List of scanner names to run (default: all)
+            save_to_db: Whether to save findings to database
+            generate_report: Whether to generate PDF report
+
+        Returns:
+            Tuple of (findings, statistics)
 
         Raises:
-            ScannerRegistrationError: If registration fails
-            ValueError: If scanner_class is not a subclass of BaseScanner
+            ValueError: If target is empty
+            RuntimeError: If a scan is already running
         """
-        if not issubclass(scanner_class, BaseScanner):
-            raise ValueError(
-                f"Scanner class must be a subclass of BaseScanner, got {scanner_class.__name__}"
-            )
-
-        scanner_name = name or scanner_class.__name__
+        if not target or not target.strip():
+            raise ValueError("Target URL cannot be empty")
 
         with self._lock:
-            if scanner_name in self._scanners:
-                raise ScannerRegistrationError(
-                    f"Scanner '{scanner_name}' is already registered",
-                    scanner_name=scanner_name,
-                )
-
-            # Create scanner info
-            info = ScannerInfo(
-                name=scanner_name,
-                scanner_class=scanner_class,
-                description=description or self._get_scanner_description(scanner_class),
-                version=version,
-                enabled=enabled,
-                tags=tags or [],
+            if self._is_running:
+                raise RuntimeError("A scan is already running")
+            self._is_running = True
+            self._scan_id = uuid4()
+            self._findings.clear()
+            self._statistics = ScanStatistics(
+                start_time=datetime.now(timezone.utc),
+                scanners_used=scanners or self._scanner_names,
+                total_scanners=len(scanners or self._scanner_names),
             )
 
-            self._scanners[scanner_name] = info
-            self._logger.info(f"Registered scanner: {scanner_name} (v{version})")
-
-    def unregister(self, scanner_name: str) -> bool:
+    def _run_scanners_parallel(
+        self, target: str, scanners: list[str] | None = None
+    ) -> dict[str, Any]:
         """
-        Unregister a scanner from the manager.
+        Run selected scanners in parallel.
 
         Args:
-            scanner_name: Name of the scanner to unregister
+            target: Target URL
+            scanners: List of scanner names
 
         Returns:
-            bool: True if removed, False if not found
-
-        Raises:
-            ScannerNotFoundError: If scanner is not found
+            Dictionary of scan results by scanner
         """
-        with self._lock:
-            if scanner_name not in self._scanners:
-                raise ScannerNotFoundError(
-                    f"Scanner '{scanner_name}' not found",
-                    scanner_name=scanner_name,
+        scanner_names = scanners or self._scanner_names
+        results: dict[str, Any] = {}
+
+        # Create scanner instances
+        scanner_instances = {}
+        for name in scanner_names:
+            if name not in self._scanners:
+                self._logger.warning(f"Scanner '{name}' not found, skipping")
+                continue
+
+            try:
+                scanner_class = self._scanners[name]
+
+                # Create scanner instance with target
+                scanner_instance = scanner_class(target=target)
+
+                # Check if scanner has a scan method (including mock objects)
+                scan_method = getattr(scanner_instance, "scan", None)
+                if scan_method is not None and callable(scan_method):
+                    scanner_instances[name] = scanner_instance
+                else:
+                    self._logger.warning(f"Scanner '{name}' has no scan method")
+            except (ValueError, TypeError, AttributeError) as e:
+                self._logger.error(f"Failed to initialize scanner '{name}': {e}")
+
+        if not scanner_instances:
+            self._logger.warning("No scanners available to run")
+            return results
+
+        # Run scanners in parallel using asyncio
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+
+        try:
+            # Create tasks for each scanner
+            tasks = {}
+            for name, scanner in scanner_instances.items():
+                tasks[name] = loop.run_in_executor(None, scanner.scan)
+
+            # Run all tasks concurrently
+            if tasks:
+                done = loop.run_until_complete(
+                    asyncio.gather(*tasks.values(), return_exceptions=True)
                 )
 
-            removed = self._scanners.pop(scanner_name)
-            self._logger.info(f"Unregistered scanner: {scanner_name}")
-            return True
+                # Collect results
+                for i, (name, _) in enumerate(tasks.items()):
+                    result = done[i]
+                    if isinstance(result, Exception):
+                        self._logger.error(f"Scanner '{name}' failed: {result}")
+                        results[name] = {"error": str(result), "findings": []}
+                    else:
+                        # Convert to ScanFinding objects
+                        findings = self._convert_findings(name, result, target)
+                        results[name] = {"findings": findings}
 
-    def list_scanners(self) -> List[ScannerInfo]:
-        """
-        Get a list of all registered scanners.
+        finally:
+            loop.close()
 
-        Returns:
-            List[ScannerInfo]: List of scanner information
-        """
-        with self._lock:
-            return list(self._scanners.values())
+        return results
 
-    def get_scanner(self, scanner_name: str) -> Optional[ScannerInfo]:
+    def _convert_findings(
+        self, scanner_name: str, scanner_result: Any, target: str
+    ) -> list[ScanFinding]:
         """
-        Get information about a specific scanner.
+        Convert scanner-specific findings to unified ScanFinding objects.
 
         Args:
             scanner_name: Name of the scanner
+            scanner_result: Scanner result object
+            target: Target URL
 
         Returns:
-            Optional[ScannerInfo]: Scanner info or None if not found
+            List of ScanFinding objects
         """
-        with self._lock:
-            return self._scanners.get(scanner_name)
+        findings = []
 
-    def get_enabled_scanners(self) -> list[ScannerInfo]:
-        """
-        Get a list of enabled scanners.
-
-        Returns:
-            List[ScannerInfo]: List of enabled scanner information
-        """
-        with self._lock:
-            return [info for info in self._scanners.values() if info.enabled]
-
-    def enable_scanner(self, scanner_name: str) -> bool:
-        """
-        Enable a scanner.
-
-        Args:
-            scanner_name: Name of the scanner to enable
-
-        Returns:
-            bool: True if enabled
-
-        Raises:
-            ScannerNotFoundError: If scanner is not found
-        """
-        with self._lock:
-            if scanner_name not in self._scanners:
-                raise ScannerNotFoundError(
-                    f"Scanner '{scanner_name}' not found",
-                    scanner_name=scanner_name,
-                )
-
-            self._scanners[scanner_name].enabled = True
-            self._logger.info(f"Enabled scanner: {scanner_name}")
-            return True
-
-    def disable_scanner(self, scanner_name: str) -> bool:
-        """
-        Disable a scanner.
-
-        Args:
-            scanner_name: Name of the scanner to disable
-
-        Returns:
-            bool: True if disabled
-
-        Raises:
-            ScannerNotFoundError: If scanner is not found
-        """
-        with self._lock:
-            if scanner_name not in self._scanners:
-                raise ScannerNotFoundError(
-                    f"Scanner '{scanner_name}' not found",
-                    scanner_name=scanner_name,
-                )
-
-            self._scanners[scanner_name].enabled = False
-            self._logger.info(f"Disabled scanner: {scanner_name}")
-            return True
-
-    def run_scanner(
-        self,
-        scanner_name: str,
-        target: str,
-        **kwargs: Any,
-    ) -> ScannerExecutionResult:
-        """
-        Run a single scanner on a target.
-
-        Args:
-            scanner_name: Name of the scanner to run
-            target: Target URL or identifier
-            **kwargs: Additional arguments to pass to the scanner
-
-        Returns:
-            ScannerExecutionResult: Execution result
-
-        Raises:
-            ScannerNotFoundError: If scanner is not found
-            ScannerExecutionError: If execution fails
-        """
-        import time
-
-        with self._lock:
-            info = self._scanners.get(scanner_name)
-            if not info:
-                raise ScannerNotFoundError(
-                    f"Scanner '{scanner_name}' not found",
-                    scanner_name=scanner_name,
-                )
-
-            if not info.enabled:
-                self._logger.warning(f"Scanner '{scanner_name}' is disabled, skipping")
-                return ScannerExecutionResult(
-                    scanner_name=scanner_name,
-                    success=False,
-                    findings=[],
-                    error="Scanner is disabled",
-                    status="disabled",
-                )
-
-        self._logger.info(f"Running scanner: {scanner_name} on {target}")
-        start_time = time.perf_counter()
-
-        try:
-            # Instantiate and run the scanner
-            scanner = info.scanner_class(target, **kwargs)
-            findings = scanner.run()
-
-            execution_time = time.perf_counter() - start_time
-            self._logger.info(
-                f"Scanner '{scanner_name}' completed: {len(findings)} findings in {execution_time:.2f}s"
-            )
-
-            return ScannerExecutionResult(
-                scanner_name=scanner_name,
-                success=True,
-                findings=findings,
-                execution_time=execution_time,
-                status="completed",
-            )
-
-        except Exception as e:
-            execution_time = time.perf_counter() - start_time
-            error_msg = f"Scanner '{scanner_name}' failed: {str(e)}"
-            self._logger.error(error_msg)
-
-            return ScannerExecutionResult(
-                scanner_name=scanner_name,
-                success=False,
-                findings=[],
-                error=str(e),
-                execution_time=execution_time,
-                status="failed",
-            )
-
-    def run_all(
-        self,
-        target: str,
-        scanner_names: Optional[List[str]] = None,
-        **kwargs: Any,
-    ) -> List[ScannerExecutionResult]:
-        """
-        Run all enabled scanners on a target.
-
-        Args:
-            target: Target URL or identifier
-            scanner_names: Optional list of specific scanners to run
-            **kwargs: Additional arguments to pass to scanners
-
-        Returns:
-            List[ScannerExecutionResult]: List of execution results
-        """
-        self._logger.info(f"Running scanners on {target}")
-
-        if scanner_names:
-            # Run specific scanners
-            scanners_to_run = []
-            with self._lock:
-                for name in scanner_names:
-                    info = self._scanners.get(name)
-                    if info and info.enabled:
-                        scanners_to_run.append(name)
+        # Handle different scanner result types
+        if hasattr(scanner_result, "findings"):
+            raw_findings = scanner_result.findings
+        elif isinstance(scanner_result, list):
+            raw_findings = scanner_result
         else:
-            # Run all enabled scanners
-            with self._lock:
-                scanners_to_run = [
-                    name for name, info in self._scanners.items() if info.enabled
-                ]
+            raw_findings = []
 
-        if not scanners_to_run:
-            self._logger.warning("No enabled scanners found to run")
-            return []
+        for raw in raw_findings:
+            finding = ScanFinding()
+            finding.scanner = scanner_name
+            finding.url = target
 
-        self._logger.info(
-            f"Running {len(scanners_to_run)} scanners: {', '.join(scanners_to_run)}"
-        )
+            # Extract data based on scanner type
+            if scanner_name == "sqli":
+                self._convert_sqli_finding(finding, raw)
+            elif scanner_name == "xss":
+                self._convert_xss_finding(finding, raw)
+            else:
+                self._convert_generic_finding(finding, raw)
 
-        results: List[ScannerExecutionResult] = []
+            # Ensure required fields
+            if not finding.title:
+                finding.title = f"{scanner_name.upper()} Vulnerability Detected"
+            if not finding.severity:
+                finding.severity = "Medium"
+            if not finding.cwe:
+                finding.cwe = "CWE-Unknown"
 
-        for scanner_name in scanners_to_run:
-            result = self.run_scanner(scanner_name, target, **kwargs)
-            results.append(result)
+            findings.append(finding)
 
-        # Summary
-        successful = sum(1 for r in results if r.success)
-        total_findings = sum(len(r.findings) for r in results)
-        self._logger.info(
-            f"Scan complete: {successful}/{len(results)} scanners succeeded, "
-            f"{total_findings} total findings"
-        )
+        return findings
 
-        return results
-
-    def run_all_async(
-        self,
-        target: str,
-        scanner_names: Optional[List[str]] = None,
-        max_workers: int = 4,
-        **kwargs: Any,
-    ) -> List[ScannerExecutionResult]:
-        """
-        Run all scanners in parallel using threads.
-
-        Args:
-            target: Target URL or identifier
-            scanner_names: Optional list of specific scanners to run
-            max_workers: Maximum concurrent scanners
-            **kwargs: Additional arguments to pass to scanners
-
-        Returns:
-            List[ScannerExecutionResult]: List of execution results
-        """
-        from concurrent.futures import ThreadPoolExecutor, as_completed
-
-        self._logger.info(
-            f"Running scanners in parallel on {target} (max_workers={max_workers})"
-        )
-
-        if scanner_names:
-            with self._lock:
-                scanners_to_run = [
-                    (name, info)
-                    for name, info in self._scanners.items()
-                    if name in scanner_names and info.enabled
-                ]
-        else:
-            with self._lock:
-                scanners_to_run = [
-                    (name, info)
-                    for name, info in self._scanners.items()
-                    if info.enabled
-                ]
-
-        if not scanners_to_run:
-            self._logger.warning("No enabled scanners found to run")
-            return []
-
-        results: List[ScannerExecutionResult] = []
-        errors: List[Exception] = []
-
-        def run_scanner_task(name: str, info: ScannerInfo) -> ScannerExecutionResult:
-            """Task to run a single scanner."""
-            return self.run_scanner(name, target, **kwargs)
-
-        with ThreadPoolExecutor(max_workers=max_workers) as executor:
-            futures = {
-                executor.submit(run_scanner_task, name, info): name
-                for name, info in scanners_to_run
+    def _convert_sqli_finding(self, finding: ScanFinding, raw: Any) -> None:
+        """Convert SQLi finding."""
+        if isinstance(raw, dict):
+            finding.title = raw.get("title", "SQL Injection Vulnerability")
+            finding.description = raw.get("description", "SQL Injection detected")
+            finding.severity = raw.get("severity", "High")
+            finding.cwe = raw.get("cwe", "CWE-89")
+            finding.owasp = raw.get("owasp", "OWASP Top 10 2021 - A03: Injection")
+            finding.cvss = raw.get(
+                "cvss", "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H (7.5)"
+            )
+            finding.payload = raw.get("payload", "")
+            finding.evidence = raw.get("evidence", [])
+            finding.remediation = raw.get("remediation", "Use parameterized queries")
+            finding.references = raw.get("references", [])
+            finding.metadata = {
+                "dbms": raw.get("dbms", "Unknown"),
+                "technique": raw.get("technique", ""),
             }
 
-            for future in as_completed(futures):
-                scanner_name = futures[future]
-                try:
-                    result = future.result(
-                        timeout=60.0
-                    )  # 60 second timeout per scanner
-                    results.append(result)
-                except Exception as e:
-                    errors.append(e)
-                    self._logger.error(
-                        f"Scanner '{scanner_name}' failed with exception: {str(e)}"
-                    )
-                    results.append(
-                        ScannerExecutionResult(
-                            scanner_name=scanner_name,
-                            success=False,
-                            findings=[],
-                            error=str(e),
-                            status="failed",
-                        )
-                    )
+    def _convert_xss_finding(self, finding: ScanFinding, raw: Any) -> None:
+        """Convert XSS finding."""
+        if isinstance(raw, dict):
+            finding.title = raw.get("title", "Cross-Site Scripting (XSS) Vulnerability")
+            finding.description = raw.get("description", "XSS vulnerability detected")
+            finding.severity = raw.get("severity", "Medium")
+            finding.cwe = raw.get("cwe", "CWE-79")
+            finding.owasp = raw.get("owasp", "OWASP Top 10 2021 - A03: Injection")
+            finding.cvss = raw.get(
+                "cvss", "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N (6.1)"
+            )
+            finding.payload = raw.get("payload", "")
+            finding.evidence = raw.get("evidence", [])
+            finding.remediation = raw.get(
+                "remediation", "Encode output, use CSP headers"
+            )
+            finding.references = raw.get("references", [])
+            finding.metadata = {"type": raw.get("type", "Reflected")}
 
-        # Summary
-        successful = sum(1 for r in results if r.success)
-        total_findings = sum(len(r.findings) for r in results)
-        self._logger.info(
-            f"Parallel scan complete: {successful}/{len(results)} scanners succeeded, "
-            f"{total_findings} total findings"
-        )
+    def _convert_generic_finding(self, finding: ScanFinding, raw: Any) -> None:
+        """Convert generic finding."""
+        if isinstance(raw, dict):
+            finding.title = raw.get("title", str(raw.get("type", "Vulnerability")))
+            finding.description = raw.get("description", str(raw))
+            finding.severity = raw.get("severity", "Medium")
+            finding.cwe = raw.get("cwe", "CWE-Unknown")
+            finding.payload = raw.get("payload", "")
+            finding.evidence = raw.get("evidence", [])
+            finding.remediation = raw.get("remediation", "")
+            finding.references = raw.get("references", [])
+        elif hasattr(raw, "__dict__"):
+            # Try to extract from object
+            for attr in [
+                "title",
+                "description",
+                "severity",
+                "cwe",
+                "payload",
+                "evidence",
+                "remediation",
+            ]:
+                if hasattr(raw, attr):
+                    setattr(finding, attr, getattr(raw, attr))
 
-        return results
-
-    def get_results_summary(
-        self, results: List[ScannerExecutionResult]
-    ) -> Dict[str, Any]:
+    def _process_results(self, results: dict[str, Any], target: str) -> None:
         """
-        Get a summary of execution results.
+        Process and aggregate scan results.
 
         Args:
-            results: List of ScannerExecutionResult
-
-        Returns:
-            Dict[str, Any]: Summary statistics
+            results: Dictionary of results by scanner
+            target: Target URL
         """
-        total = len(results)
-        successful = sum(1 for r in results if r.success)
-        failed = total - successful
-        total_findings = sum(len(r.findings) for r in results)
+        with self._lock:
+            for scanner_name, data in results.items():
+                findings = data.get("findings", [])
+                self._findings.extend(findings)
 
-        severity_counts = {
-            "critical": 0,
-            "high": 0,
-            "medium": 0,
-            "low": 0,
-            "info": 0,
-        }
+                # Track findings by scanner
+                self._statistics.findings_by_scanner[scanner_name] = len(findings)
 
-        for result in results:
-            for finding in result.findings:
+    def _update_statistics(self) -> None:
+        """Update scan statistics."""
+        with self._lock:
+            self._statistics.total_findings = len(self._findings)
+
+            for finding in self._findings:
                 severity = finding.severity.lower()
-                if severity in severity_counts:
-                    severity_counts[severity] += 1
+                if severity == "critical":
+                    self._statistics.critical += 1
+                elif severity == "high":
+                    self._statistics.high += 1
+                elif severity == "medium":
+                    self._statistics.medium += 1
+                elif severity == "low":
+                    self._statistics.low += 1
 
-        return {
-            "total_scanners": total,
-            "successful": successful,
-            "failed": failed,
-            "total_findings": total_findings,
-            "severity_counts": severity_counts,
-            "results": [r.to_dict() for r in results],
-        }
-
-    def clear(self) -> None:
-        """Clear all registered scanners."""
+    def _save_to_database(self) -> None:
+        """Save findings to database (JSON file)."""
         with self._lock:
-            self._scanners.clear()
-            self._logger.info("Cleared all scanners")
+            if not self._findings:
+                self._logger.info("No findings to save")
+                return
 
-    def _get_scanner_description(self, scanner_class: Type[BaseScanner]) -> str:
-        """
-        Get a description from a scanner class.
-
-        Args:
-            scanner_class: The scanner class
-
-        Returns:
-            str: Scanner description
-        """
-        docstring = scanner_class.__doc__
-        if docstring:
-            lines = docstring.strip().split("\n")
-            if lines:
-                return lines[0].strip()
-        return scanner_class.__name__
-
-    def get_statistics(self) -> Dict[str, Any]:
-        """
-        Get statistics about the manager.
-
-        Returns:
-            Dict[str, Any]: Manager statistics
-        """
-        with self._lock:
-            enabled_count = sum(1 for info in self._scanners.values() if info.enabled)
-            return {
-                "total_scanners": len(self._scanners),
-                "enabled_scanners": enabled_count,
-                "disabled_scanners": len(self._scanners) - enabled_count,
-                "scanners": [info.to_dict() for info in self._scanners.values()],
+            data = {
+                "scan_id": str(self._scan_id),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "statistics": {
+                    "total_findings": self._statistics.total_findings,
+                    "critical": self._statistics.critical,
+                    "high": self._statistics.high,
+                    "medium": self._statistics.medium,
+                    "low": self._statistics.low,
+                },
+                "findings": [
+                    {
+                        "id": str(f.id),
+                        "scanner": f.scanner,
+                        "title": f.title,
+                        "description": f.description,
+                        "severity": f.severity,
+                        "cwe": f.cwe,
+                        "owasp": f.owasp,
+                        "cvss": f.cvss,
+                        "url": f.url,
+                        "payload": f.payload,
+                        "evidence": f.evidence,
+                        "remediation": f.remediation,
+                        "references": f.references,
+                        "timestamp": f.timestamp.isoformat(),
+                    }
+                    for f in self._findings
+                ],
             }
 
-    def __len__(self) -> int:
-        """Return the number of registered scanners."""
-        with self._lock:
-            return len(self._scanners)
+            try:
+                path = Path(self._db_path)
+                path.parent.mkdir(parents=True, exist_ok=True)
 
-    def __contains__(self, scanner_name: str) -> bool:
-        """Check if a scanner is registered."""
-        with self._lock:
-            return scanner_name in self._scanners
+                # Load existing data if any
+                existing = []
+                if path.exists():
+                    try:
+                        with open(path, "r", encoding="utf-8") as f:
+                            content = f.read().strip()
+                            if content:
+                                existing = json.loads(content)
+                                if not isinstance(existing, list):
+                                    existing = []
+                    except (json.JSONDecodeError, OSError):
+                        # File exists but is empty or corrupted, start fresh
+                        existing = []
 
-    def __repr__(self) -> str:
-        """Return a string representation."""
+                existing.append(data)
+
+                with open(path, "w", encoding="utf-8") as f:
+                    json.dump(existing, f, indent=2)
+
+                self._logger.info(
+                    f"Saved {len(self._findings)} findings to {self._db_path}"
+                )
+            except (OSError, json.JSONDecodeError) as e:
+                self._logger.error(f"Failed to save to database: {e}")
+
+    def _generate_pdf_report(self) -> None:
+        """
+        Generate a professional PDF report.
+
+        Note: This is a placeholder that generates a JSON report.
+        PDF generation requires additional libraries.
+        """
+        try:
+            # Generate report data
+            report = self._generate_report_data()
+
+            # Save as JSON (placeholder for PDF)
+            report_path = Path(f"report_{self._scan_id}.json")
+            with open(report_path, "w") as f:
+                json.dump(report, f, indent=2)
+
+            self._logger.info(f"Report generated: {report_path}")
+
+        except (OSError, json.JSONDecodeError) as e:
+            self._logger.error(f"Failed to generate report: {e}")
+
+    def _generate_report_data(self) -> dict[str, Any]:
+        """
+        Generate report data structure.
+
+        Returns:
+            Dictionary containing complete report data
+        """
+        return {
+            "title": "SentinelAI Security Scan Report",
+            "scan_id": str(self._scan_id),
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "executive_summary": self._generate_executive_summary(),
+            "statistics": {
+                "total_findings": self._statistics.total_findings,
+                "critical": self._statistics.critical,
+                "high": self._statistics.high,
+                "medium": self._statistics.medium,
+                "low": self._statistics.low,
+                "scanners_used": self._statistics.scanners_used,
+                "duration": f"{self._statistics.duration:.2f}s",
+            },
+            "findings": [
+                {
+                    "scanner": f.scanner,
+                    "title": f.title,
+                    "description": f.description,
+                    "severity": f.severity,
+                    "cwe": f.cwe,
+                    "owasp": f.owasp,
+                    "cvss": f.cvss,
+                    "url": f.url,
+                    "payload": f.payload,
+                    "evidence": f.evidence,
+                    "remediation": f.remediation,
+                    "references": f.references,
+                }
+                for f in self._findings
+            ],
+            "recommendations": self._generate_recommendations(),
+        }
+
+    def _generate_executive_summary(self) -> str:
+        """Generate executive summary."""
+        total = self._statistics.total_findings
+        if total == 0:
+            return "No security vulnerabilities were detected during the scan."
+
+        critical = self._statistics.critical
+        high = self._statistics.high
+        medium = self._statistics.medium
+        low = self._statistics.low
+
+        parts = []
+        if critical > 0:
+            parts.append(f"{critical} critical")
+        if high > 0:
+            parts.append(f"{high} high")
+        if medium > 0:
+            parts.append(f"{medium} medium")
+        if low > 0:
+            parts.append(f"{low} low")
+
+        summary = f"A total of {total} vulnerabilities were identified: "
+        summary += ", ".join(parts)
+        summary += ". Immediate remediation is recommended for critical and high severity findings."
+
+        return summary
+
+    def _generate_recommendations(self) -> list[str]:
+        """Generate recommendations based on findings."""
+        recommendations = set()
+
+        for finding in self._findings:
+            if finding.remediation:
+                recommendations.add(finding.remediation)
+
+        # Add general recommendations
+        recommendations.add("Implement regular security scanning and testing")
+        recommendations.add("Follow secure coding best practices")
+        recommendations.add("Keep dependencies and libraries updated")
+
+        return list(recommendations)
+
+    def get_findings(self) -> list[ScanFinding]:
+        """Get all findings from the last scan."""
         with self._lock:
-            return f"ScannerManager(scanners={len(self._scanners)})"
+            return self._findings.copy()
+
+    def get_statistics(self) -> ScanStatistics:
+        """Get statistics from the last scan."""
+        with self._lock:
+            return self._statistics
+
+    def get_status(self) -> dict[str, Any]:
+        """Get current scan status."""
+        with self._lock:
+            return {
+                "is_running": self._is_running,
+                "scan_id": str(self._scan_id) if self._scan_id else None,
+                "total_findings": len(self._findings),
+                "scanners_available": list(self._scanners.keys()),
+            }
+
+    def register_scanner(self, name: str, scanner_class: Any) -> None:
+        """
+        Register a new scanner.
+
+        Args:
+            name: Scanner name
+            scanner_class: Scanner class
+        """
+        with self._lock:
+            self._scanners[name] = scanner_class
+            if name not in self._scanner_names:
+                self._scanner_names.append(name)
+
+    def clear_findings(self) -> None:
+        """Clear all findings."""
+        with self._lock:
+            self._findings.clear()
+            self._statistics = ScanStatistics()

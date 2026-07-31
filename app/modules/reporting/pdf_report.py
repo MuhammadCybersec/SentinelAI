@@ -3,7 +3,7 @@
 Project : Sentinel AI
 Module  : PDF Report
 File ID : REPORT-PDF-001
-Version : 1.0.0
+Version : 1.1.0
 ===========================================================
 
 Description:
@@ -75,7 +75,7 @@ class PDFReport:
 
         story.append(
             Paragraph(
-                f"<b>Target:</b> {analysis.get('target','Unknown')}",
+                f"<b>Target:</b> {analysis.get('target', 'Unknown')}",
                 styles["Normal"],
             )
         )
@@ -105,21 +105,21 @@ class PDFReport:
 
         story.append(
             Paragraph(
-                f"Risk Score : {summary.get('score',0)}/100",
+                f"Risk Score : {summary.get('score', 0)}/100",
                 styles["Normal"],
             )
         )
 
         story.append(
             Paragraph(
-                f"Risk Level : {summary.get('risk_level','Unknown')}",
+                f"Risk Level : {summary.get('risk_level', 'Unknown')}",
                 styles["Normal"],
             )
         )
 
         story.append(
             Paragraph(
-                f"Total Findings : {summary.get('total_findings',0)}",
+                f"Total Findings : {summary.get('total_findings', 0)}",
                 styles["Normal"],
             )
         )
@@ -130,6 +130,7 @@ class PDFReport:
                 20,
             )
         )
+
         # ==================================================
         # Findings
         # ==================================================
@@ -157,15 +158,25 @@ class PDFReport:
 
             if hasattr(finding, "title"):
 
-                title = finding.title
-                severity = finding.severity
-                evidence = finding.evidence
+                title = getattr(finding, "title", "Unknown")
+                severity = getattr(finding, "severity", "Info")
+                evidence = getattr(finding, "evidence", "")
+
+                url = getattr(finding, "url", "N/A")
+                payload = getattr(finding, "payload", "N/A")
+                cwe = getattr(finding, "cwe", "N/A")
+                cvss = getattr(finding, "cvss", "N/A")
 
             else:
 
                 title = finding.get("title", "Unknown")
                 severity = finding.get("severity", "Info")
                 evidence = finding.get("evidence", "")
+
+                url = finding.get("url", "N/A")
+                payload = finding.get("payload", "N/A")
+                cwe = finding.get("cwe", "N/A")
+                cvss = finding.get("cvss", "N/A")
 
             story.append(
                 Paragraph(
@@ -174,11 +185,39 @@ class PDFReport:
                 )
             )
 
+            story.append(
+                Paragraph(
+                    f"<b>URL:</b> {url}",
+                    styles["Normal"],
+                )
+            )
+
+            story.append(
+                Paragraph(
+                    f"<b>Payload:</b> {payload}",
+                    styles["Normal"],
+                )
+            )
+
+            story.append(
+                Paragraph(
+                    f"<b>CWE:</b> {cwe}",
+                    styles["Normal"],
+                )
+            )
+
+            story.append(
+                Paragraph(
+                    f"<b>CVSS:</b> {cvss}",
+                    styles["Normal"],
+                )
+            )
+
             if evidence:
 
                 story.append(
                     Paragraph(
-                        f"Evidence: {evidence}",
+                        f"<b>Evidence:</b> {evidence}",
                         styles["Normal"],
                     )
                 )
@@ -186,7 +225,7 @@ class PDFReport:
             story.append(
                 Spacer(
                     1,
-                    8,
+                    10,
                 )
             )
 
@@ -257,62 +296,3 @@ class PDFReport:
         document.build(story)
 
         return output_file
-
-
-# ===========================================================
-# Temporary Test
-# ===========================================================
-
-if __name__ == "__main__":
-
-    report = PDFReport()
-
-    sample = {
-        "target": "https://bugcrowd.com",
-        "summary": {
-            "score": 68,
-            "risk_level": "High",
-            "total_findings": 3,
-        },
-        "findings": [
-            {
-                "severity": "High",
-                "title": "Sensitive Secret Found in JavaScript",
-                "evidence": "AIzaXXXXXXXXXXXXXXXX",
-            },
-            {
-                "severity": "Medium",
-                "title": "Missing Content Security Policy",
-                "evidence": "Header Missing",
-            },
-            {
-                "severity": "Info",
-                "title": "Technology Identified",
-                "evidence": "nginx",
-            },
-        ],
-        "recommendations": [
-            {
-                "priority": "High",
-                "recommendation": "Remove secrets from JavaScript.",
-            },
-            {
-                "priority": "Medium",
-                "recommendation": "Configure Content Security Policy.",
-            },
-        ],
-    }
-
-    output = report.generate(sample)
-
-    print()
-
-    print("=" * 60)
-
-    print("PDF Report")
-
-    print("=" * 60)
-
-    print()
-
-    print(f"Generated Successfully: {output}")

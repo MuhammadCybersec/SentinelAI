@@ -111,10 +111,18 @@ class ScanResult:
     raw_response: Optional[str] = None
     scanner_version: Optional[str] = None
 
+    success: bool = True
+    findings: list[dict[str, Any]] = field(default_factory=list)
+    error: str = ""
+
     # Backward compatibility fields
     scanner: str = ""
     target: str = ""
     vulnerable: bool = False
+
+    # New fields for SecretsScanner
+    success: bool = True
+    findings: List[Dict[str, Any]] = field(default_factory=list)
 
     def __post_init__(self) -> None:
         """Validate and normalize fields after initialization."""
@@ -180,6 +188,9 @@ class ScanResult:
             "scan_id": self.scan_id,
             "raw_response": self.raw_response,
             "scanner_version": self.scanner_version,
+            "success": self.success,
+            "findings": self.findings,
+            "error": self.error,
             "vulnerable": self.vulnerable,
         }
 
@@ -245,51 +256,49 @@ class ScanResult:
         )
         return hashlib.md5(data.encode()).hexdigest()[:8]
 
+    # ===========================================================
+    # Migration Adapter
+    # ===========================================================
 
-# ===========================================================
-# Migration Adapter
-# ===========================================================
+    def adapt_legacy_finding(
+        scanner_name: str,
+        target: str,
+        vulnerable: bool,
+        severity: str,
+        description: str,
+        confidence: float,
+        evidence: list[str] | None = None,
+        metadata: dict[str, Any] | None = None,
+    ) -> ScanResult:
+        """
+        Adapt legacy finding format to new ScanResult.
 
+        Args:
+            scanner_name: Scanner name
+            target: Target URL
+            vulnerable: Whether vulnerable
+            severity: Severity level
+            description: Description
+            confidence: Confidence score
+            evidence: Evidence list
+            metadata: Metadata
 
-def adapt_legacy_finding(
-    scanner_name: str,
-    target: str,
-    vulnerable: bool,
-    severity: str,
-    description: str,
-    confidence: float,
-    evidence: list[str] | None = None,
-    metadata: dict[str, Any] | None = None,
-) -> ScanResult:
-    """
-    Adapt legacy finding format to new ScanResult.
-
-    Args:
-        scanner_name: Scanner name
-        target: Target URL
-        vulnerable: Whether vulnerable
-        severity: Severity level
-        description: Description
-        confidence: Confidence score
-        evidence: Evidence list
-        metadata: Metadata
-
-    Returns:
-        ScanResult: New ScanResult instance
-    """
-    return ScanResult(
-        scanner_name=scanner_name,
-        vulnerability_type=description[:50] if description else "unknown",
-        severity=severity.lower() if severity else "info",
-        confidence=confidence if confidence is not None else 0.0,
-        url=target,
-        description=description or "",
-        evidence="\n".join(evidence) if evidence else "",
-        metadata=metadata or {},
-        scanner=scanner_name,
-        target=target,
-        vulnerable=vulnerable,
-    )
+        Returns:
+            ScanResult: New ScanResult instance
+        """
+        return ScanResult(
+            scanner_name=scanner_name,
+            vulnerability_type=description[:50] if description else "unknown",
+            severity=severity.lower() if severity else "info",
+            confidence=confidence if confidence is not None else 0.0,
+            url=target,
+            description=description or "",
+            evidence="\n".join(evidence) if evidence else "",
+            metadata=metadata or {},
+            scanner=scanner_name,
+            target=target,
+            vulnerable=vulnerable,
+        )
 
 
 # ===========================================================
