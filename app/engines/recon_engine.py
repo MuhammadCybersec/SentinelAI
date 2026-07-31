@@ -67,6 +67,17 @@ class ReconEngine:
             "waf": {},
             "inventory": [],
         }
+        self.results["crawler"] = crawl_target(target)
+        self.results["wayback"] = collect_wayback_urls(target)
+        self.results["javascript"] = discover_javascript(target)
+        self.results["js_endpoints"] = discover_js_endpoints(target)
+        self.results["js_secrets"] = discover_js_secrets(target)
+        self.results["api"] = discover_api(target)
+        self.results["headers"] = analyze_headers(target)
+        self.results["technology"] = detect_technology(target)
+        self.results["waf"] = detect_waf(target)
+        self.results["inventory"] = collect_endpoints(target)
+        print(self.results)
 
         return self.results
 

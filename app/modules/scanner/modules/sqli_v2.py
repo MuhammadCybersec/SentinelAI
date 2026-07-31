@@ -870,6 +870,8 @@ class SQLiScanner(BaseScanner):
 
         return self.findings
 
+    print("[+] SQLiScanner started")
+
     # ==========================================================
     # Test Single Payload
     # ==========================================================

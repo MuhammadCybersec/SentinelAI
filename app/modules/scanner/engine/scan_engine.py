@@ -304,6 +304,7 @@ class ScanEngine:
         """
 
         print(f"   -> {scanner.__class__.__name__}")
+        print(f"[DEBUG] Running {scanner.__class__.__name__}")
 
         finding = scanner.scan(
             project_id=project_id,
