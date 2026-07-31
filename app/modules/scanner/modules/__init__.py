@@ -1,7 +1,252 @@
-from app.modules.scanner.modules.sqli import SQLiScanner
-from app.modules.scanner.modules.union_sqli import UnionSQLiScanner, UnionFinding
-from app.modules.scanner.modules.error_sqli import ErrorSQLiScanner, ErrorFinding
-from app.modules.scanner.modules.blind_sqli import BlindSQLiScanner, BlindFinding
-from app.modules.scanner.modules.lab6_handler import Lab6Handler, solve_lab6
-from app.modules.scanner.modules.login_bypass import LoginBypassScanner
-from app.modules.scanner.modules.xss import XSSScanner
+"""
+===========================================================
+Project : Sentinel AI
+Module  : Scanner Modules
+File ID : SCANNER-MODULES-INIT-001
+Version : 2.0.0
+===========================================================
+
+Description:
+
+Package initializer for scanner modules.
+
+Exports:
+- SQLiScanner
+- XSSScanner
+- BlindBooleanScanner
+- ErrorBasedScanner
+- TimeBasedScanner
+- CommandInjectionScanner
+- PathTraversalScanner
+- SSRFScanner
+- LoginBypassScanner
+- FileUploadScanner
+- IDORScanner
+- CORSScanner
+- CSRFScanner
+- ClickjackingScanner
+- LFIScanner
+- RFIScanner
+- SSIScanner
+- SSTIScanner
+- XXEInjectionScanner
+- HostHeaderScanner
+- OpenRedirectScanner
+- PrototypePollutionScanner
+- JWTHijackingScanner
+
+===========================================================
+"""
+
+# ===========================================================
+# SQL Injection
+# ===========================================================
+
+try:
+    from app.modules.scanner.modules.sqli import SQLiScanner
+except ImportError:
+    # Fallback if sqli module is not available
+    SQLiScanner = None
+
+# ===========================================================
+# XSS Scanner
+# ===========================================================
+
+try:
+    from app.modules.scanner.modules.xss_scanner import XSSScanner, LegacyXSSScanner
+except ImportError:
+    XSSScanner = None
+    LegacyXSSScanner = None
+
+# ===========================================================
+# Blind Injection
+# ===========================================================
+
+try:
+    from app.modules.scanner.modules.blind_sqli import BlindSQLiScanner
+except ImportError:
+    BlindSQLiScanner = None
+
+try:
+    from app.modules.scanner.modules.blind_boolean import BlindBooleanScanner
+except ImportError:
+    BlindBooleanScanner = None
+
+try:
+    from app.modules.scanner.modules.blind_time import TimeBasedScanner
+except ImportError:
+    TimeBasedScanner = None
+
+# ===========================================================
+# Error Based
+# ===========================================================
+
+try:
+    from app.modules.scanner.modules.error_sqli import ErrorBasedScanner
+except ImportError:
+    ErrorBasedScanner = None
+
+# ===========================================================
+# Injection Types
+# ===========================================================
+
+try:
+    from app.modules.scanner.modules.cmd_injection import CommandInjectionScanner
+except ImportError:
+    CommandInjectionScanner = None
+
+try:
+    from app.modules.scanner.modules.path_traversal import PathTraversalScanner
+except ImportError:
+    PathTraversalScanner = None
+
+try:
+    from app.modules.scanner.modules.ssrf import SSRFScanner
+except ImportError:
+    SSRFScanner = None
+
+try:
+    from app.modules.scanner.modules.lfi import LFIScanner
+except ImportError:
+    LFIScanner = None
+
+try:
+    from app.modules.scanner.modules.rfi import RFIScanner
+except ImportError:
+    RFIScanner = None
+
+try:
+    from app.modules.scanner.modules.xxe import XXEInjectionScanner
+except ImportError:
+    XXEInjectionScanner = None
+
+try:
+    from app.modules.scanner.modules.ssti import SSTIScanner
+except ImportError:
+    SSTIScanner = None
+
+try:
+    from app.modules.scanner.modules.ldap_injection import LDAPInjectionScanner
+except ImportError:
+    LDAPInjectionScanner = None
+
+try:
+    from app.modules.scanner.modules.nosql_injection import NoSQLInjectionScanner
+except ImportError:
+    NoSQLInjectionScanner = None
+
+# ===========================================================
+# Authentication & Authorization
+# ===========================================================
+
+try:
+    from app.modules.scanner.modules.login_bypass import LoginBypassScanner
+except ImportError:
+    LoginBypassScanner = None
+
+try:
+    from app.modules.scanner.modules.idor import IDORScanner
+except ImportError:
+    IDORScanner = None
+
+try:
+    from app.modules.scanner.modules.jwt import JWTHijackingScanner
+except ImportError:
+    JWTHijackingScanner = None
+
+# ===========================================================
+# File & Upload
+# ===========================================================
+
+try:
+    from app.modules.scanner.modules.file_upload import FileUploadScanner
+except ImportError:
+    FileUploadScanner = None
+
+# ===========================================================
+# Web Vulnerabilities
+# ===========================================================
+
+try:
+    from app.modules.scanner.modules.cors import CORSScanner
+except ImportError:
+    CORSScanner = None
+
+try:
+    from app.modules.scanner.modules.csrf import CSRFScanner
+except ImportError:
+    CSRFScanner = None
+
+try:
+    from app.modules.scanner.modules.clickjacking import ClickjackingScanner
+except ImportError:
+    ClickjackingScanner = None
+
+try:
+    from app.modules.scanner.modules.host_header import HostHeaderScanner
+except ImportError:
+    HostHeaderScanner = None
+
+try:
+    from app.modules.scanner.modules.open_redirect import OpenRedirectScanner
+except ImportError:
+    OpenRedirectScanner = None
+
+try:
+    from app.modules.scanner.modules.prototype_pollution import (
+        PrototypePollutionScanner,
+    )
+except ImportError:
+    PrototypePollutionScanner = None
+
+# ===========================================================
+# Web Application Firewall
+# ===========================================================
+
+try:
+    from app.modules.scanner.modules.waf_bypass import WAFBypassScanner
+except ImportError:
+    WAFBypassScanner = None
+
+# ===========================================================
+# Public API
+# ===========================================================
+
+__all__ = [
+    # SQL Injection
+    "SQLiScanner",
+    # XSS
+    "XSSScanner",
+    "LegacyXSSScanner",
+    # Blind Injection
+    "BlindSQLiScanner",
+    "BlindBooleanScanner",
+    "TimeBasedScanner",
+    # Error Based
+    "ErrorBasedScanner",
+    # Injection Types
+    "CommandInjectionScanner",
+    "PathTraversalScanner",
+    "SSRFScanner",
+    "LFIScanner",
+    "RFIScanner",
+    "XXEInjectionScanner",
+    "SSTIScanner",
+    "LDAPInjectionScanner",
+    "NoSQLInjectionScanner",
+    # Authentication
+    "LoginBypassScanner",
+    "IDORScanner",
+    "JWTHijackingScanner",
+    # File & Upload
+    "FileUploadScanner",
+    # Web Vulnerabilities
+    "CORSScanner",
+    "CSRFScanner",
+    "ClickjackingScanner",
+    "HostHeaderScanner",
+    "OpenRedirectScanner",
+    "PrototypePollutionScanner",
+    # WAF
+    "WAFBypassScanner",
+]

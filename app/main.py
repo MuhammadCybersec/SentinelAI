@@ -34,6 +34,8 @@ from app.workflows.cli import CLI
 from app.modules.recon import TargetValidator
 from app.services.recon_service import ReconService
 from app.database.repositories.recon_result_repository import ReconResultRepository
+from app.database.repositories.finding_repository import FindingRepository
+from app.services.finding_service import FindingService
 
 # ===========================================================
 # MAIN-002
@@ -88,7 +90,15 @@ def main() -> None:
         # ==========================================
 
         project_service = ProjectService(project_repo)
-        recon_service = ReconService(recon_repo)
+        finding_repo = FindingRepository(db)
+        finding_service = FindingService(
+            finding_repo,
+        )
+        recon_service = ReconService(
+            recon_repo,
+            finding_service,
+        )
+
         manager = ManagerAgent(
             project_service,
             recon_service,

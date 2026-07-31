@@ -25,7 +25,10 @@ Provides:
 
 from __future__ import annotations
 
+import json
+import logging
 import random
+import urllib.parse
 from dataclasses import dataclass
 from typing import Any
 
@@ -120,6 +123,8 @@ class ResponseData:
 
     title: str
 
+    payload: str = ""
+
 
 # ===========================================================
 # Request Engine
@@ -156,6 +161,10 @@ class RequestEngine:
         proxy: str | None = None,
     ) -> None:
 
+        self.logger = logging.getLogger(
+            self.__class__.__name__,
+        )
+
         self.timeout = timeout
 
         self.retries = retries
@@ -174,7 +183,11 @@ class RequestEngine:
 
         self.error_count = 0
 
-        # ===========================================================
+        self.before_request_hook = None
+
+        self.after_request_hook = None
+
+    # ===========================================================
 
     # Random User Agent
     # ===========================================================
@@ -226,21 +239,36 @@ class RequestEngine:
         """
 
         if self.session is not None:
+
             return self.session
 
-        client_args = {
+        self.logger.debug(
+            "Creating HTTP session.",
+        )
+
+        client_args: dict[str, Any] = {
             "timeout": self.timeout,
             "verify": self.verify_ssl,
             "follow_redirects": self.follow_redirects,
             "headers": self.build_headers(),
-            "http2": False,  # <--- CHANGE: True se False kiya
+            "http2": False,
         }
 
-        if self.proxy:
+        if self.proxy is not None:
+
             client_args["proxy"] = self.proxy
+
+            self.logger.debug(
+                "Using proxy: %s",
+                self.proxy,
+            )
 
         self.session = httpx.Client(
             **client_args,
+        )
+
+        self.logger.debug(
+            "HTTP session created successfully.",
         )
 
         return self.session
@@ -413,19 +441,14 @@ class RequestEngine:
         # with proper URL encoding
         # --------------------------------------------------
         if payload and method.upper() == "GET":
-            import urllib.parse
-
             # Payload ko URL encode karein
             encoded_payload = urllib.parse.quote(payload, safe="")
 
-            # URL mein payload add karein
-            if "?" in url:
-                if url.endswith("&") or url.endswith("?"):
-                    url = f"{url}{encoded_payload}"
-                else:
-                    url = f"{url}&{encoded_payload}"
+            # URL mein payload add karein - FIXED: Tuple use kiya
+            if url.endswith(("&", "?", "/")):
+                url = f"{url}{encoded_payload}"
             else:
-                url = f"{url}?{encoded_payload}"
+                url = f"{url}&{encoded_payload}"
 
         # --------------------------------------------------
         # Payload ko data mein convert karein (POST/PUT/PATCH)
@@ -448,6 +471,15 @@ class RequestEngine:
         headers = kwargs.pop("headers", None)
         headers = self.build_headers(headers)
 
+        if self.before_request_hook:
+
+            self.before_request_hook(
+                method,
+                url,
+                headers,
+                kwargs,
+            )
+
         last_error: Exception | None = None
 
         for attempt in range(self.retries):
@@ -463,25 +495,22 @@ class RequestEngine:
 
                 self.response_count += 1
 
-                return self._normalize_response(response)
+                if self.after_request_hook:
 
-            except httpx.TimeoutException as exc:
-                last_error = exc
-                self.error_count += 1
+                    self.after_request_hook(
+                        response,
+                    )
+                    return self._normalize_response(
+                        response,
+                        payload,
+                    )
 
-            except httpx.ConnectError as exc:
-                last_error = exc
-                self.error_count += 1
-
-            except httpx.NetworkError as exc:
-                last_error = exc
-                self.error_count += 1
-
-            except httpx.HTTPError as exc:
-                last_error = exc
-                self.error_count += 1
-
-            except Exception as exc:
+            except (
+                httpx.TimeoutException,
+                httpx.ConnectError,
+                httpx.NetworkError,
+                httpx.HTTPError,
+            ) as exc:
                 last_error = exc
                 self.error_count += 1
 
@@ -498,17 +527,15 @@ class RequestEngine:
     def _normalize_response(
         self,
         response: httpx.Response,
+        payload: str = "",
     ) -> ResponseData:
         """
         Convert httpx.Response into Sentinel ResponseData.
         """
 
         try:
-
             body = response.text
-
-        except Exception:
-
+        except (httpx.DecodingError, httpx.StreamError, AttributeError):
             body = ""
 
         # -------------------------------------------------------
@@ -518,19 +545,12 @@ class RequestEngine:
         title = ""
 
         try:
-
             lower = body.lower()
-
             start = lower.find("<title>")
-
             end = lower.find("</title>")
-
             if start != -1 and end != -1:
-
                 title = body[start + 7 : end].strip()
-
-        except Exception:
-
+        except (AttributeError, TypeError, ValueError):
             title = ""
 
         # -------------------------------------------------------
@@ -572,13 +592,10 @@ class RequestEngine:
         # -------------------------------------------------------
 
         try:
-
             content_length = len(
                 response.content,
             )
-
-        except Exception:
-
+        except (AttributeError, TypeError):
             content_length = len(
                 body,
             )
@@ -588,11 +605,8 @@ class RequestEngine:
         # -------------------------------------------------------
 
         try:
-
             elapsed = response.elapsed.total_seconds()
-
-        except Exception:
-
+        except (AttributeError, TypeError):
             elapsed = 0.0
 
         # -------------------------------------------------------
@@ -612,9 +626,10 @@ class RequestEngine:
             content_type=content_type,
             server=server,
             title=title,
+            payload=payload,
         )
-        # ===========================================================
 
+    # ===========================================================
     # JSON Request
     # ===========================================================
 
@@ -630,15 +645,10 @@ class RequestEngine:
         )
 
         try:
-
-            import json
-
             return json.loads(
                 response.body,
             )
-
-        except Exception:
-
+        except (json.JSONDecodeError, TypeError, ValueError):
             return {}
 
     # ===========================================================
@@ -760,3 +770,20 @@ class RequestEngine:
             "responses": self.response_count,
             "errors": self.error_count,
         }
+
+    # ===========================================================
+    # Reset Statistics
+    # ===========================================================
+
+    def reset_statistics(
+        self,
+    ) -> None:
+        """
+        Reset request engine counters.
+        """
+
+        self.request_count = 0
+
+        self.response_count = 0
+
+        self.error_count = 0

@@ -23,7 +23,13 @@ from time import perf_counter
 from app.modules.recon.scope_manager import ScopeManager
 from app.modules.scanner.core.base_scanner import BaseScanner
 from app.modules.scanner.core.response_analyzer import AnalysisResult
-from app.modules.scanner.payloads.sql_payloads import get_payloads
+
+# Use relative import or check if the file exists
+try:
+    from app.modules.scanner.payloads.sql_payloads import get_payloads
+except ImportError:
+    # Fallback: define inline payloads or import from another location
+    from app.modules.scanner.payloads import get_sql_payloads as get_payloads
 
 # ==========================================================
 # Scanner Metadata

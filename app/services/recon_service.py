@@ -13,6 +13,8 @@ from app.database.repositories.recon_result_repository import (
     ReconResultRepository,
 )
 from app.engines.recon_engine import ReconEngine
+from app.modules.scanner.engine.scan_engine import ScanEngine
+from app.services.finding_service import FindingService
 
 
 class ReconService:
@@ -24,10 +26,12 @@ class ReconService:
     def __init__(
         self,
         repository: ReconResultRepository,
+        finding_service: FindingService,
     ) -> None:
 
         self.repository = repository
         self.engine = ReconEngine()
+        self.scan_engine = ScanEngine(finding_service)
 
     # =====================================================
     # Run Recon
@@ -40,6 +44,10 @@ class ReconService:
     ) -> dict:
 
         results = self.engine.run(target)
+        scan_results = self.scan_engine.run(
+            project_id=project_id,
+            target=target,
+        )
 
         saved = 0
 
@@ -64,4 +72,5 @@ class ReconService:
             "modules": len(results),
             "saved": saved,
             "results": results,
+            "scan": scan_results,
         }

@@ -43,7 +43,7 @@ from app.modules.scanner.modules.xss_v1 import (
     XSSScanner,
 )
 
-from app.modules.scanner.modules.sqli_v1 import SQLiScanner
+from app.modules.scanner.modules.sqli_v2 import SQLiScanner
 
 from app.modules.scanner.modules.ssrf import (
     SSRFScanner,
@@ -143,7 +143,10 @@ class ScanEngine:
 
         self.scanners = [
             XSSScanner(),
-            SQLiScanner(),
+            SQLiScanner(
+                target="",
+                scope=self.scope_manager,
+            ),
             SSRFScanner(),
             LFIScanner(),
             RFIScanner(),
@@ -298,19 +301,16 @@ class ScanEngine:
         scanner,
         project_id: str,
         url: str,
-    ) -> Finding | None:
-        """
-        Execute a scanner safely.
-        """
+    ):
 
         print(f"   -> {scanner.__class__.__name__}")
-
-        finding = scanner.scan(
+        if scanner.__class__.__name__ == "SQLiScanner":
+            scanner.target = url
+            return scanner.scan()
+        return scanner.scan(
             project_id=project_id,
             url=url,
         )
-
-        return finding
 
     # =======================================================
     # Save Finding

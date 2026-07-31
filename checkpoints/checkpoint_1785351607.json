@@ -1,0 +1,14 @@
+{
+  "timestamp": "2026-07-29T22:00:07.598153",
+  "technique": "boolean",
+  "target_type": "data",
+  "target_name": "",
+  "position": 10,
+  "extracted_data": [
+    "XXXXXXXXXX"
+  ],
+  "charset": "ascii_printable",
+  "query_count": 0,
+  "progress": 100.0,
+  "metadata": {}
+}

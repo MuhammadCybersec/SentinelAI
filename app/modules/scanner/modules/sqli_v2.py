@@ -832,6 +832,7 @@ class SQLiScanner(BaseScanner):
                 self.statistics["errors"] += 1
 
                 self.errors += 1
+                print(f"[SQLI_V2] Scanner started: {self.target}")
 
         # ------------------------------------------------------
         # Time-Based
@@ -884,12 +885,16 @@ class SQLiScanner(BaseScanner):
         """
 
         self.requests_sent += 1
+        print(f"[SQLi] Payload: {payload}")
+        print(f"[SQLi] Target : {self.target}")
+        print(f"[PAYLOAD] {payload}")
 
         response = self.request.send(
             method="GET",
             url=self.target,
             payload=payload,
         )
+        print("[SQLi] Request sent")
 
         if response is None:
             self.errors += 1
@@ -938,6 +943,10 @@ class SQLiScanner(BaseScanner):
                     finding.evidence.append(
                         "Boolean SQL Injection response difference detected."
                     )
+                    if finding is not None:
+                        self.statistics["vulnerabilities"] += 1
+                        return finding
+                    return None
 
     # ==========================================================
     # False Positive Filter

@@ -26,9 +26,10 @@ Responsible for:
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-
+import hashlib
 import re
+from dataclasses import dataclass, field
+from difflib import SequenceMatcher
 
 # ===========================================================
 # Analysis Result
@@ -86,6 +87,17 @@ class AnalysisResult:
     )
 
     confidence: float = 0.0
+    fingerprint: str = ""
+
+    login_page: bool = False
+
+    access_denied: bool = False
+
+    maintenance_page: bool = False
+
+    captcha_detected: bool = False
+
+    soft_404: bool = False
 
 
 # ===========================================================
@@ -111,8 +123,8 @@ class ResponseAnalyzer:
         self.interesting_patterns: list[str] = []
 
         self._load_patterns()
-        # ===========================================================
 
+    # ===========================================================
     # Load Detection Patterns
     # ===========================================================
 
@@ -222,8 +234,8 @@ class ResponseAnalyzer:
             r"test",
             r"api",
         ]
-        # ===========================================================
 
+    # ===========================================================
     # Analyze Response
     # ===========================================================
 
@@ -252,6 +264,18 @@ class ResponseAnalyzer:
         result.content_length = response.content_length
 
         result.response_time = response.elapsed
+
+        payload = getattr(
+            response,
+            "payload",
+            "",
+        )
+
+        self.detect_reflection(
+            payload,
+            response.body,
+            result,
+        )
 
         # -------------------------------------------------------
         # Advanced Analysis
@@ -319,6 +343,33 @@ class ResponseAnalyzer:
         return ""
 
     # ===========================================================
+    # Generate Response Fingerprint
+    # ===========================================================
+
+    def _generate_fingerprint(
+        self,
+        response,
+        result: AnalysisResult,
+    ) -> None:
+        """
+        Generate a stable fingerprint for response comparison.
+        """
+
+        fingerprint_source = (
+            f"{response.status_code}|"
+            f"{response.content_length}|"
+            f"{response.title}|"
+            f"{response.server}|"
+            f"{response.content_type}"
+        )
+
+        result.fingerprint = hashlib.sha256(
+            fingerprint_source.encode(
+                "utf-8",
+            )
+        ).hexdigest()
+
+    # ===========================================================
     # Detect SQL Errors
     # ===========================================================
 
@@ -365,8 +416,8 @@ class ResponseAnalyzer:
                 result.stack_traces.append(
                     pattern,
                 )
-        # ===========================================================
 
+    # ===========================================================
     # Reflection Detection
     # ===========================================================
 
@@ -402,7 +453,8 @@ class ResponseAnalyzer:
         Detect security headers present in response.
         """
 
-        header_names = {key.lower() for key in headers.keys()}
+        # FIXED: SIM118 - `.keys()` hata diya
+        header_names = {key.lower() for key in headers}
 
         for header in self.security_headers:
 
@@ -467,8 +519,8 @@ class ResponseAnalyzer:
                 result.interesting_patterns.append(
                     pattern,
                 )
-        # ===========================================================
 
+    # ===========================================================
     # Compare Responses
     # ===========================================================
 
@@ -482,8 +534,6 @@ class ResponseAnalyzer:
 
         Returns similarity percentage.
         """
-
-        from difflib import SequenceMatcher
 
         return SequenceMatcher(
             None,
@@ -586,8 +636,8 @@ class ResponseAnalyzer:
         """
 
         return result.confidence >= 0.50
-        # ===========================================================
 
+    # ===========================================================
     # Technology Detection
     # ===========================================================
 
@@ -636,7 +686,8 @@ class ResponseAnalyzer:
         Return missing security headers.
         """
 
-        existing = {key.lower() for key in headers.keys()}
+        # FIXED: SIM118 - `.keys()` hata diya
+        existing = {key.lower() for key in headers}
 
         missing = []
 
@@ -712,8 +763,8 @@ class ResponseAnalyzer:
                 headers,
             )
         )
-        # ===========================================================
 
+    # ===========================================================
     # Risk Level
     # ===========================================================
 
