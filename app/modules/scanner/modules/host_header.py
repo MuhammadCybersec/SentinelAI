@@ -58,7 +58,6 @@ class HostHeaderScanner:
         detected_payload = ""
 
         for payload in self.payloads:
-
             # -------------------------------------------------
             # Future:
             # Send request with modified Host header
@@ -68,7 +67,6 @@ class HostHeaderScanner:
             # -------------------------------------------------
 
             if False:
-
                 vulnerable = True
 
                 detected_payload = payload
@@ -76,7 +74,6 @@ class HostHeaderScanner:
                 break
 
         if not vulnerable:
-
             return None
 
         return Finding(
@@ -123,7 +120,6 @@ class HostHeaderScanner:
 # ============================================================
 
 if __name__ == "__main__":
-
     scanner = HostHeaderScanner()
 
     result = scanner.scan(
@@ -134,9 +130,7 @@ if __name__ == "__main__":
     print()
 
     if result is None:
-
         print("No Host Header Injection Found")
 
     else:
-
         print(result)

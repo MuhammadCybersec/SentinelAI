@@ -18,16 +18,15 @@ Defines the Project ORM model.
 # ===========================================================
 
 from sqlalchemy import String
-from sqlalchemy.orm import Mapped
-from sqlalchemy.orm import mapped_column
+from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database.models.base_model import BaseModel
-
 
 # ===========================================================
 # DB-MODEL-003
 # Project Model
 # ===========================================================
+
 
 class Project(BaseModel):
     """
@@ -44,19 +43,13 @@ class Project(BaseModel):
     # Project Name
     # -------------------------------------------------------
 
-    name: Mapped[str] = mapped_column(
-        String(150),
-        nullable=False
-    )
+    name: Mapped[str] = mapped_column(String(150), nullable=False)
 
     # -------------------------------------------------------
     # Description
     # -------------------------------------------------------
 
-    description: Mapped[str | None] = mapped_column(
-        String(500),
-        nullable=True
-    )
+    description: Mapped[str | None] = mapped_column(String(500), nullable=True)
 
     # -------------------------------------------------------
     # Target
@@ -64,16 +57,10 @@ class Project(BaseModel):
     # https://example.com
     # -------------------------------------------------------
 
-    target: Mapped[str] = mapped_column(
-        String(500),
-        nullable=False
-    )
+    target: Mapped[str] = mapped_column(String(500), nullable=False)
 
     # -------------------------------------------------------
     # Current Status
     # -------------------------------------------------------
 
-    status: Mapped[str] = mapped_column(
-        String(50),
-        default="created"
-    )
+    status: Mapped[str] = mapped_column(String(50), default="created")

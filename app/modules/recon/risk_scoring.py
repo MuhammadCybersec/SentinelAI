@@ -100,7 +100,6 @@ def score_urls(urls: list[str]) -> list[dict]:
     findings: list[dict] = []
 
     for url in urls:
-
         score, severity = calculate_score(url)
 
         findings.append(
@@ -124,7 +123,6 @@ def score_urls(urls: list[str]) -> list[dict]:
 # ============================================================
 
 if __name__ == "__main__":
-
     TEST_URLS = [
         "https://example.com/",
         "https://example.com/admin",
@@ -145,5 +143,4 @@ if __name__ == "__main__":
     print()
 
     for item in results:
-
         print(f"[{item['severity']:^8}] {item['score']:>3}  {item['url']}")

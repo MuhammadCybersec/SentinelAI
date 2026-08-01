@@ -15,7 +15,6 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from typing import List, Optional, Dict, Any
 
 from app.modules.scanner.modules.error_detector import ErrorDetector
 from app.modules.scanner.modules.error_extractor import ErrorExtractor
@@ -35,11 +34,11 @@ class ErrorFinding:
     database: str = ""
     version: str = ""
     user: str = ""
-    tables: List[str] = field(default_factory=list)
-    columns: Dict[str, List[str]] = field(default_factory=dict)
-    credentials: List[Dict[str, str]] = field(default_factory=list)
+    tables: list[str] = field(default_factory=list)
+    columns: dict[str, list[str]] = field(default_factory=dict)
+    credentials: list[dict[str, str]] = field(default_factory=list)
     confidence: float = 0.0
-    evidence: List[str] = field(default_factory=list)
+    evidence: list[str] = field(default_factory=list)
 
 
 class ErrorSQLiScanner:
@@ -50,15 +49,15 @@ class ErrorSQLiScanner:
     def __init__(self, target: str):
         self.target = target
         self.parameter: str = "category"
-        self.findings: List[ErrorFinding] = []
-        self.detector: Optional[ErrorDetector] = None
-        self.dbms: Optional[str] = None
+        self.findings: list[ErrorFinding] = []
+        self.detector: ErrorDetector | None = None
+        self.dbms: str | None = None
         self.statistics = {
             "requests": 0,
             "findings": 0,
         }
 
-    def scan(self) -> List[ErrorFinding]:
+    def scan(self) -> list[ErrorFinding]:
         """
         Execute Error-Based SQL Injection scan.
 
@@ -154,7 +153,7 @@ class SQLInjectionManager:
         self.blind_scanner = None
         self.result = None
 
-    def scan(self) -> List[ErrorFinding]:
+    def scan(self) -> list[ErrorFinding]:
         """
         Execute Error-Based SQL Injection scan.
         """
@@ -183,7 +182,7 @@ class SQLInjectionManager:
         else:
             return self._scan_standard(extractor)
 
-    def _scan_oracle(self, extractor) -> List[ErrorFinding]:
+    def _scan_oracle(self, extractor) -> list[ErrorFinding]:
         """Oracle-specific extraction."""
         logger.info("[ErrorSQLi] Using Oracle-specific extraction...")
 
@@ -244,7 +243,7 @@ class SQLInjectionManager:
         )
         return self.findings
 
-    def _scan_standard(self, extractor) -> List[ErrorFinding]:
+    def _scan_standard(self, extractor) -> list[ErrorFinding]:
         """Standard extraction for MySQL, PostgreSQL, MSSQL."""
         database = extractor.extract_database()
         version = extractor.extract_version()

@@ -15,10 +15,8 @@ Used by:
 
 from __future__ import annotations
 
-import re
 import html
-import time
-
+import re
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -30,7 +28,7 @@ HTML_TAG_RE = re.compile(r"<[^>]+>")
 
 SCRIPT_RE = re.compile(
     r"<script.*?>.*?</script>",
-    re.I | re.S,
+    re.IGNORECASE | re.DOTALL,
 )
 
 HTML_ENTITY_RE = re.compile(r"&[a-zA-Z0-9#]+;")
@@ -44,7 +42,6 @@ URL_ENCODE_RE = re.compile(r"%[0-9A-Fa-f]{2}")
 
 @dataclass(slots=True)
 class ReflectionResult:
-
     reflected: bool = False
 
     count: int = 0
@@ -63,7 +60,6 @@ class ReflectionResult:
 
 @dataclass(slots=True)
 class ContextResult:
-
     context: str = "unknown"
 
     inside_tag: bool = False
@@ -82,7 +78,6 @@ class ContextResult:
 
 @dataclass(slots=True)
 class RiskResult:
-
     severity: str = "Informational"
 
     confidence: float = 0.0
@@ -97,7 +92,6 @@ class RiskResult:
 
 @dataclass(slots=True)
 class AnalysisResult:
-
     url: str = ""
 
     status_code: int = 0
@@ -180,7 +174,6 @@ class ResponseAnalyzer:
         start = 0
 
         while True:
-
             index = response_text.find(
                 payload,
                 start,
@@ -204,7 +197,6 @@ class ResponseAnalyzer:
         # ------------------------------------------
 
         if not result.reflected:
-
             payload_tokens = [
                 token
                 for token in re.split(
@@ -217,12 +209,10 @@ class ResponseAnalyzer:
             matched = 0
 
             for token in payload_tokens:
-
                 if token in response_text:
                     matched += 1
 
             if matched >= max(2, len(payload_tokens) // 2):
-
                 result.reflected = True
 
                 result.exact = False
@@ -256,7 +246,6 @@ class ResponseAnalyzer:
 
         # Sentinel ResponseData
         if text is None:
-
             text = getattr(
                 response,
                 "body",
@@ -306,7 +295,6 @@ class ResponseAnalyzer:
         last_script_close = before.lower().rfind("</script>")
 
         if last_script_open > last_script_close:
-
             result.context = "script"
 
             result.inside_script = True
@@ -321,14 +309,12 @@ class ResponseAnalyzer:
         tag_close = before.rfind(">")
 
         if tag_open > tag_close:
-
             result.inside_tag = True
 
             quote1 = before.rfind('"')
             quote2 = before.rfind("'")
 
             if quote1 > tag_open or quote2 > tag_open:
-
                 result.context = "attribute"
 
                 result.inside_attribute = True
@@ -346,7 +332,6 @@ class ResponseAnalyzer:
         stripped = before.strip()
 
         if stripped.endswith(":") or stripped.endswith("{"):
-
             result.context = "json"
 
             result.inside_json = True
@@ -497,15 +482,12 @@ class ResponseAnalyzer:
         headers = {}
 
         if hasattr(response, "headers"):
-
             try:
-
                 headers = {
                     str(k).lower(): str(v).lower() for k, v in response.headers.items()
                 }
 
             except Exception:
-
                 headers = {}
 
         server = headers.get(
@@ -564,9 +546,7 @@ class ResponseAnalyzer:
         search_space = body + server + powered + generator
 
         for keyword, name in framework_checks.items():
-
             if keyword in search_space:
-
                 technologies.add(name)
 
         # --------------------------------------------------
@@ -574,19 +554,15 @@ class ResponseAnalyzer:
         # --------------------------------------------------
 
         if "x-aspnet-version" in headers:
-
             technologies.add("ASP.NET")
 
         if "x-powered-by" in headers:
-
             value = headers["x-powered-by"]
 
             if "php" in value:
-
                 technologies.add("PHP")
 
             if "express" in value:
-
                 technologies.add("Express")
 
         return sorted(technologies)
@@ -609,13 +585,11 @@ class ResponseAnalyzer:
         headers = {}
 
         try:
-
             headers = {
                 str(k).lower(): str(v).lower() for k, v in response.headers.items()
             }
 
         except Exception:
-
             return None
 
         server = headers.get(
@@ -645,9 +619,7 @@ class ResponseAnalyzer:
         }
 
         for signature, name in wafs.items():
-
             if signature in waf_signature:
-
                 return name
 
         return None
@@ -674,15 +646,12 @@ class ResponseAnalyzer:
         }
 
         if response is None:
-
             return result
 
         try:
-
             headers = {str(k).lower(): str(v) for k, v in response.headers.items()}
 
         except Exception:
-
             return result
 
         mapping = {
@@ -695,9 +664,7 @@ class ResponseAnalyzer:
         }
 
         for header, pretty_name in mapping.items():
-
             if header in headers:
-
                 result[pretty_name] = True
 
         return result
@@ -721,11 +688,9 @@ class ResponseAnalyzer:
         # ------------------------------------
 
         if result.reflection.reflected:
-
             score += 0.40
 
             if result.reflection.exact:
-
                 score += 0.20
 
         # ------------------------------------
@@ -756,15 +721,9 @@ class ResponseAnalyzer:
         )
 
         if encoding == "raw":
-
             score += 0.15
 
-        elif encoding == "html":
-
-            score += 0.05
-
-        elif encoding == "javascript":
-
+        elif encoding == "html" or encoding == "javascript":
             score += 0.05
 
         return round(
@@ -793,19 +752,15 @@ class ResponseAnalyzer:
         )
 
         if confidence >= 0.90:
-
             severity = "Critical"
 
         elif confidence >= 0.75:
-
             severity = "High"
 
         elif confidence >= 0.50:
-
             severity = "Medium"
 
         else:
-
             severity = "Low"
 
         return RiskResult(
@@ -897,7 +852,6 @@ class ResponseAnalyzer:
 
 
 if __name__ == "__main__":
-
     from types import SimpleNamespace
 
     demo = SimpleNamespace(

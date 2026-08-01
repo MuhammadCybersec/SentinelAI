@@ -4,32 +4,29 @@
 # DESCRIPTION: Bridge between Scanner module and AI Service
 # =============================================================================
 
+import json
 import logging
 import threading
-from typing import Optional, Dict, Any, List, Set
 from datetime import datetime
-import json
+from typing import Any
 
-from app.services.ai import (
-    AIService,
-    ParsedResponse,
-    AnalysisType,
-    SeverityLevel,
-    ConfidenceLevel,
-    VulnerabilityFinding,
-    AIServiceError,
-    ModelNotConfiguredError,
-    AIConnectionError,
-    AIParsingError,
-    GenerationError,
-    ParseError,
-)
 from app.modules.scanner.exceptions.ai_analysis_exceptions import (
     ScannerAIAnalysisError,
-    ScannerAINotConfiguredError,
     ScannerAIConnectionError,
+    ScannerAINotConfiguredError,
     ScannerAIParsingError,
-    ScannerAIReportError,
+)
+from app.services.ai import (
+    AIConnectionError,
+    AIParsingError,
+    AIService,
+    AIServiceError,
+    AnalysisType,
+    ConfidenceLevel,
+    ModelNotConfiguredError,
+    ParsedResponse,
+    ParseError,
+    SeverityLevel,
 )
 
 # =============================================================================
@@ -53,14 +50,14 @@ class ScannerFinding:
     """
 
     __slots__ = (
-        "vulnerability_type",
-        "severity",
-        "description",
-        "location",
-        "evidence",
         "confidence",
+        "description",
         "details",
+        "evidence",
+        "location",
+        "severity",
         "timestamp",
+        "vulnerability_type",
     )
 
     def __init__(
@@ -69,10 +66,10 @@ class ScannerFinding:
         severity: str,
         description: str,
         location: str,
-        evidence: Optional[str] = None,
+        evidence: str | None = None,
         confidence: str = "medium",
-        details: Optional[Dict[str, Any]] = None,
-        timestamp: Optional[datetime] = None,
+        details: dict[str, Any] | None = None,
+        timestamp: datetime | None = None,
     ) -> None:
         self.vulnerability_type = vulnerability_type
         self.severity = severity
@@ -83,7 +80,7 @@ class ScannerFinding:
         self.details = details or {}
         self.timestamp = timestamp or datetime.now()
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert finding to dictionary."""
         return {
             "vulnerability_type": self.vulnerability_type,
@@ -115,30 +112,30 @@ class ScanContext:
     """
 
     __slots__ = (
-        "url",
-        "method",
-        "headers",
-        "payload",
+        "additional_data",
         "evidence",
-        "status_code",
+        "headers",
+        "method",
+        "payload",
         "response_body",
         "scanner_module",
+        "status_code",
         "timestamp",
-        "additional_data",
+        "url",
     )
 
     def __init__(
         self,
         url: str,
         method: str = "GET",
-        headers: Optional[Dict[str, str]] = None,
-        payload: Optional[str] = None,
-        evidence: Optional[str] = None,
-        status_code: Optional[int] = None,
-        response_body: Optional[str] = None,
-        scanner_module: Optional[str] = None,
-        timestamp: Optional[datetime] = None,
-        additional_data: Optional[Dict[str, Any]] = None,
+        headers: dict[str, str] | None = None,
+        payload: str | None = None,
+        evidence: str | None = None,
+        status_code: int | None = None,
+        response_body: str | None = None,
+        scanner_module: str | None = None,
+        timestamp: datetime | None = None,
+        additional_data: dict[str, Any] | None = None,
     ) -> None:
         self.url = url
         self.method = method
@@ -151,7 +148,7 @@ class ScanContext:
         self.timestamp = timestamp or datetime.now()
         self.additional_data = additional_data or {}
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert context to dictionary."""
         return {
             "url": self.url,
@@ -201,7 +198,7 @@ class AIAnalysisService:
     def __init__(
         self,
         ai_service: AIService,
-        logger: Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
         enabled: bool = True,
         cache_analyses: bool = True,
     ) -> None:
@@ -219,8 +216,8 @@ class AIAnalysisService:
         self._enabled = enabled
         self._cache_analyses = cache_analyses
         self._lock = threading.RLock()
-        self._analysis_cache: Dict[str, ParsedResponse] = {}
-        self._processed_findings: Set[str] = set()
+        self._analysis_cache: dict[str, ParsedResponse] = {}
+        self._processed_findings: set[str] = set()
 
     def _setup_logger(self) -> logging.Logger:
         """Set up default logger."""
@@ -286,7 +283,7 @@ class AIAnalysisService:
 
         return True
 
-    def _prepare_scan_context(self, context: ScanContext) -> Dict[str, Any]:
+    def _prepare_scan_context(self, context: ScanContext) -> dict[str, Any]:
         """
         Prepare scan context for AI prompt.
 
@@ -367,29 +364,29 @@ class AIAnalysisService:
             ScannerAIParsingError: If parsing fails
             ScannerAIAnalysisError: For other AI errors
         """
-        self._logger.error(f"AI analysis error in {context}: {str(error)}")
+        self._logger.error(f"AI analysis error in {context}: {error!s}")
 
         if isinstance(error, ModelNotConfiguredError):
             raise ScannerAINotConfiguredError(
-                f"AI service not configured: {str(error)}", details={"context": context}
+                f"AI service not configured: {error!s}", details={"context": context}
             ) from error
         elif isinstance(error, AIConnectionError):
             raise ScannerAIConnectionError(
-                f"Connection to AI service failed: {str(error)}",
+                f"Connection to AI service failed: {error!s}",
                 details={"context": context},
             ) from error
         elif isinstance(error, (AIParsingError, ParseError)):
             raise ScannerAIParsingError(
-                f"Failed to parse AI response: {str(error)}",
+                f"Failed to parse AI response: {error!s}",
                 details={"context": context},
             ) from error
         elif isinstance(error, AIServiceError):
             raise ScannerAIAnalysisError(
-                f"AI service error: {str(error)}", details={"context": context}
+                f"AI service error: {error!s}", details={"context": context}
             ) from error
         else:
             raise ScannerAIAnalysisError(
-                f"Unexpected error: {str(error)}", details={"context": context}
+                f"Unexpected error: {error!s}", details={"context": context}
             ) from error
 
     def _create_empty_response(self, analysis_type: AnalysisType) -> ParsedResponse:
@@ -597,7 +594,7 @@ class AIAnalysisService:
 
     def generate_security_report(
         self,
-        findings: List[ScannerFinding],
+        findings: list[ScannerFinding],
         context: ScanContext,
     ) -> ParsedResponse:
         """
@@ -778,7 +775,7 @@ class AIAnalysisService:
 
     def _prepare_security_report_data(
         self,
-        findings: List[ScannerFinding],
+        findings: list[ScannerFinding],
         context: ScanContext,
     ) -> str:
         """
@@ -824,7 +821,7 @@ class AIAnalysisService:
             self._processed_findings.clear()
             self._logger.info("Analysis cache cleared")
 
-    def get_cache_stats(self) -> Dict[str, Any]:
+    def get_cache_stats(self) -> dict[str, Any]:
         """
         Get cache statistics.
 

@@ -54,7 +54,6 @@ class ClickjackingScanner:
         vulnerable = False
 
         if not vulnerable:
-
             return None
 
         return Finding(
@@ -71,8 +70,7 @@ class ClickjackingScanner:
             payload="",
             evidence="",
             recommendation=(
-                "Configure X-Frame-Options or "
-                "Content-Security-Policy frame-ancestors."
+                "Configure X-Frame-Options or Content-Security-Policy frame-ancestors."
             ),
             reference=("https://owasp.org/www-community/attacks/Clickjacking"),
             cwe="CWE-1021",
@@ -98,7 +96,6 @@ class ClickjackingScanner:
 # ============================================================
 
 if __name__ == "__main__":
-
     scanner = ClickjackingScanner()
 
     result = scanner.scan(
@@ -109,9 +106,7 @@ if __name__ == "__main__":
     print()
 
     if result is None:
-
         print("No Clickjacking Found")
 
     else:
-
         print(result)

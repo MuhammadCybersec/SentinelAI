@@ -56,14 +56,12 @@ class SSRFScanner:
         detected_payload = ""
 
         for payload in self.payloads:
-
             # Future:
             # Inject payload
             # Send request
             # Detect SSRF behavior
 
             if False:
-
                 vulnerable = True
 
                 detected_payload = payload
@@ -71,7 +69,6 @@ class SSRFScanner:
                 break
 
         if not vulnerable:
-
             return None
 
         return Finding(
@@ -115,7 +112,6 @@ class SSRFScanner:
 # ============================================================
 
 if __name__ == "__main__":
-
     scanner = SSRFScanner()
 
     result = scanner.scan(
@@ -126,9 +122,7 @@ if __name__ == "__main__":
     print()
 
     if result is None:
-
         print("No SSRF Found")
 
     else:
-
         print(result)

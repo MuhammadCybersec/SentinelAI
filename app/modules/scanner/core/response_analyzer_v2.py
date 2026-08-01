@@ -335,7 +335,6 @@ class ResponseAnalyzer:
         )
 
         if match:
-
             return match.group(
                 1,
             ).strip()
@@ -382,13 +381,11 @@ class ResponseAnalyzer:
         text = body.lower()
 
         for pattern in self.sql_patterns:
-
             if re.search(
                 pattern,
                 text,
                 re.IGNORECASE,
             ):
-
                 result.sql_errors.append(
                     pattern,
                 )
@@ -406,13 +403,11 @@ class ResponseAnalyzer:
         text = body.lower()
 
         for pattern in self.stack_patterns:
-
             if re.search(
                 pattern,
                 text,
                 re.IGNORECASE,
             ):
-
                 result.stack_traces.append(
                     pattern,
                 )
@@ -457,9 +452,7 @@ class ResponseAnalyzer:
         header_names = {key.lower() for key in headers}
 
         for header in self.security_headers:
-
             if header in header_names:
-
                 result.security_headers.append(
                     header,
                 )
@@ -480,13 +473,11 @@ class ResponseAnalyzer:
         text = (response.body + "\n" + str(response.headers)).lower()
 
         for pattern in self.waf_patterns:
-
             if re.search(
                 pattern,
                 text,
                 re.IGNORECASE,
             ):
-
                 result.waf_detected = True
 
                 result.waf_name = pattern
@@ -509,13 +500,11 @@ class ResponseAnalyzer:
         text = body.lower()
 
         for pattern in self.interesting_patterns:
-
             if re.search(
                 pattern,
                 text,
                 re.IGNORECASE,
             ):
-
                 result.interesting_patterns.append(
                     pattern,
                 )
@@ -592,27 +581,21 @@ class ResponseAnalyzer:
         score = 0.0
 
         if result.reflected:
-
             score += 0.35
 
         if result.sql_errors:
-
             score += 0.35
 
         if result.stack_traces:
-
             score += 0.10
 
         if result.waf_detected:
-
             score += 0.05
 
         if result.interesting_patterns:
-
             score += 0.10
 
         if result.security_headers:
-
             score += 0.05
 
         result.confidence = round(
@@ -661,7 +644,6 @@ class ResponseAnalyzer:
         )
 
         if server:
-
             result.server = server
 
             result.technologies.append(
@@ -669,7 +651,6 @@ class ResponseAnalyzer:
             )
 
         if powered_by:
-
             result.technologies.append(
                 powered_by,
             )
@@ -692,9 +673,7 @@ class ResponseAnalyzer:
         missing = []
 
         for header in self.security_headers:
-
             if header not in existing:
-
                 missing.append(
                     header,
                 )
@@ -730,9 +709,7 @@ class ResponseAnalyzer:
         lower_headers = {k.lower(): v for k, v in headers.items()}
 
         for header in interesting:
-
             if header in lower_headers:
-
                 result.interesting_headers.append(f"{header}: {lower_headers[header]}")
 
     # ===========================================================
@@ -853,7 +830,6 @@ class ResponseAnalyzer:
 
 
 if __name__ == "__main__":
-
     analyzer = ResponseAnalyzer()
 
     print("=" * 60)

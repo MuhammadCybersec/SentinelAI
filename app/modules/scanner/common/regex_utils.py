@@ -5,7 +5,6 @@ Regular expression utilities for data extraction.
 """
 
 import re
-from typing import List, Set, Optional, Dict, Pattern
 
 
 class RegexUtils:
@@ -25,7 +24,7 @@ class RegexUtils:
             "numeric": r"\b\d+\b",
         }
 
-    def extract_pattern(self, text: str, pattern: str) -> List[str]:
+    def extract_pattern(self, text: str, pattern: str) -> list[str]:
         """
         Extract all matches for a pattern.
 
@@ -39,7 +38,7 @@ class RegexUtils:
         matches = re.findall(pattern, text, re.IGNORECASE)
         return matches
 
-    def extract_table_names(self, text: str) -> List[str]:
+    def extract_table_names(self, text: str) -> list[str]:
         """
         Extract potential table names from text.
 
@@ -51,7 +50,7 @@ class RegexUtils:
         """
         return self.extract_pattern(text, self.patterns["table_name"])
 
-    def extract_column_names(self, text: str) -> List[str]:
+    def extract_column_names(self, text: str) -> list[str]:
         """
         Extract potential column names from text.
 
@@ -63,7 +62,7 @@ class RegexUtils:
         """
         return self.extract_pattern(text, self.patterns["column_name"])
 
-    def extract_oracle_errors(self, text: str) -> List[str]:
+    def extract_oracle_errors(self, text: str) -> list[str]:
         """
         Extract Oracle error codes from text.
 
@@ -75,7 +74,7 @@ class RegexUtils:
         """
         return self.extract_pattern(text, self.patterns["oracle_error"])
 
-    def extract_emails(self, text: str) -> List[str]:
+    def extract_emails(self, text: str) -> list[str]:
         """
         Extract email addresses from text.
 
@@ -87,7 +86,7 @@ class RegexUtils:
         """
         return self.extract_pattern(text, self.patterns["email"])
 
-    def extract_hashes(self, text: str) -> List[str]:
+    def extract_hashes(self, text: str) -> list[str]:
         """
         Extract hash strings from text.
 
@@ -99,7 +98,7 @@ class RegexUtils:
         """
         return self.extract_pattern(text, self.patterns["hash"])
 
-    def extract_numbers(self, text: str) -> List[str]:
+    def extract_numbers(self, text: str) -> list[str]:
         """
         Extract numeric values from text.
 

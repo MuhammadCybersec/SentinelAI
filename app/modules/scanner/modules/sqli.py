@@ -23,13 +23,7 @@ from time import perf_counter
 from app.modules.recon.scope_manager import ScopeManager
 from app.modules.scanner.core.base_scanner import BaseScanner
 from app.modules.scanner.core.response_analyzer import AnalysisResult
-
-# Use relative import or check if the file exists
-try:
-    from app.modules.scanner.payload.sql_payloads import get_payloads
-except ImportError:
-    # Fallback: define inline payloads or import from another location
-    from app.modules.scanner.payload.sql_payloads import get_payloads
+from app.modules.scanner.payload.sql_payloads import get_payloads
 
 # ==========================================================
 # Scanner Metadata
@@ -38,7 +32,6 @@ except ImportError:
 
 @dataclass(slots=True)
 class SQLScannerInfo:
-
     name: str = "SQL Injection"
 
     slug: str = "sqli"
@@ -62,7 +55,6 @@ class SQLScannerInfo:
 
 @dataclass(slots=True)
 class SQLFinding:
-
     vulnerable: bool = False
 
     url: str = ""
@@ -102,7 +94,6 @@ class SQLFinding:
 
 
 class SQLiScanner(BaseScanner):
-
     def __init__(
         self,
         target: str,
@@ -230,7 +221,6 @@ class SQLiScanner(BaseScanner):
         """
 
         for payload in self.payloads:
-
             self.statistics["payloads"] += 1
 
             yield payload
@@ -275,7 +265,6 @@ class SQLiScanner(BaseScanner):
         """
 
         if dbms is not None:
-
             return list(
                 self.TIME_PAYLOADS.get(
                     dbms,
@@ -286,7 +275,6 @@ class SQLiScanner(BaseScanner):
         payloads: list[str] = []
 
         for values in self.TIME_PAYLOADS.values():
-
             payloads.extend(values)
 
         return payloads
@@ -304,7 +292,6 @@ class SQLiScanner(BaseScanner):
         """
 
         if self.detected_dbms is None:
-
             return self.get_all_payloads()
 
         dbms = self.detected_dbms.lower()
@@ -312,35 +299,28 @@ class SQLiScanner(BaseScanner):
         smart_payloads: list[str] = []
 
         for payload in self.payloads:
-
             lower = payload.lower()
 
             if "mysql" in dbms:
-
                 if "sleep(" in lower or "benchmark(" in lower or "mysql" in lower:
                     smart_payloads.append(payload)
 
             elif "postgres" in dbms:
-
                 if "pg_sleep" in lower:
                     smart_payloads.append(payload)
 
             elif "sql server" in dbms:
-
                 if "waitfor" in lower:
                     smart_payloads.append(payload)
 
             elif "oracle" in dbms:
-
                 if "dbms_pipe" in lower or "utl_http" in lower:
                     smart_payloads.append(payload)
 
             else:
-
                 smart_payloads.append(payload)
 
         if not smart_payloads:
-
             return self.get_all_payloads()
 
         return smart_payloads
@@ -361,11 +341,8 @@ class SQLiScanner(BaseScanner):
         body = response_text.lower()
 
         for dbms, signatures in self.DBMS_ERRORS.items():
-
             for signature in signatures:
-
                 if signature.lower() in body:
-
                     self.detected_dbms = dbms
 
                     return dbms
@@ -811,7 +788,6 @@ class SQLiScanner(BaseScanner):
         )
 
         if response is None:
-
             self.errors += 1
 
             self.statistics["errors"] += 1
@@ -849,11 +825,9 @@ class SQLiScanner(BaseScanner):
                 false_response,
             )
         ):
-
             finding.technique = "Boolean-Based"
 
             if finding.analyzer is not None:
-
                 finding.analyzer.risk.confidence = min(
                     finding.analyzer.risk.confidence + 0.20,
                     1.0,
@@ -882,7 +856,6 @@ class SQLiScanner(BaseScanner):
         baseline_time = self.get_baseline_time()
 
         if baseline_time <= 0:
-
             self.errors += 1
 
             self.statistics["errors"] += 1
@@ -902,7 +875,6 @@ class SQLiScanner(BaseScanner):
         injected_time = perf_counter() - injected_start
 
         if response is None:
-
             self.errors += 1
 
             self.statistics["errors"] += 1
@@ -924,7 +896,6 @@ class SQLiScanner(BaseScanner):
         # --------------------------------------------------
         analysis = None
         if self.analyzer is not None:
-
             analysis = self.analyzer.analyze(
                 response,
                 payload,
@@ -945,7 +916,6 @@ class SQLiScanner(BaseScanner):
         finding.analyzer = analysis
 
         if analysis is not None:
-
             analysis.risk.confidence = max(
                 analysis.risk.confidence,
                 self.calculate_confidence(
@@ -982,7 +952,6 @@ class SQLiScanner(BaseScanner):
         ] = {}
 
         for finding in findings:
-
             key = (
                 finding.url,
                 finding.payload,
@@ -1011,7 +980,6 @@ class SQLiScanner(BaseScanner):
             # ------------------------------------------
 
             for evidence in finding.evidence:
-
                 if evidence not in current.evidence:
                     current.evidence.append(evidence)
 
@@ -1040,7 +1008,6 @@ class SQLiScanner(BaseScanner):
         """
 
         if finding.analyzer is not None:
-
             score = finding.analyzer.risk.score
 
             if score >= 90:
@@ -1056,7 +1023,6 @@ class SQLiScanner(BaseScanner):
                 severity = "Low"
 
         else:
-
             severity = "Medium"
 
         finding.severity = severity
@@ -1110,7 +1076,6 @@ class SQLiScanner(BaseScanner):
         initial_response = self.safe_request()
 
         if initial_response is None:
-
             self.finished_at = perf_counter()
 
             return []
@@ -1133,13 +1098,11 @@ class SQLiScanner(BaseScanner):
             self.statistics["payloads"] += 1
 
             try:
-
                 finding = self.test_payload(
                     payload,
                 )
 
                 if finding is not None:
-
                     finding = self.enrich_finding(
                         finding,
                     )
@@ -1157,7 +1120,6 @@ class SQLiScanner(BaseScanner):
                         break
 
             except Exception:
-
                 self.errors += 1
 
                 self.statistics["errors"] += 1
@@ -1192,9 +1154,7 @@ class SQLiScanner(BaseScanner):
         )
 
         if time_payloads:
-
             for payload in time_payloads:
-
                 if (
                     self.max_payloads is not None
                     and self.statistics["payloads"] >= self.max_payloads
@@ -1204,13 +1164,11 @@ class SQLiScanner(BaseScanner):
                 self.statistics["payloads"] += 1
 
                 try:
-
                     finding = self.test_time_payload(
                         payload,
                     )
 
                     if finding is not None:
-
                         finding = self.enrich_finding(
                             finding,
                         )
@@ -1229,7 +1187,6 @@ class SQLiScanner(BaseScanner):
                             break
 
                 except Exception:
-
                     self.errors += 1
 
                     self.statistics["errors"] += 1
@@ -1280,7 +1237,6 @@ class SQLiScanner(BaseScanner):
         """
 
         if delay <= 0:
-
             return
 
         from time import sleep
@@ -1324,7 +1280,6 @@ class SQLiScanner(BaseScanner):
             "randomize",
             False,
         ):
-
             prepared = self.randomize_payloads(
                 prepared,
             )
@@ -1352,7 +1307,6 @@ class SQLiScanner(BaseScanner):
         unique: list[str] = []
 
         for payload in payloads:
-
             if payload in seen:
                 continue
 
@@ -1575,11 +1529,8 @@ class SQLiScanner(BaseScanner):
         combined = body + headers
 
         for waf, signatures in self.WAF_SIGNATURES.items():
-
             for signature in signatures:
-
                 if signature.lower() in combined:
-
                     return waf
 
         return None
@@ -1606,7 +1557,6 @@ class SQLiScanner(BaseScanner):
         waf_name = waf.lower()
 
         for payload in payloads:
-
             lower = payload.lower()
 
             # ------------------------------------------
@@ -1614,7 +1564,6 @@ class SQLiScanner(BaseScanner):
             # ------------------------------------------
 
             if "cloudflare" in waf_name:
-
                 if (
                     "union select" in lower
                     or "information_schema" in lower
@@ -1627,7 +1576,6 @@ class SQLiScanner(BaseScanner):
             # ------------------------------------------
 
             elif "modsecurity" in waf_name:
-
                 if "union" in lower or "sleep(" in lower or "waitfor" in lower:
                     continue
 
@@ -1636,7 +1584,6 @@ class SQLiScanner(BaseScanner):
             # ------------------------------------------
 
             elif "aws" in waf_name:
-
                 if "union select" in lower or "dbms_pipe" in lower:
                     continue
 
@@ -1645,7 +1592,6 @@ class SQLiScanner(BaseScanner):
             # ------------------------------------------
 
             elif "imperva" in waf_name:
-
                 if "sleep(" in lower or "benchmark(" in lower:
                     continue
 

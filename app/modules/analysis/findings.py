@@ -17,9 +17,7 @@ Every analyzer converts its output into this format.
 
 from __future__ import annotations
 
-from dataclasses import asdict
-from dataclasses import dataclass
-from dataclasses import field
+from dataclasses import asdict, dataclass, field
 
 # ===========================================================
 # ANALYSIS-FINDING-001
@@ -150,7 +148,6 @@ class Finding:
 # ===========================================================
 
 if __name__ == "__main__":
-
     finding = Finding(
         id="HDR-001",
         title="Missing Content Security Policy",

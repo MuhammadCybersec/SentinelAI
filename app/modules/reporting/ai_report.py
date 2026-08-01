@@ -57,13 +57,13 @@ class AIReport:
         report.append("=" * 60)
         report.append("")
 
-        report.append(f"Target : {analysis.get('target','Unknown')}")
+        report.append(f"Target : {analysis.get('target', 'Unknown')}")
 
-        report.append(f"Overall Risk : {summary.get('risk_level','Unknown')}")
+        report.append(f"Overall Risk : {summary.get('risk_level', 'Unknown')}")
 
-        report.append(f"Risk Score : {summary.get('score',0)}/100")
+        report.append(f"Risk Score : {summary.get('score', 0)}/100")
 
-        report.append(f"Total Findings : {summary.get('total_findings',0)}")
+        report.append(f"Total Findings : {summary.get('total_findings', 0)}")
 
         report.append("")
 
@@ -75,28 +75,24 @@ class AIReport:
         report.append("-" * 60)
 
         if summary.get("score", 0) >= 80:
-
             report.append(
                 "The assessment identified multiple high-risk "
                 "security issues requiring immediate attention."
             )
 
         elif summary.get("score", 0) >= 60:
-
             report.append(
                 "The assessment identified several security "
                 "weaknesses that should be addressed soon."
             )
 
         elif summary.get("score", 0) >= 30:
-
             report.append(
                 "The target contains a limited number of "
                 "security findings with moderate impact."
             )
 
         else:
-
             report.append(
                 "No significant security weaknesses were "
                 "identified during reconnaissance."
@@ -111,20 +107,15 @@ class AIReport:
         report.append("-" * 60)
 
         if not findings:
-
             report.append("No findings detected.")
 
         else:
-
             for finding in findings:
-
                 if hasattr(finding, "severity"):
-
                     severity = finding.severity
                     title = finding.title
 
                 else:
-
                     severity = finding.get(
                         "severity",
                         "Info",
@@ -152,12 +143,10 @@ class AIReport:
         )
 
         if recommendations:
-
             for index, item in enumerate(
                 recommendations,
                 start=1,
             ):
-
                 recommendation = item.get(
                     "recommendation",
                     item.get(
@@ -169,7 +158,6 @@ class AIReport:
                 report.append(f"{index}. {recommendation}")
 
         else:
-
             report.append("No recommendations available.")
 
         report.append("")
@@ -187,19 +175,15 @@ class AIReport:
         )
 
         if score >= 80:
-
             verdict = "High Risk - Immediate remediation is recommended."
 
         elif score >= 60:
-
             verdict = "Moderate Risk - Address findings as a priority."
 
         elif score >= 30:
-
             verdict = "Low Risk - Continue improving the security posture."
 
         else:
-
             verdict = "Minimal Risk - No major security concerns identified."
 
         report.append(verdict)
@@ -217,7 +201,6 @@ class AIReport:
 # ===========================================================
 
 if __name__ == "__main__":
-
     report = AIReport()
 
     sample = {

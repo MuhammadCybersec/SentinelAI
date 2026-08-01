@@ -167,7 +167,6 @@ class DashboardEngine:
 # ===========================================================
 
 if __name__ == "__main__":
-
     findings = [
         Finding(
             project_id="demo",
@@ -208,7 +207,6 @@ if __name__ == "__main__":
     print()
 
     for section, data in dashboard.items():
-
         print("-" * 60)
 
         print(section.upper())

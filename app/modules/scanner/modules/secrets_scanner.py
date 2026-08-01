@@ -237,21 +237,25 @@ class SecretsScanner(BaseScanner):
     # Validation patterns - ClassVar
     VALIDATION_PATTERNS: typing.ClassVar[dict[str, typing.Callable[[str], bool]]] = {
         "aws_access_key": lambda s: re.match(r"AKIA[0-9A-Z]{16}", s) is not None,
-        "aws_secret_key": lambda s: len(s) == 40
-        and re.match(r"^[A-Za-z0-9/+=]+$", s) is not None,
+        "aws_secret_key": lambda s: (
+            len(s) == 40 and re.match(r"^[A-Za-z0-9/+=]+$", s) is not None
+        ),
         "google_api_key": lambda s: len(s) == 39 and s.startswith("AIza"),
         "google_oauth": lambda s: ".apps.googleusercontent.com" in s,
         "firebase_key": lambda s: 20 <= len(s) <= 50,
-        "github_token": lambda s: s.startswith(("ghp_", "gho_", "ghu_", "ghs_"))
-        and len(s) == 40,
+        "github_token": lambda s: (
+            s.startswith(("ghp_", "gho_", "ghu_", "ghs_")) and len(s) == 40
+        ),
         "github_app_token": lambda s: s.startswith(("ghs_", "ghu_")) and len(s) == 40,
-        "jwt": lambda s: len(s.split(".")) == 3
-        and all(s.split("."))
-        and s.split(".")[0].startswith("eyJ"),
-        "stripe_key": lambda s: s.startswith(
-            ("sk_live_", "sk_test_", "rk_live_", "rk_test_")
-        )
-        and len(s) == 32,
+        "jwt": lambda s: (
+            len(s.split(".")) == 3
+            and all(s.split("."))
+            and s.split(".")[0].startswith("eyJ")
+        ),
+        "stripe_key": lambda s: (
+            s.startswith(("sk_live_", "sk_test_", "rk_live_", "rk_test_"))
+            and len(s) == 32
+        ),
         "stripe_webhook": lambda s: s.startswith("whsec_") and len(s) == 30,
         "twilio_key": lambda s: 32 <= len(s) <= 34,
         "twilio_sid": lambda s: s.startswith("AC") and len(s) == 34,

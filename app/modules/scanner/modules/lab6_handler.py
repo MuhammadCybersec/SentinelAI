@@ -15,11 +15,9 @@ Uses UNION-based SQL Injection exclusively.
 from __future__ import annotations
 
 import logging
-import re
-from typing import Dict, Any, Optional, List, Tuple
+from typing import Any
 
-from app.modules.scanner.modules.union_sqli import UnionSQLiScanner, UnionFinding
-from app.agents.post_exploitation_agent import PostExploitationAgent
+from app.modules.scanner.modules.union_sqli import UnionSQLiScanner
 
 logger = logging.getLogger(__name__)
 
@@ -33,11 +31,11 @@ class Lab6Handler:
     def __init__(self, target_url: str):
         self.target_url = target_url
         self.parameter = self._detect_parameter(target_url)
-        self.credentials: List[Dict[str, str]] = []
+        self.credentials: list[dict[str, str]] = []
         self.union_findings = None
-        self.scan_result: Optional[Dict[str, Any]] = None
+        self.scan_result: dict[str, Any] | None = None
         self.login_success: bool = False
-        self.dbms: Optional[str] = None
+        self.dbms: str | None = None
 
         self.statistics = {
             "requests": 0,
@@ -58,7 +56,7 @@ class Lab6Handler:
             return "filter"
         return "category"
 
-    def run(self) -> Dict[str, Any]:
+    def run(self) -> dict[str, Any]:
         """
         Execute complete Lab 6 solution using UNION-based SQLi only.
 
@@ -109,7 +107,7 @@ class Lab6Handler:
         logger.info("[Lab6] ❌ UNION SQLi not found for Lab 6")
         return self._build_response()
 
-    def _extract_credentials_from_findings(self, findings) -> List[Dict[str, str]]:
+    def _extract_credentials_from_findings(self, findings) -> list[dict[str, str]]:
         """Extract credentials from UNION SQLi findings."""
         credentials = []
         for finding in findings:
@@ -161,7 +159,7 @@ class Lab6Handler:
             logger.error(f"[Lab6] ❌ PostExploitationAgent import failed: {e}")
             return False
 
-    def _build_response(self) -> Dict[str, Any]:
+    def _build_response(self) -> dict[str, Any]:
         """Build the final response."""
         return {
             "target": self.target_url,
@@ -176,7 +174,7 @@ class Lab6Handler:
         }
 
 
-def solve_lab6(target_url: str) -> Dict[str, Any]:
+def solve_lab6(target_url: str) -> dict[str, Any]:
     """
     Convenience function to solve Lab 6 using UNION-based SQLi only.
 

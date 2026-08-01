@@ -6,14 +6,14 @@ Phase 11: Boolean-Based Blind SQL Injection Detection
 
 import logging
 import time
-import re
 from dataclasses import dataclass, field
-from typing import Optional, Dict, List, Any, Tuple, Set
+from typing import Any
+
 import requests
 
-from .union_sqli import UnionSQLi
 from .html_parser import HTMLParser
 from .regex_utils import RegexUtils
+from .union_sqli import UnionSQLi
 
 # ============================================================
 # Data Classes
@@ -30,18 +30,18 @@ class BlindBooleanResult:
     is_vulnerable: bool = False
     true_response_length: int = 0
     false_response_length: int = 0
-    true_signature: Optional[str] = None
-    false_signature: Optional[str] = None
+    true_signature: str | None = None
+    false_signature: str | None = None
     confidence: int = 0
-    working_payloads: List[str] = field(default_factory=list)
+    working_payloads: list[str] = field(default_factory=list)
     comparison_method: str = ""  # LENGTH, CONTENT, STATUS, KEYWORD, DOM
-    evidence: List[str] = field(default_factory=list)
-    errors: List[str] = field(default_factory=list)
-    true_responses: List[str] = field(default_factory=list)
-    false_responses: List[str] = field(default_factory=list)
+    evidence: list[str] = field(default_factory=list)
+    errors: list[str] = field(default_factory=list)
+    true_responses: list[str] = field(default_factory=list)
+    false_responses: list[str] = field(default_factory=list)
     execution_time: float = 0.0
-    best_true_payload: Optional[str] = None
-    best_false_payload: Optional[str] = None
+    best_true_payload: str | None = None
+    best_false_payload: str | None = None
     similarity_score: float = 0.0
 
     def add_error(self, error: str):
@@ -67,7 +67,7 @@ class BlindBooleanResult:
             return "Boolean blind SQL injection not detected"
 
         parts = []
-        parts.append(f"Vulnerable: YES")
+        parts.append("Vulnerable: YES")
         if self.best_true_payload:
             parts.append(f"True payload: {self.best_true_payload[:30]}...")
         if self.best_false_payload:
@@ -79,7 +79,7 @@ class BlindBooleanResult:
 
         return f"Boolean Blind: {', '.join(parts)}"
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for logging/output."""
         return {
             "success": self.success,
@@ -169,7 +169,7 @@ class OracleBlindBooleanEngine:
         self,
         session: requests.Session,
         base_url: str,
-        logger: Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ):
         """
         Initialize Oracle Blind Boolean Engine.
@@ -219,7 +219,7 @@ class OracleBlindBooleanEngine:
     # Private Methods
     # ============================================================
 
-    def _get_baseline(self, injection_point: str) -> Optional[requests.Response]:
+    def _get_baseline(self, injection_point: str) -> requests.Response | None:
         """Get baseline response for comparison."""
         if self.baseline_response is None:
             self.logger.info("[BlindBoolean] Fetching baseline response...")
@@ -240,7 +240,7 @@ class OracleBlindBooleanEngine:
 
     def _send_payload(
         self, injection_point: str, payload: str
-    ) -> Optional[requests.Response]:
+    ) -> requests.Response | None:
         """Send a payload and return the response."""
         baseline = self._get_baseline(injection_point)
         result = self.union_sqli.test_payload(injection_point, payload, baseline)
@@ -464,9 +464,7 @@ class OracleBlindBooleanEngine:
                     result.true_responses.append(response.text)
                     result.add_working_payload(payload)
 
-                    if not best_true:
-                        best_true = response
-                    elif len(response.text) > len(best_true.text):
+                    if not best_true or len(response.text) > len(best_true.text):
                         best_true = response
 
                     self.logger.debug(
@@ -485,9 +483,7 @@ class OracleBlindBooleanEngine:
                     result.false_responses.append(response.text)
                     result.add_working_payload(payload)
 
-                    if not best_false:
-                        best_false = response
-                    elif len(response.text) > len(best_false.text):
+                    if not best_false or len(response.text) > len(best_false.text):
                         best_false = response
 
                     self.logger.debug(
@@ -563,7 +559,7 @@ class OracleBlindBooleanEngine:
                 result.add_evidence("No boolean blind SQL injection detected")
 
         except Exception as e:
-            error_msg = f"Boolean blind detection failed: {str(e)}"
+            error_msg = f"Boolean blind detection failed: {e!s}"
             self.logger.error(error_msg)
             result.add_error(error_msg)
             result.success = False
@@ -585,7 +581,7 @@ class OracleBlindBooleanEngine:
 
     def compare_true_false(
         self, injection_point: str, true_payload: str, false_payload: str
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Compare true and false condition responses.
 
@@ -628,7 +624,7 @@ class OracleBlindBooleanEngine:
 
     def build_boolean_payloads(
         self, condition: str, payload_type: str = "AND"
-    ) -> List[str]:
+    ) -> list[str]:
         """
         Build boolean-based payloads for a condition.
 
@@ -655,7 +651,7 @@ class OracleBlindBooleanEngine:
 
         return payloads
 
-    def find_best_true_payload(self, injection_point: str) -> Optional[str]:
+    def find_best_true_payload(self, injection_point: str) -> str | None:
         """
         Find the best true condition payload.
 
@@ -681,7 +677,7 @@ class OracleBlindBooleanEngine:
 
         return best_payload
 
-    def find_best_false_payload(self, injection_point: str) -> Optional[str]:
+    def find_best_false_payload(self, injection_point: str) -> str | None:
         """
         Find the best false condition payload.
 
@@ -806,7 +802,7 @@ class OracleBlindBooleanEngine:
         result = self.detect_boolean_blind(injection_point)
         return result.is_vulnerable
 
-    def get_best_boolean_payload(self, injection_point: str) -> Optional[str]:
+    def get_best_boolean_payload(self, injection_point: str) -> str | None:
         """
         Get the best boolean payload.
 

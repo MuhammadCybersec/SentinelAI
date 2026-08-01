@@ -64,21 +64,16 @@ def find_interesting_urls(urls: list[str]) -> list[str]:
     interesting: set[str] = set()
 
     for url in urls:
-
         try:
-
             parsed = urlparse(url)
 
             path = parsed.path.lower()
 
         except Exception:
-
             continue
 
         for keyword in INTERESTING_KEYWORDS:
-
             if keyword in path:
-
                 interesting.add(url)
 
                 break
@@ -91,7 +86,6 @@ def find_interesting_urls(urls: list[str]) -> list[str]:
 # ======================================================
 
 if __name__ == "__main__":
-
     sample_urls = [
         "https://bugcrowd.com/login",
         "https://bugcrowd.com/blog",
@@ -106,5 +100,4 @@ if __name__ == "__main__":
     print(f"Interesting URLs: {len(results)}\n")
 
     for url in results:
-
         print(url)

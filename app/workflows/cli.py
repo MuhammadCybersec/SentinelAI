@@ -11,7 +11,6 @@ from app.core.logger import sentinel_logger
 
 
 class CLI:
-
     def __init__(self, manager):
 
         self.manager = manager
@@ -27,20 +26,16 @@ class CLI:
         print("=" * 60)
 
         while True:
-
             command = input("\nSentinelAI> ").strip()
 
             if command.lower() == "exit":
-
                 print("Goodbye!")
                 break
 
             if command == "":
-
                 continue
 
             try:
-
                 result = self.manager.handle(command)
 
                 # ============================================
@@ -48,17 +43,13 @@ class CLI:
                 # ============================================
 
                 if hasattr(result, "id"):
-
                     if command.lower().startswith("create"):
-
                         print("\nProject Created Successfully")
 
                     elif command.lower() == "current project":
-
                         print("\nCurrent Project")
 
                     else:
-
                         print("\nProject Information")
 
                     print("-" * 40)
@@ -72,18 +63,14 @@ class CLI:
                 # ============================================
 
                 elif isinstance(result, list):
-
                     print("\nProjects")
                     print("-" * 60)
 
                     if not result:
-
                         print("No projects found.")
 
                     else:
-
                         for project in result:
-
                             print(f"ID          : {project.id}")
                             print(f"Name        : {project.name}")
                             print(f"Target      : {project.target}")
@@ -95,12 +82,17 @@ class CLI:
                 # ============================================
 
                 elif isinstance(result, dict):
-
                     print("\nRecon Report")
                     print("-" * 40)
+                    if "commands" in result:
+                        print("\nAvailable Commands")
+                        print("-" * 40)
 
+                        for cmd in result["commands"]:
+                            print(f"  - {cmd}")
+
+                        continue
                     for key, value in result.items():
-
                         # Skip raw headers
                         if key == "headers":
                             continue
@@ -166,8 +158,7 @@ class CLI:
                                     print(f"Source : {secret['source']}")
                                     print()
 
-                                else:
-                                    print("No secrets found.")
+                                print("No secrets found.")
                                 continue
 
                             else:
@@ -188,12 +179,10 @@ class CLI:
 
                         # Print Security Headers
                         if key == "security_headers":
-
                             print("\nSecurity Headers")
                             print("-" * 40)
 
                             if isinstance(value, dict):
-
                                 for h, v in value.items():
                                     print(f"{h:30}: {v}")
 
@@ -204,7 +193,6 @@ class CLI:
                             print("\nOpen Ports")
                             print("-" * 40)
                             if value:
-
                                 for port in value:
                                     print(f"Port {port} is open.")
 
@@ -234,7 +222,6 @@ class CLI:
 
                         # Print Technologies
                         if key == "technologies":
-
                             techs = ", ".join(value) if value else "Unknown"
                             print(f"Technologies : {techs}")
 
@@ -248,9 +235,7 @@ class CLI:
                 # ============================================
 
                 else:
-
                     print(result)
 
             except Exception as e:
-
                 print(f"Error: {e}")

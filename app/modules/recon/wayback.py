@@ -7,8 +7,8 @@ Version : 1.1.0
 ===========================================================
 """
 
-from app.tools.http_client import http
 from app.modules.recon.url_normalizer import normalize_url
+from app.tools.http_client import http
 
 WAYBACK_API = "https://web.archive.org/cdx/search/cdx"
 
@@ -81,7 +81,6 @@ def collect_wayback_urls(domain: str) -> list[str]:
     urls: set[str] = set()
 
     for row in data:
-
         if not row:
             continue
 
@@ -129,7 +128,6 @@ def collect_wayback_urls(domain: str) -> list[str]:
 # ======================================================
 
 if __name__ == "__main__":
-
     urls = collect_wayback_urls("bugcrowd.com")
 
     print(f"Total URLs: {len(urls)}")

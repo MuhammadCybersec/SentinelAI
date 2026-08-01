@@ -4,7 +4,7 @@ Reusable regular expression utilities for SQL injection detection.
 """
 
 import re
-from typing import List, Optional, Pattern, Dict, Any
+from typing import Any
 
 
 class RegexUtils:
@@ -30,7 +30,7 @@ class RegexUtils:
     }
 
     @classmethod
-    def contains_oracle_keywords(cls, text: str) -> List[str]:
+    def contains_oracle_keywords(cls, text: str) -> list[str]:
         """
         Check if text contains Oracle-specific keywords.
 
@@ -64,7 +64,7 @@ class RegexUtils:
         return found_keywords
 
     @classmethod
-    def extract_oracle_errors(cls, text: str) -> List[str]:
+    def extract_oracle_errors(cls, text: str) -> list[str]:
         """
         Extract Oracle error codes from text.
 
@@ -82,7 +82,7 @@ class RegexUtils:
         return matches
 
     @classmethod
-    def extract_words(cls, text: str, min_length: int = 3) -> List[str]:
+    def extract_words(cls, text: str, min_length: int = 3) -> list[str]:
         """
         Extract all words from text with minimum length.
 
@@ -148,7 +148,7 @@ class RegexUtils:
             return 0
 
     @classmethod
-    def find_significant_changes(cls, baseline: str, response: str) -> Dict[str, Any]:
+    def find_significant_changes(cls, baseline: str, response: str) -> dict[str, Any]:
         """
         Find significant changes between baseline and response.
 

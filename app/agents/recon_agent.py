@@ -7,18 +7,19 @@ Version : 0.1.0
 ===========================================================
 """
 
-import socket
 import concurrent.futures
-import dns.resolver
+import socket
 from urllib.parse import urlparse
 
+import dns.resolver
 import requests
-from app.modules.recon.waf import detect_waf
+
+from app.modules.recon.api_discovery import discover_api
 from app.modules.recon.http_methods import detect_http_methods
 from app.modules.recon.javascript import discover_javascript
 from app.modules.recon.js_endpoints import discover_js_endpoints
 from app.modules.recon.js_secrets import discover_js_secrets
-from app.modules.recon.api_discovery import discover_api
+from app.modules.recon.waf import detect_waf
 
 
 class ReconAgent:
@@ -117,8 +118,7 @@ class ReconAgent:
                 subdomains = []
                 if hostname:
                     domain = hostname
-                    if domain.startswith("www."):
-                        domain = domain[4:]
+                    domain = domain.removeprefix("www.")
                     with concurrent.futures.ThreadPoolExecutor(
                         max_workers=20
                     ) as executor:

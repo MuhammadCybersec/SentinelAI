@@ -17,9 +17,9 @@ from pathlib import Path
 from typing import Any
 from uuid import UUID, uuid4
 
+from app.modules.scanner.modules.secrets_scanner import SecretsScanner
 from app.modules.scanner.modules.sqli_v2 import SQLiV2Scanner
 from app.modules.scanner.modules.xss_scanner import XSSScanner
-from app.modules.scanner.modules.secrets_scanner import SecretsScanner
 
 
 @dataclass(slots=True)
@@ -92,6 +92,39 @@ class ScanStatistics:
     end_time: datetime | None = None
     duration: float = 0.0
     findings_by_scanner: dict[str, int] = field(default_factory=dict)
+
+
+class ScannerManagerError(Exception):
+    pass
+
+
+class ScannerNotFoundError(ScannerManagerError):
+    pass
+
+
+class ScannerRegistrationError(ScannerManagerError):
+    pass
+
+
+class ScannerExecutionError(ScannerManagerError):
+    pass
+
+
+@dataclass(slots=True)
+class ScannerInfo:
+    name: str
+    version: str = "1.0.0"
+    description: str = ""
+    severity: str = ""
+
+
+@dataclass(slots=True)
+class ScannerExecutionResult:
+    scanner: str
+    success: bool
+    findings: list[ScanFinding] = field(default_factory=list)
+    error: str | None = None
+    duration: float = 0.0
 
 
 class ScannerManager:

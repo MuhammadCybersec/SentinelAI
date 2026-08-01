@@ -5,15 +5,16 @@ Phase 7: SQL Injection Detection
 """
 
 import logging
-import time
 import re
+import time
 from dataclasses import dataclass, field
-from typing import Optional, Dict, List, Any, Tuple, Set
+from typing import Any
+
 import requests
 
-from .union_sqli import UnionSQLi
 from .html_parser import HTMLParser
 from .regex_utils import RegexUtils
+from .union_sqli import UnionSQLi
 
 # ============================================================
 # Data Classes
@@ -28,22 +29,22 @@ class SQLiDetectionResult:
     """
 
     success: bool = False
-    parameter: Optional[str] = None
-    injection_type: Optional[str] = None
-    payload: Optional[str] = None
+    parameter: str | None = None
+    injection_type: str | None = None
+    payload: str | None = None
     confidence: int = 0
     risk_level: str = "LOW"
-    evidence: List[str] = field(default_factory=list)
-    response_diff: Optional[Dict[str, Any]] = None
+    evidence: list[str] = field(default_factory=list)
+    response_diff: dict[str, Any] | None = None
     column_count: int = 0
-    dbms_confidence: Dict[str, int] = field(default_factory=dict)
-    techniques_tested: List[str] = field(default_factory=list)
+    dbms_confidence: dict[str, int] = field(default_factory=dict)
+    techniques_tested: list[str] = field(default_factory=list)
     execution_time: float = 0.0
-    errors: List[str] = field(default_factory=list)
+    errors: list[str] = field(default_factory=list)
 
     # Raw data
-    baseline_response: Optional[str] = None
-    payload_responses: Dict[str, str] = field(default_factory=dict)
+    baseline_response: str | None = None
+    payload_responses: dict[str, str] = field(default_factory=dict)
 
     def add_evidence(self, evidence: str):
         """Add evidence to the result."""
@@ -81,7 +82,7 @@ class SQLiDetectionResult:
 
         return f"SQLi: {', '.join(parts)}" if parts else "SQLi detected"
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for logging/output."""
         return {
             "success": self.success,
@@ -223,7 +224,7 @@ class SQLiDetector:
         self,
         session: requests.Session,
         base_url: str,
-        logger: Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ):
         """
         Initialize SQL Injection detector.
@@ -275,7 +276,7 @@ class SQLiDetector:
 
     def _get_baseline(
         self, injection_point: str
-    ) -> Tuple[Optional[requests.Response], int, float]:
+    ) -> tuple[requests.Response | None, int, float]:
         """Get baseline response with timing."""
         start_time = time.time()
 
@@ -295,8 +296,8 @@ class SQLiDetector:
         return self.baseline_response, self.baseline_size, elapsed
 
     def _send_payload_with_metrics(
-        self, injection_point: str, payload: str, baseline: Optional[requests.Response]
-    ) -> Dict[str, Any]:
+        self, injection_point: str, payload: str, baseline: requests.Response | None
+    ) -> dict[str, Any]:
         """Send payload and collect metrics."""
         start_time = time.time()
 
@@ -327,7 +328,7 @@ class SQLiDetector:
             "status_code": response.status_code,
         }
 
-    def _check_oracle_errors(self, text: str) -> List[str]:
+    def _check_oracle_errors(self, text: str) -> list[str]:
         """Check for Oracle errors in text."""
         errors = []
         for pattern in self.ORACLE_ERROR_PATTERNS:
@@ -335,7 +336,7 @@ class SQLiDetector:
                 errors.append(pattern)
         return errors
 
-    def _check_dbms_fingerprints(self, text: str) -> Dict[str, int]:
+    def _check_dbms_fingerprints(self, text: str) -> dict[str, int]:
         """Check for DBMS fingerprints in text."""
         scores = {}
         for dbms, patterns in self.DBMS_FINGERPRINTS.items():
@@ -399,10 +400,10 @@ class SQLiDetector:
     def _try_payloads(
         self,
         injection_point: str,
-        payloads: List[Tuple[str, str]],
+        payloads: list[tuple[str, str]],
         target_type: str,
         threshold: int = 50,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Try a list of payloads and return the best one."""
         baseline, baseline_size, baseline_time = self._get_baseline(injection_point)
 
@@ -465,7 +466,7 @@ class SQLiDetector:
     # Public Detection Methods
     # ============================================================
 
-    def detect_union(self, injection_point: str) -> Dict[str, Any]:
+    def detect_union(self, injection_point: str) -> dict[str, Any]:
         """
         Detect UNION-based SQL injection.
 
@@ -526,7 +527,7 @@ class SQLiDetector:
             "execution_time": elapsed,
         }
 
-    def detect_boolean(self, injection_point: str) -> Dict[str, Any]:
+    def detect_boolean(self, injection_point: str) -> dict[str, Any]:
         """
         Detect Boolean-based SQL injection.
 
@@ -611,7 +612,7 @@ class SQLiDetector:
             "execution_time": elapsed,
         }
 
-    def detect_error_based(self, injection_point: str) -> Dict[str, Any]:
+    def detect_error_based(self, injection_point: str) -> dict[str, Any]:
         """
         Detect Error-based SQL injection.
 
@@ -660,7 +661,7 @@ class SQLiDetector:
 
     def detect_time_based(
         self, injection_point: str, sleep_seconds: int = 5
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Detect Time-based SQL injection.
 
@@ -755,7 +756,7 @@ class SQLiDetector:
         self.logger.warning("[SQLiDetector] Failed to detect column count")
         return 0
 
-    def verify(self, injection_point: str, payload: str) -> Dict[str, Any]:
+    def verify(self, injection_point: str, payload: str) -> dict[str, Any]:
         """
         Verify a suspected injection.
 
@@ -843,7 +844,7 @@ class SQLiDetector:
             )
 
             if normal_result["success"]:
-                result.add_evidence(f"Normal payloads showed differences")
+                result.add_evidence("Normal payloads showed differences")
                 result.confidence = max(result.confidence, normal_result["best_score"])
                 result.payload = normal_result["best_payload"]
 
@@ -856,7 +857,7 @@ class SQLiDetector:
             )
 
             if oracle_result["success"]:
-                result.add_evidence(f"Oracle-specific payloads successful")
+                result.add_evidence("Oracle-specific payloads successful")
                 result.confidence = max(result.confidence, oracle_result["best_score"])
                 result.add_dbms_confidence(
                     "oracle", min(oracle_result["best_score"] + 20, 100)
@@ -887,7 +888,7 @@ class SQLiDetector:
             error_result = self.detect_error_based(injection_point)
 
             if error_result["success"]:
-                result.add_evidence(f"Error-based injection detected")
+                result.add_evidence("Error-based injection detected")
                 result.confidence = max(result.confidence, error_result["confidence"])
                 if result.injection_type != "UNION":
                     result.injection_type = "ERROR_BASED"
@@ -903,7 +904,7 @@ class SQLiDetector:
             boolean_result = self.detect_boolean(injection_point)
 
             if boolean_result["success"]:
-                result.add_evidence(f"Boolean injection detected")
+                result.add_evidence("Boolean injection detected")
                 result.confidence = max(result.confidence, boolean_result["confidence"])
                 if result.injection_type not in ["UNION", "ERROR_BASED"]:
                     result.injection_type = "BOOLEAN"
@@ -918,7 +919,7 @@ class SQLiDetector:
                 time_result = self.detect_time_based(injection_point)
 
                 if time_result["success"]:
-                    result.add_evidence(f"Time-based injection detected")
+                    result.add_evidence("Time-based injection detected")
                     result.confidence = max(
                         result.confidence, time_result["confidence"]
                     )
@@ -960,7 +961,7 @@ class SQLiDetector:
                     result.add_dbms_confidence(dbms, score)
 
         except Exception as e:
-            error_msg = f"SQL Injection detection failed: {str(e)}"
+            error_msg = f"SQL Injection detection failed: {e!s}"
             self.logger.error(error_msg)
             result.add_error(error_msg)
             result.success = False
@@ -996,7 +997,7 @@ class SQLiDetector:
         result = self.detect(injection_point, fast_mode=True)
         return result.confidence
 
-    def get_payload(self, injection_point: str) -> Optional[str]:
+    def get_payload(self, injection_point: str) -> str | None:
         """Get working payload for a parameter."""
         result = self.detect(injection_point, fast_mode=True)
         return result.payload

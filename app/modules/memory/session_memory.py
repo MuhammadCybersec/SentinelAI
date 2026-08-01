@@ -17,6 +17,7 @@ Stores the current runtime session information.
 # Session Memory Class
 # ===========================================================
 
+
 class SessionMemory:
     """
     Stores runtime information for the current session.

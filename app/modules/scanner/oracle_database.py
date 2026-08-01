@@ -8,13 +8,14 @@ import logging
 import re
 import time
 from dataclasses import dataclass, field
-from typing import Optional, Dict, List, Any
+from typing import Any
+
 import requests
 
-from .union_sqli import UnionSQLi
 from .html_parser import HTMLParser
 from .regex_utils import RegexUtils
 from .signatures import OracleSignatures
+from .union_sqli import UnionSQLi
 
 # ============================================================
 # Data Classes
@@ -31,59 +32,59 @@ class OracleDatabaseResult:
     success: bool = False
 
     # Database identification
-    banner: Optional[str] = None
-    database_name: Optional[str] = None
-    instance_name: Optional[str] = None
-    sid: Optional[str] = None
-    service_name: Optional[str] = None
-    host_name: Optional[str] = None
-    global_name: Optional[str] = None
-    oracle_home: Optional[str] = None
+    banner: str | None = None
+    database_name: str | None = None
+    instance_name: str | None = None
+    sid: str | None = None
+    service_name: str | None = None
+    host_name: str | None = None
+    global_name: str | None = None
+    oracle_home: str | None = None
 
     # Platform & OS
-    platform: Optional[str] = None
-    operating_system: Optional[str] = None
+    platform: str | None = None
+    operating_system: str | None = None
 
     # Version & Edition
-    version: Optional[str] = None
-    edition: Optional[str] = None
-    full_version: Optional[str] = None
+    version: str | None = None
+    edition: str | None = None
+    full_version: str | None = None
 
     # Database status
-    database_role: Optional[str] = None
-    open_mode: Optional[str] = None
-    log_mode: Optional[str] = None
-    startup_time: Optional[str] = None
-    uptime: Optional[str] = None
-    uptime_seconds: Optional[int] = None
+    database_role: str | None = None
+    open_mode: str | None = None
+    log_mode: str | None = None
+    startup_time: str | None = None
+    uptime: str | None = None
+    uptime_seconds: int | None = None
 
     # Time & Date
-    current_date: Optional[str] = None
-    current_time: Optional[str] = None
-    timezone: Optional[str] = None
+    current_date: str | None = None
+    current_time: str | None = None
+    timezone: str | None = None
 
     # Character sets
-    character_set: Optional[str] = None
-    national_character_set: Optional[str] = None
+    character_set: str | None = None
+    national_character_set: str | None = None
 
     # NLS parameters
-    nls_language: Optional[str] = None
-    nls_territory: Optional[str] = None
-    nls_parameters: Dict[str, str] = field(default_factory=dict)
+    nls_language: str | None = None
+    nls_territory: str | None = None
+    nls_parameters: dict[str, str] = field(default_factory=dict)
 
     # Container/Pluggable
     is_cdb: bool = False
     is_pdb: bool = False
-    container_name: Optional[str] = None
-    pdb_name: Optional[str] = None
+    container_name: str | None = None
+    pdb_name: str | None = None
 
     # Components & Options
-    installed_components: List[str] = field(default_factory=list)
-    installed_options: List[str] = field(default_factory=list)
+    installed_components: list[str] = field(default_factory=list)
+    installed_options: list[str] = field(default_factory=list)
 
     # Raw data for debugging
-    raw_responses: List[str] = field(default_factory=list)
-    errors: List[str] = field(default_factory=list)
+    raw_responses: list[str] = field(default_factory=list)
+    errors: list[str] = field(default_factory=list)
 
     def add_error(self, error: str):
         """Add an error to the result."""
@@ -145,7 +146,7 @@ class OracleDatabaseResult:
 
         return f"Database: {', '.join(parts)}" if parts else "Database: No data found"
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for logging/output."""
         return {
             "success": self.success,
@@ -337,7 +338,7 @@ class OracleDatabaseEnumerator:
         self,
         session: requests.Session,
         base_url: str,
-        logger: Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ):
         """
         Initialize Oracle database enumerator.
@@ -384,7 +385,7 @@ class OracleDatabaseEnumerator:
     # Private Methods
     # ============================================================
 
-    def _get_baseline(self, injection_point: str) -> Optional[requests.Response]:
+    def _get_baseline(self, injection_point: str) -> requests.Response | None:
         """Get baseline response for comparison."""
         if self.baseline_response is None:
             self.logger.info("[OracleDatabase] Fetching baseline response...")
@@ -401,7 +402,7 @@ class OracleDatabaseEnumerator:
 
     def _send_payload(
         self, injection_point: str, payload: str
-    ) -> Optional[requests.Response]:
+    ) -> requests.Response | None:
         """Send a payload and return the response."""
         baseline = self._get_baseline(injection_point)
         result = self.union_sqli.test_payload(injection_point, payload, baseline)
@@ -411,7 +412,7 @@ class OracleDatabaseEnumerator:
 
         return result["response"]
 
-    def _extract_values(self, text: str, pattern: str) -> List[str]:
+    def _extract_values(self, text: str, pattern: str) -> list[str]:
         """Extract values from text using regex pattern."""
         if not text:
             return []
@@ -448,7 +449,7 @@ class OracleDatabaseEnumerator:
 
         return cleaned
 
-    def _extract_single_value(self, text: str, pattern: str) -> Optional[str]:
+    def _extract_single_value(self, text: str, pattern: str) -> str | None:
         """Extract a single value from text."""
         values = self._extract_values(text, pattern)
         return values[0] if values else None
@@ -467,7 +468,7 @@ class OracleDatabaseEnumerator:
     def _try_payloads(
         self,
         injection_point: str,
-        payloads: List[str],
+        payloads: list[str],
         extract_pattern: str,
         single: bool = False,
     ) -> Any:
@@ -491,7 +492,7 @@ class OracleDatabaseEnumerator:
                         if values:
                             return [self._clean_value(v) for v in values]
             except Exception as e:
-                self.logger.warning(f"[OracleDatabase] Payload failed: {str(e)}")
+                self.logger.warning(f"[OracleDatabase] Payload failed: {e!s}")
                 continue
 
         return None if single else []
@@ -500,7 +501,7 @@ class OracleDatabaseEnumerator:
     # Public Enumeration Methods
     # ============================================================
 
-    def enumerate_banner(self, injection_point: str) -> Optional[str]:
+    def enumerate_banner(self, injection_point: str) -> str | None:
         """Enumerate database banner."""
         self.logger.info("[OracleDatabase] Enumerating database banner...")
         start = time.time()
@@ -524,7 +525,7 @@ class OracleDatabaseEnumerator:
 
         return result
 
-    def enumerate_database_name(self, injection_point: str) -> Optional[str]:
+    def enumerate_database_name(self, injection_point: str) -> str | None:
         """Enumerate database name."""
         self.logger.info("[OracleDatabase] Enumerating database name...")
         start = time.time()
@@ -548,7 +549,7 @@ class OracleDatabaseEnumerator:
 
         return result
 
-    def enumerate_instance_name(self, injection_point: str) -> Optional[str]:
+    def enumerate_instance_name(self, injection_point: str) -> str | None:
         """Enumerate instance name."""
         self.logger.info("[OracleDatabase] Enumerating instance name...")
         start = time.time()
@@ -572,7 +573,7 @@ class OracleDatabaseEnumerator:
 
         return result
 
-    def enumerate_sid(self, injection_point: str) -> Optional[str]:
+    def enumerate_sid(self, injection_point: str) -> str | None:
         """Enumerate SID."""
         self.logger.info("[OracleDatabase] Enumerating SID...")
         start = time.time()
@@ -594,7 +595,7 @@ class OracleDatabaseEnumerator:
 
         return result
 
-    def enumerate_service_name(self, injection_point: str) -> Optional[str]:
+    def enumerate_service_name(self, injection_point: str) -> str | None:
         """Enumerate service name."""
         self.logger.info("[OracleDatabase] Enumerating service name...")
         start = time.time()
@@ -618,7 +619,7 @@ class OracleDatabaseEnumerator:
 
         return result
 
-    def enumerate_hostname(self, injection_point: str) -> Optional[str]:
+    def enumerate_hostname(self, injection_point: str) -> str | None:
         """Enumerate host name."""
         self.logger.info("[OracleDatabase] Enumerating host name...")
         start = time.time()
@@ -640,7 +641,7 @@ class OracleDatabaseEnumerator:
 
         return result
 
-    def enumerate_global_name(self, injection_point: str) -> Optional[str]:
+    def enumerate_global_name(self, injection_point: str) -> str | None:
         """Enumerate global database name."""
         self.logger.info("[OracleDatabase] Enumerating global name...")
         start = time.time()
@@ -662,7 +663,7 @@ class OracleDatabaseEnumerator:
 
         return result
 
-    def enumerate_oracle_home(self, injection_point: str) -> Optional[str]:
+    def enumerate_oracle_home(self, injection_point: str) -> str | None:
         """Enumerate Oracle Home path."""
         self.logger.info("[OracleDatabase] Enumerating Oracle Home...")
         start = time.time()
@@ -684,7 +685,7 @@ class OracleDatabaseEnumerator:
 
         return result
 
-    def enumerate_platform(self, injection_point: str) -> Optional[str]:
+    def enumerate_platform(self, injection_point: str) -> str | None:
         """Enumerate platform."""
         self.logger.info("[OracleDatabase] Enumerating platform...")
         start = time.time()
@@ -706,7 +707,7 @@ class OracleDatabaseEnumerator:
 
         return result
 
-    def enumerate_operating_system(self, injection_point: str) -> Optional[str]:
+    def enumerate_operating_system(self, injection_point: str) -> str | None:
         """Enumerate operating system."""
         self.logger.info("[OracleDatabase] Enumerating operating system...")
         start = time.time()
@@ -730,7 +731,7 @@ class OracleDatabaseEnumerator:
 
         return result
 
-    def enumerate_version(self, injection_point: str) -> Optional[str]:
+    def enumerate_version(self, injection_point: str) -> str | None:
         """Enumerate database version."""
         self.logger.info("[OracleDatabase] Enumerating version...")
         start = time.time()
@@ -752,7 +753,7 @@ class OracleDatabaseEnumerator:
 
         return result
 
-    def enumerate_database_role(self, injection_point: str) -> Optional[str]:
+    def enumerate_database_role(self, injection_point: str) -> str | None:
         """Enumerate database role."""
         self.logger.info("[OracleDatabase] Enumerating database role...")
         start = time.time()
@@ -776,7 +777,7 @@ class OracleDatabaseEnumerator:
 
         return result
 
-    def enumerate_open_mode(self, injection_point: str) -> Optional[str]:
+    def enumerate_open_mode(self, injection_point: str) -> str | None:
         """Enumerate open mode."""
         self.logger.info("[OracleDatabase] Enumerating open mode...")
         start = time.time()
@@ -798,7 +799,7 @@ class OracleDatabaseEnumerator:
 
         return result
 
-    def enumerate_log_mode(self, injection_point: str) -> Optional[str]:
+    def enumerate_log_mode(self, injection_point: str) -> str | None:
         """Enumerate log mode."""
         self.logger.info("[OracleDatabase] Enumerating log mode...")
         start = time.time()
@@ -820,7 +821,7 @@ class OracleDatabaseEnumerator:
 
         return result
 
-    def enumerate_startup_time(self, injection_point: str) -> Optional[str]:
+    def enumerate_startup_time(self, injection_point: str) -> str | None:
         """Enumerate startup time."""
         self.logger.info("[OracleDatabase] Enumerating startup time...")
         start = time.time()
@@ -844,7 +845,7 @@ class OracleDatabaseEnumerator:
 
         return result
 
-    def enumerate_uptime(self, injection_point: str) -> Optional[str]:
+    def enumerate_uptime(self, injection_point: str) -> str | None:
         """Enumerate database uptime."""
         self.logger.info("[OracleDatabase] Enumerating uptime...")
         start = time.time()
@@ -866,7 +867,7 @@ class OracleDatabaseEnumerator:
 
         return None
 
-    def enumerate_current_date(self, injection_point: str) -> Optional[str]:
+    def enumerate_current_date(self, injection_point: str) -> str | None:
         """Enumerate current date."""
         self.logger.info("[OracleDatabase] Enumerating current date...")
         start = time.time()
@@ -890,7 +891,7 @@ class OracleDatabaseEnumerator:
 
         return result
 
-    def enumerate_current_time(self, injection_point: str) -> Optional[str]:
+    def enumerate_current_time(self, injection_point: str) -> str | None:
         """Enumerate current time."""
         self.logger.info("[OracleDatabase] Enumerating current time...")
         start = time.time()
@@ -914,7 +915,7 @@ class OracleDatabaseEnumerator:
 
         return result
 
-    def enumerate_timezone(self, injection_point: str) -> Optional[str]:
+    def enumerate_timezone(self, injection_point: str) -> str | None:
         """Enumerate timezone."""
         self.logger.info("[OracleDatabase] Enumerating timezone...")
         start = time.time()
@@ -933,7 +934,7 @@ class OracleDatabaseEnumerator:
 
         return result
 
-    def enumerate_character_set(self, injection_point: str) -> Optional[str]:
+    def enumerate_character_set(self, injection_point: str) -> str | None:
         """Enumerate character set."""
         self.logger.info("[OracleDatabase] Enumerating character set...")
         start = time.time()
@@ -957,7 +958,7 @@ class OracleDatabaseEnumerator:
 
         return result
 
-    def enumerate_national_character_set(self, injection_point: str) -> Optional[str]:
+    def enumerate_national_character_set(self, injection_point: str) -> str | None:
         """Enumerate national character set."""
         self.logger.info("[OracleDatabase] Enumerating national character set...")
         start = time.time()
@@ -981,7 +982,7 @@ class OracleDatabaseEnumerator:
 
         return result
 
-    def enumerate_nls_language(self, injection_point: str) -> Optional[str]:
+    def enumerate_nls_language(self, injection_point: str) -> str | None:
         """Enumerate NLS language."""
         self.logger.info("[OracleDatabase] Enumerating NLS language...")
         start = time.time()
@@ -1002,7 +1003,7 @@ class OracleDatabaseEnumerator:
 
         return result
 
-    def enumerate_nls_territory(self, injection_point: str) -> Optional[str]:
+    def enumerate_nls_territory(self, injection_point: str) -> str | None:
         """Enumerate NLS territory."""
         self.logger.info("[OracleDatabase] Enumerating NLS territory...")
         start = time.time()
@@ -1023,7 +1024,7 @@ class OracleDatabaseEnumerator:
 
         return result
 
-    def enumerate_nls_parameters(self, injection_point: str) -> Dict[str, str]:
+    def enumerate_nls_parameters(self, injection_point: str) -> dict[str, str]:
         """Enumerate NLS parameters."""
         self.logger.info("[OracleDatabase] Enumerating NLS parameters...")
         start = time.time()
@@ -1073,10 +1074,11 @@ class OracleDatabaseEnumerator:
         if result:
             result_upper = result.upper()
             # Valid CDB names must contain "CDB" or be "ROOT"
-            if "CDB" in result_upper or result_upper == "ROOT":
-                is_cdb = True
-            # Also check for valid PDB names that indicate CDB
-            elif result_upper in ["PDB$SEED", "PDB"]:
+            if (
+                "CDB" in result_upper
+                or result_upper == "ROOT"
+                or result_upper in ["PDB$SEED", "PDB"]
+            ):
                 is_cdb = True
             # Check if it's a valid database name (not an error or random word)
             elif (
@@ -1090,7 +1092,7 @@ class OracleDatabaseEnumerator:
         self.logger.info(f"[OracleDatabase] CDB: {is_cdb} ({elapsed:.2f}s)")
         return is_cdb
 
-    def enumerate_pdb(self, injection_point: str) -> Optional[str]:
+    def enumerate_pdb(self, injection_point: str) -> str | None:
         """Enumerate Pluggable Database (PDB) name."""
         self.logger.info("[OracleDatabase] Enumerating PDB name...")
         start = time.time()
@@ -1119,7 +1121,7 @@ class OracleDatabaseEnumerator:
         )
         return None
 
-    def enumerate_container_name(self, injection_point: str) -> Optional[str]:
+    def enumerate_container_name(self, injection_point: str) -> str | None:
         """Enumerate container name."""
         self.logger.info("[OracleDatabase] Enumerating container name...")
         start = time.time()
@@ -1150,7 +1152,7 @@ class OracleDatabaseEnumerator:
         )
         return None
 
-    def enumerate_components(self, injection_point: str) -> List[str]:
+    def enumerate_components(self, injection_point: str) -> list[str]:
         """Enumerate installed components."""
         self.logger.info("[OracleDatabase] Enumerating installed components...")
         start = time.time()
@@ -1176,7 +1178,7 @@ class OracleDatabaseEnumerator:
 
         return result or []
 
-    def enumerate_options(self, injection_point: str) -> List[str]:
+    def enumerate_options(self, injection_point: str) -> list[str]:
         """Enumerate installed options."""
         self.logger.info("[OracleDatabase] Enumerating installed options...")
         start = time.time()
@@ -1202,7 +1204,7 @@ class OracleDatabaseEnumerator:
 
         return result or []
 
-    def enumerate_edition(self, injection_point: str) -> Optional[str]:
+    def enumerate_edition(self, injection_point: str) -> str | None:
         """Enumerate database edition from banner."""
         self.logger.info("[OracleDatabase] Enumerating edition...")
         start = time.time()
@@ -1234,7 +1236,7 @@ class OracleDatabaseEnumerator:
         )
         return None
 
-    def enumerate_full_version(self, injection_point: str) -> Optional[str]:
+    def enumerate_full_version(self, injection_point: str) -> str | None:
         """Enumerate full version string."""
         self.logger.info("[OracleDatabase] Enumerating full version...")
         start = time.time()
@@ -1357,7 +1359,7 @@ class OracleDatabaseEnumerator:
             result.success = True
 
         except Exception as e:
-            error_msg = f"Database enumeration failed: {str(e)}"
+            error_msg = f"Database enumeration failed: {e!s}"
             self.logger.error(error_msg)
             result.add_error(error_msg)
             result.success = False
@@ -1381,15 +1383,15 @@ class OracleDatabaseEnumerator:
     # Convenience Methods
     # ============================================================
 
-    def get_database_info(self, injection_point: str) -> Dict[str, Any]:
+    def get_database_info(self, injection_point: str) -> dict[str, Any]:
         """Get basic database information."""
         result = self.enumerate_all(injection_point)
         return result.to_dict()
 
-    def get_version(self, injection_point: str) -> Optional[str]:
+    def get_version(self, injection_point: str) -> str | None:
         """Get database version only."""
         return self.enumerate_version(injection_point)
 
-    def get_instance(self, injection_point: str) -> Optional[str]:
+    def get_instance(self, injection_point: str) -> str | None:
         """Get instance name only."""
         return self.enumerate_instance_name(injection_point)

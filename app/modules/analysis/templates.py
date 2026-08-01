@@ -139,11 +139,9 @@ TEMPLATE_DATABASE = {
         "cvss": 8.2,
         "module": "js_secrets",
         "description": (
-            "Sensitive credentials or tokens were found inside " "JavaScript files."
+            "Sensitive credentials or tokens were found inside JavaScript files."
         ),
-        "impact": (
-            "Attackers may abuse exposed secrets to gain " "unauthorized access."
-        ),
+        "impact": ("Attackers may abuse exposed secrets to gain unauthorized access."),
         "recommendation": (
             "Remove secrets from client-side JavaScript and store "
             "them securely on the server."
@@ -208,9 +206,7 @@ TEMPLATE_DATABASE = {
         "cvss": 0.0,
         "module": "technology",
         "description": ("Technology fingerprint identified."),
-        "impact": (
-            "Technology identification helps prioritize known " "vulnerabilities."
-        ),
+        "impact": ("Technology identification helps prioritize known vulnerabilities."),
         "recommendation": ("Keep software updated with the latest security patches."),
         "references": [
             "https://owasp.org/Top10/",

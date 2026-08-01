@@ -31,7 +31,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
 from time import perf_counter
-from typing import Any, Self, Optional
+from typing import Any, Self
 
 from app.modules.recon.scope_manager import ScopeManager
 from app.modules.scanner.core.request_engine import (
@@ -107,9 +107,9 @@ class ScanResult:
     tags: list[str] = field(default_factory=list)
     metadata: dict[str, Any] = field(default_factory=dict)
     timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
-    scan_id: Optional[str] = None
-    raw_response: Optional[str] = None
-    scanner_version: Optional[str] = None
+    scan_id: str | None = None
+    raw_response: str | None = None
+    scanner_version: str | None = None
 
     success: bool = True
     findings: list[dict[str, Any]] = field(default_factory=list)
@@ -474,19 +474,19 @@ class BaseScanner:
         severity: str,
         description: str,
         confidence: float,
-        url: Optional[str] = None,
+        url: str | None = None,
         method: str = "GET",
         parameter: str = "",
         payload: str = "",
         evidence: str = "",
         remediation: str = "",
-        references: Optional[list[str]] = None,
+        references: list[str] | None = None,
         cwe_id: str = "",
         cvss_score: float = 0.0,
         status_code: int = 0,
         response_time: float = 0.0,
-        tags: Optional[list[str]] = None,
-        metadata: Optional[dict[str, Any]] = None,
+        tags: list[str] | None = None,
+        metadata: dict[str, Any] | None = None,
         # Backward compatibility
         vulnerable: bool = False,
     ) -> ScanResult:
@@ -586,7 +586,6 @@ class BaseScanner:
 
         Child scanners may override this.
         """
-        pass
 
     def after_scan(self) -> None:
         """
@@ -594,7 +593,6 @@ class BaseScanner:
 
         Child scanners may override this.
         """
-        pass
 
     def before_request(self, url: str) -> None:
         """
@@ -602,7 +600,6 @@ class BaseScanner:
 
         Child scanners may override this.
         """
-        pass
 
     def after_request(self, response: ResponseData) -> None:
         """
@@ -610,7 +607,6 @@ class BaseScanner:
 
         Child scanners may override this.
         """
-        pass
 
     # ===========================================================
     # Scan Duration

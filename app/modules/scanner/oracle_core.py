@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from typing import Optional
 import requests
+
 from .oracle_core import OracleCore
 
 

@@ -45,7 +45,7 @@ logger.add(
     sys.stdout,
     level="INFO",
     colorize=True,
-    format="<green>{time:HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{message}</cyan>"
+    format="<green>{time:HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{message}</cyan>",
 )
 
 # ===========================================================
@@ -58,7 +58,7 @@ logger.add(
     level="DEBUG",
     rotation="10 MB",
     retention="30 days",
-    encoding="utf-8"
+    encoding="utf-8",
 )
 
 # ===========================================================

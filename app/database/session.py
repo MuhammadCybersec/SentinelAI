@@ -27,21 +27,14 @@ from app.database.connection import engine
 # ===========================================================
 
 SessionLocal = sessionmaker(
-
-    bind=engine,
-
-    autoflush=False,
-
-    autocommit=False,
-
-    expire_on_commit=False
-
+    bind=engine, autoflush=False, autocommit=False, expire_on_commit=False
 )
 
 # ===========================================================
 # DB-SESSION-003
 # Session Provider
 # ===========================================================
+
 
 def get_session():
     """

@@ -14,10 +14,10 @@ Uses DOM diff-based extraction for reliable results.
 
 from __future__ import annotations
 
-import re
 import logging
-from typing import List, Dict, Optional, Any, Tuple, Set
+import re
 from dataclasses import dataclass, field
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 class TableScore:
     name: str
     score: int
-    reasons: List[str] = field(default_factory=list)
+    reasons: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -34,7 +34,7 @@ class ColumnScore:
     name: str
     score: int
     col_type: str  # "username", "password", "unknown"
-    reasons: List[str] = field(default_factory=list)
+    reasons: list[str] = field(default_factory=list)
 
 
 class OracleEnum:
@@ -47,7 +47,7 @@ class OracleEnum:
     # Initialization
     # ============================================================
 
-    def __init__(self, scanner, visible_columns: List[int], column_count: int) -> None:
+    def __init__(self, scanner, visible_columns: list[int], column_count: int) -> None:
         self.scanner = scanner
         self.column_count = column_count
         self.visible_columns = visible_columns
@@ -62,12 +62,12 @@ class OracleEnum:
         self._log(f"[OracleEnum] Using visible columns: {self.visible_columns}")
 
         # State
-        self.tables: List[str] = []
-        self.columns: Dict[str, List[str]] = {}
-        self.username_col: Optional[str] = None
-        self.password_col: Optional[str] = None
-        self.user_table: Optional[str] = None
-        self.credentials: List[Dict[str, str]] = []
+        self.tables: list[str] = []
+        self.columns: dict[str, list[str]] = {}
+        self.username_col: str | None = None
+        self.password_col: str | None = None
+        self.user_table: str | None = None
+        self.credentials: list[dict[str, str]] = []
         self.lab_solved: bool = False
 
         # Baseline for DOM diff
@@ -117,7 +117,7 @@ class OracleEnum:
     # Main Entry Point
     # ============================================================
 
-    def run(self) -> Dict[str, Any]:
+    def run(self) -> dict[str, Any]:
         """Execute complete Oracle enumeration workflow."""
         self._log("[OracleEnum] Starting enumeration...")
 
@@ -177,7 +177,7 @@ class OracleEnum:
             "lab_solved": self.lab_solved,
         }
 
-    def _empty_result(self) -> Dict[str, Any]:
+    def _empty_result(self) -> dict[str, Any]:
         return {
             "tables": [],
             "columns": {},
@@ -192,10 +192,10 @@ class OracleEnum:
     # Step 1: Table Enumeration
     # ============================================================
 
-    def _enumerate_tables(self) -> List[str]:
+    def _enumerate_tables(self) -> list[str]:
         """Enumerate tables using UNION SELECT table_name,NULL FROM user_tables."""
-        tables: List[str] = []
-        seen: Set[str] = set()
+        tables: list[str] = []
+        seen: set[str] = set()
         consecutive_empty = 0
 
         # Try user_tables first
@@ -215,10 +215,10 @@ class OracleEnum:
 
         return self.tables
 
-    def _enumerate_tables_from_source(self, source: str) -> List[str]:
+    def _enumerate_tables_from_source(self, source: str) -> list[str]:
         """Enumerate tables from a specific source."""
-        tables: List[str] = []
-        seen: Set[str] = set()
+        tables: list[str] = []
+        seen: set[str] = set()
         consecutive_empty = 0
 
         # Build column list
@@ -269,9 +269,9 @@ class OracleEnum:
     # Step 2: Table Scoring
     # ============================================================
 
-    def _find_user_table(self, tables: List[str]) -> Optional[str]:
+    def _find_user_table(self, tables: list[str]) -> str | None:
         """Find the highest scoring user table."""
-        scored: List[TableScore] = []
+        scored: list[TableScore] = []
 
         for table in tables:
             score = 0
@@ -327,10 +327,10 @@ class OracleEnum:
     # Step 3: Column Enumeration
     # ============================================================
 
-    def _enumerate_columns(self, table: str) -> List[str]:
+    def _enumerate_columns(self, table: str) -> list[str]:
         """Enumerate columns from a specific table."""
-        columns: List[str] = []
-        seen: Set[str] = set()
+        columns: list[str] = []
+        seen: set[str] = set()
         table_upper = table.upper()
 
         self._log(f"[OracleEnum] Enumerating columns from {table_upper}...")
@@ -379,10 +379,10 @@ class OracleEnum:
     # ============================================================
 
     def _find_credential_columns(
-        self, columns: List[str]
-    ) -> Tuple[Optional[str], Optional[str]]:
+        self, columns: list[str]
+    ) -> tuple[str | None, str | None]:
         """Find username and password columns using scoring."""
-        scored: List[ColumnScore] = []
+        scored: list[ColumnScore] = []
 
         for col in columns:
             upper = col.upper()
@@ -459,10 +459,10 @@ class OracleEnum:
 
     def _extract_credentials(
         self, table: str, username_col: str, password_col: str
-    ) -> List[Dict[str, str]]:
+    ) -> list[dict[str, str]]:
         """Extract credentials from user table."""
-        credentials: List[Dict[str, str]] = []
-        seen: Set[str] = set()
+        credentials: list[dict[str, str]] = []
+        seen: set[str] = set()
 
         self._log(f"[OracleEnum] Extracting credentials from {table}...")
 
@@ -515,27 +515,39 @@ class OracleEnum:
     # DOM Diff Parser
     # ============================================================
 
-    def _extract_container(self, html: str) -> Optional[str]:
+    def _extract_container(self, html: str) -> str | None:
         """Extract the product container from HTML."""
         if not html:
             return None
 
         # Remove scripts and styles
-        html = re.sub(r"<script[^>]*>.*?</script>", " ", html, flags=re.DOTALL | re.I)
-        html = re.sub(r"<style[^>]*>.*?</style>", " ", html, flags=re.DOTALL | re.I)
+        html = re.sub(
+            r"<script[^>]*>.*?</script>", " ", html, flags=re.DOTALL | re.IGNORECASE
+        )
+        html = re.sub(
+            r"<style[^>]*>.*?</style>", " ", html, flags=re.DOTALL | re.IGNORECASE
+        )
 
         # Remove navigation, header, footer
-        html = re.sub(r"<nav[^>]*>.*?</nav>", " ", html, flags=re.DOTALL | re.I)
-        html = re.sub(r"<header[^>]*>.*?</header>", " ", html, flags=re.DOTALL | re.I)
-        html = re.sub(r"<footer[^>]*>.*?</footer>", " ", html, flags=re.DOTALL | re.I)
-        html = re.sub(r"<title[^>]*>.*?</title>", " ", html, flags=re.DOTALL | re.I)
+        html = re.sub(
+            r"<nav[^>]*>.*?</nav>", " ", html, flags=re.DOTALL | re.IGNORECASE
+        )
+        html = re.sub(
+            r"<header[^>]*>.*?</header>", " ", html, flags=re.DOTALL | re.IGNORECASE
+        )
+        html = re.sub(
+            r"<footer[^>]*>.*?</footer>", " ", html, flags=re.DOTALL | re.IGNORECASE
+        )
+        html = re.sub(
+            r"<title[^>]*>.*?</title>", " ", html, flags=re.DOTALL | re.IGNORECASE
+        )
 
         # Remove lab header
         html = re.sub(
             r'<div[^>]*id="academyLabHeader"[^>]*>.*?</div>',
             " ",
             html,
-            flags=re.DOTALL | re.I,
+            flags=re.DOTALL | re.IGNORECASE,
         )
 
         # Find product container
@@ -550,7 +562,7 @@ class OracleEnum:
         ]
 
         for pattern in container_patterns:
-            match = re.search(pattern, html, re.DOTALL | re.I)
+            match = re.search(pattern, html, re.DOTALL | re.IGNORECASE)
             if match:
                 return match.group(1)
 
@@ -559,7 +571,7 @@ class OracleEnum:
             r'<div[^>]*id="academyLabHeader"[^>]*>.*?</div>',
             " ",
             html,
-            flags=re.DOTALL | re.I,
+            flags=re.DOTALL | re.IGNORECASE,
         )
         return html
 
@@ -599,7 +611,7 @@ class OracleEnum:
     # Extraction Helpers
     # ============================================================
 
-    def _extract_table_name_from_response(self, html: str) -> Optional[str]:
+    def _extract_table_name_from_response(self, html: str) -> str | None:
         """Extract table name from response using DOM diff."""
         container = self._extract_container(html)
         if not container:
@@ -680,7 +692,7 @@ class OracleEnum:
 
         return None
 
-    def _extract_column_name_from_response(self, html: str) -> Optional[str]:
+    def _extract_column_name_from_response(self, html: str) -> str | None:
         """Extract column name from response using DOM diff."""
         container = self._extract_container(html)
         if not container:
@@ -739,7 +751,7 @@ class OracleEnum:
 
         return None
 
-    def _extract_credential_from_response(self, html: str) -> Optional[Dict[str, str]]:
+    def _extract_credential_from_response(self, html: str) -> dict[str, str] | None:
         """Extract credential pair from response using DOM diff."""
         container = self._extract_container(html)
         if not container:
@@ -796,7 +808,7 @@ class OracleEnum:
         }
 
         for pattern in patterns:
-            matches = re.findall(pattern, diff, re.I)
+            matches = re.findall(pattern, diff, re.IGNORECASE)
             for match in matches:
                 if len(match) == 2:
                     username = match[0].strip()
@@ -915,8 +927,8 @@ class OracleEnum:
 
 
 def oracle_enumeration(
-    scanner, visible_columns: List[int], column_count: int
-) -> Dict[str, Any]:
+    scanner, visible_columns: list[int], column_count: int
+) -> dict[str, Any]:
     """
     Factory function for Oracle enumeration.
 

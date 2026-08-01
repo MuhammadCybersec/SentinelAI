@@ -5,12 +5,13 @@ Phase 15: Payload Tampering and Evasion
 """
 
 import logging
-import re
 import random
+import re
 import string
-from dataclasses import dataclass, field
-from typing import Optional, Dict, List, Any, Callable, Tuple
 import urllib.parse
+from collections.abc import Callable
+from dataclasses import dataclass, field
+from typing import Any
 
 # ============================================================
 # Data Classes
@@ -26,10 +27,10 @@ class TamperResult:
 
     original_payload: str = ""
     tampered_payload: str = ""
-    tamper_chain: List[str] = field(default_factory=list)
+    tamper_chain: list[str] = field(default_factory=list)
     confidence: int = 0
     success: bool = False
-    errors: List[str] = field(default_factory=list)
+    errors: list[str] = field(default_factory=list)
     execution_time: float = 0.0
     tamper_count: int = 0
 
@@ -53,7 +54,7 @@ class TamperResult:
 
         return f"Tamper: {', '.join(parts)}" if parts else "Tamper: No changes applied"
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for logging/output."""
         return {
             "original_payload": self.original_payload,
@@ -181,7 +182,7 @@ class TamperEngine:
     # Initialization
     # ============================================================
 
-    def __init__(self, logger: Optional[logging.Logger] = None):
+    def __init__(self, logger: logging.Logger | None = None):
         """
         Initialize Tamper Engine.
 
@@ -216,7 +217,7 @@ class TamperEngine:
     # Core Tamper Methods
     # ============================================================
 
-    def _register_tampers(self) -> Dict[str, Callable]:
+    def _register_tampers(self) -> dict[str, Callable]:
         """Register all tamper methods."""
         return {
             "random_case": self._tamper_random_case,
@@ -546,14 +547,14 @@ class TamperEngine:
             )
 
         except Exception as e:
-            result.add_error(f"Tamper failed: {str(e)}")
+            result.add_error(f"Tamper failed: {e!s}")
             result.success = False
-            self.logger.error(f"[TamperEngine] Failed to apply {tamper_name}: {str(e)}")
+            self.logger.error(f"[TamperEngine] Failed to apply {tamper_name}: {e!s}")
 
         result.execution_time = time.time() - start_time
         return result
 
-    def apply_chain(self, payload: str, tamper_chain: List[str]) -> TamperResult:
+    def apply_chain(self, payload: str, tamper_chain: list[str]) -> TamperResult:
         """
         Apply multiple tampers in sequence.
 
@@ -601,9 +602,9 @@ class TamperEngine:
                 self.logger.debug(f"[TamperEngine] Applied {tamper_name} in chain")
 
             except Exception as e:
-                result.add_error(f"Tamper {tamper_name} failed: {str(e)}")
+                result.add_error(f"Tamper {tamper_name} failed: {e!s}")
                 self.logger.error(
-                    f"[TamperEngine] Chain tamper {tamper_name} failed: {str(e)}"
+                    f"[TamperEngine] Chain tamper {tamper_name} failed: {e!s}"
                 )
 
         result.tampered_payload = current_payload
@@ -622,7 +623,7 @@ class TamperEngine:
 
         return result
 
-    def list_tampers(self) -> List[str]:
+    def list_tampers(self) -> list[str]:
         """
         List all available tamper methods.
 
@@ -631,7 +632,7 @@ class TamperEngine:
         """
         return list(self._tamper_registry.keys())
 
-    def recommend_tampers(self, waf_name: str) -> List[str]:
+    def recommend_tampers(self, waf_name: str) -> list[str]:
         """
         Recommend tampers for a specific WAF.
 

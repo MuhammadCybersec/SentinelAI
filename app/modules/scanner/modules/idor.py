@@ -60,7 +60,6 @@ class IDORScanner:
         tested_value = ""
 
         for value in self.test_values:
-
             # -------------------------------------------------
             # Future:
             # Replace object identifiers
@@ -70,7 +69,6 @@ class IDORScanner:
             # -------------------------------------------------
 
             if False:
-
                 vulnerable = True
 
                 tested_value = value
@@ -78,7 +76,6 @@ class IDORScanner:
                 break
 
         if not vulnerable:
-
             return None
 
         return Finding(
@@ -95,7 +92,7 @@ class IDORScanner:
             payload=tested_value,
             evidence="",
             recommendation=(
-                "Implement proper authorization checks " "for every object request."
+                "Implement proper authorization checks for every object request."
             ),
             reference=(
                 "https://owasp.org/www-community/attacks/Insecure_Direct_Object_Reference_Prevention_Cheat_Sheet"
@@ -124,7 +121,6 @@ class IDORScanner:
 # ============================================================
 
 if __name__ == "__main__":
-
     scanner = IDORScanner()
 
     result = scanner.scan(
@@ -135,9 +131,7 @@ if __name__ == "__main__":
     print()
 
     if result is None:
-
         print("No IDOR Found")
 
     else:
-
         print(result)

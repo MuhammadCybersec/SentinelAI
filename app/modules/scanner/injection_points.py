@@ -4,19 +4,20 @@ Intelligent Injection Point Discovery for SentinelAI.
 Phase 8: Discovers all potential injection points in requests.
 """
 
-import logging
 import json
+import logging
 import re
 import time  # ADDED
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass, field
-from typing import Optional, Dict, List, Any, Tuple, Union
-from urllib.parse import urlparse, parse_qs, unquote
+from typing import Any
+from urllib.parse import parse_qs, urlparse
+
 import requests
 
-from .union_sqli import UnionSQLi
 from .html_parser import HTMLParser
 from .regex_utils import RegexUtils
+from .union_sqli import UnionSQLi
 
 # ============================================================
 # Data Classes
@@ -37,7 +38,7 @@ class InjectionPointResult:
     is_injectable: bool = False
     confidence: int = 0
     risk_level: str = "LOW"
-    evidence: List[str] = field(default_factory=list)
+    evidence: list[str] = field(default_factory=list)
     reason: str = ""
     location: str = ""  # Full path or location
     value_type: str = ""  # string, number, boolean, array, object, null
@@ -56,7 +57,7 @@ class InjectionPointResult:
 
         return f"{self.parameter_type}::{self.parameter_name} = {self.original_value} [{status}] Confidence: {self.confidence}%"
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for logging/output."""
         return {
             "parameter_name": self.parameter_name,
@@ -82,10 +83,10 @@ class InjectionDiscoveryResult:
     """
 
     success: bool = False
-    parameters: List[InjectionPointResult] = field(default_factory=list)
+    parameters: list[InjectionPointResult] = field(default_factory=list)
     total_parameters: int = 0
     injectable_parameters: int = 0
-    errors: List[str] = field(default_factory=list)
+    errors: list[str] = field(default_factory=list)
     execution_time: float = 0.0
 
     def add_parameter(self, param: InjectionPointResult):
@@ -99,7 +100,7 @@ class InjectionDiscoveryResult:
         """Add an error to the result."""
         self.errors.append(error)
 
-    def get_best_parameter(self) -> Optional[InjectionPointResult]:
+    def get_best_parameter(self) -> InjectionPointResult | None:
         """
         Get the best injection point (highest confidence).
 
@@ -115,7 +116,7 @@ class InjectionDiscoveryResult:
 
         return max(self.parameters, key=lambda x: x.confidence)
 
-    def get_injectable_parameters(self) -> List[InjectionPointResult]:
+    def get_injectable_parameters(self) -> list[InjectionPointResult]:
         """Get all injectable parameters."""
         return [p for p in self.parameters if p.is_injectable]
 
@@ -145,7 +146,7 @@ class InjectionDiscoveryResult:
 
         return f"Discovery: {', '.join(parts)}"
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for logging/output."""
         best = self.get_best_parameter()
         return {
@@ -293,7 +294,7 @@ class InjectionPointDiscovery:
         self,
         session: requests.Session,
         base_url: str,
-        logger: Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ):
         """
         Initialize Injection Point Discovery module.
@@ -412,7 +413,7 @@ class InjectionPointDiscovery:
     # Public Discovery Methods
     # ============================================================
 
-    def discover_get_parameters(self, url: str) -> List[InjectionPointResult]:
+    def discover_get_parameters(self, url: str) -> list[InjectionPointResult]:
         """
         Discover GET parameters from URL.
 
@@ -455,15 +456,13 @@ class InjectionPointDiscovery:
 
         except Exception as e:
             self.logger.warning(
-                f"[InjectionDiscovery] Failed to parse GET parameters: {str(e)}"
+                f"[InjectionDiscovery] Failed to parse GET parameters: {e!s}"
             )
 
         self.logger.info(f"[InjectionDiscovery] Found {len(results)} GET parameters")
         return results
 
-    def discover_post_parameters(
-        self, data: Union[str, Dict]
-    ) -> List[InjectionPointResult]:
+    def discover_post_parameters(self, data: str | dict) -> list[InjectionPointResult]:
         """
         Discover POST parameters from form data.
 
@@ -512,15 +511,15 @@ class InjectionPointDiscovery:
 
         except Exception as e:
             self.logger.warning(
-                f"[InjectionDiscovery] Failed to parse POST parameters: {str(e)}"
+                f"[InjectionDiscovery] Failed to parse POST parameters: {e!s}"
             )
 
         self.logger.info(f"[InjectionDiscovery] Found {len(results)} POST parameters")
         return results
 
     def discover_json_parameters(
-        self, data: Union[str, Dict], prefix: str = ""
-    ) -> List[InjectionPointResult]:
+        self, data: str | dict, prefix: str = ""
+    ) -> list[InjectionPointResult]:
         """
         Discover parameters from JSON data (supports nested objects).
 
@@ -544,13 +543,13 @@ class InjectionPointDiscovery:
             self._discover_json_recursive(parsed, prefix, results)
 
         except Exception as e:
-            self.logger.warning(f"[InjectionDiscovery] Failed to parse JSON: {str(e)}")
+            self.logger.warning(f"[InjectionDiscovery] Failed to parse JSON: {e!s}")
 
         self.logger.info(f"[InjectionDiscovery] Found {len(results)} JSON parameters")
         return results
 
     def _discover_json_recursive(
-        self, obj: Any, prefix: str, results: List[InjectionPointResult]
+        self, obj: Any, prefix: str, results: list[InjectionPointResult]
     ):
         """
         Recursively discover parameters in JSON objects.
@@ -605,7 +604,7 @@ class InjectionPointDiscovery:
                     result.risk_level = self._get_risk_level(result.confidence)
                     results.append(result)
 
-    def discover_xml_parameters(self, data: str) -> List[InjectionPointResult]:
+    def discover_xml_parameters(self, data: str) -> list[InjectionPointResult]:
         """
         Discover parameters from XML data (supports nested elements).
 
@@ -624,13 +623,13 @@ class InjectionPointDiscovery:
             self._discover_xml_recursive(root, "", results)
 
         except ET.ParseError as e:
-            self.logger.warning(f"[InjectionDiscovery] Failed to parse XML: {str(e)}")
+            self.logger.warning(f"[InjectionDiscovery] Failed to parse XML: {e!s}")
 
         self.logger.info(f"[InjectionDiscovery] Found {len(results)} XML parameters")
         return results
 
     def _discover_xml_recursive(
-        self, element: ET.Element, prefix: str, results: List[InjectionPointResult]
+        self, element: ET.Element, prefix: str, results: list[InjectionPointResult]
     ):
         """
         Recursively discover parameters in XML elements.
@@ -680,8 +679,8 @@ class InjectionPointDiscovery:
             self._discover_xml_recursive(child, param_name, results)
 
     def discover_cookie_parameters(
-        self, cookies: Dict[str, str]
-    ) -> List[InjectionPointResult]:
+        self, cookies: dict[str, str]
+    ) -> list[InjectionPointResult]:
         """
         Discover parameters from cookies.
 
@@ -713,16 +712,14 @@ class InjectionPointDiscovery:
                 self.logger.debug(f"[InjectionDiscovery] Found cookie: {name}={value}")
 
         except Exception as e:
-            self.logger.warning(
-                f"[InjectionDiscovery] Failed to parse cookies: {str(e)}"
-            )
+            self.logger.warning(f"[InjectionDiscovery] Failed to parse cookies: {e!s}")
 
         self.logger.info(f"[InjectionDiscovery] Found {len(results)} cookie parameters")
         return results
 
     def discover_header_parameters(
-        self, headers: Dict[str, str]
-    ) -> List[InjectionPointResult]:
+        self, headers: dict[str, str]
+    ) -> list[InjectionPointResult]:
         """
         Discover parameters from HTTP headers.
 
@@ -784,9 +781,7 @@ class InjectionPointDiscovery:
                     )
 
         except Exception as e:
-            self.logger.warning(
-                f"[InjectionDiscovery] Failed to parse headers: {str(e)}"
-            )
+            self.logger.warning(f"[InjectionDiscovery] Failed to parse headers: {e!s}")
 
         self.logger.info(f"[InjectionDiscovery] Found {len(results)} header parameters")
         return results
@@ -830,7 +825,7 @@ class InjectionPointDiscovery:
                 result.is_injectable = True
                 result.confidence = min(result.confidence + 15, 100)
                 result.add_evidence(f"Contains injection pattern: {pattern}")
-                result.reason = f"Test value contains injection pattern"
+                result.reason = "Test value contains injection pattern"
                 break
 
         return result
@@ -842,11 +837,11 @@ class InjectionPointDiscovery:
     def discover_all(
         self,
         url: str,
-        data: Optional[Union[str, Dict]] = None,
-        json_data: Optional[Union[str, Dict]] = None,
-        xml_data: Optional[str] = None,
-        cookies: Optional[Dict[str, str]] = None,
-        headers: Optional[Dict[str, str]] = None,
+        data: str | dict | None = None,
+        json_data: str | dict | None = None,
+        xml_data: str | None = None,
+        cookies: dict[str, str] | None = None,
+        headers: dict[str, str] | None = None,
         test_parameters: bool = True,
     ) -> InjectionDiscoveryResult:
         """
@@ -944,7 +939,7 @@ class InjectionPointDiscovery:
             result.success = True
 
         except Exception as e:
-            error_msg = f"Injection point discovery failed: {str(e)}"
+            error_msg = f"Injection point discovery failed: {e!s}"
             self.logger.error(error_msg)
             result.add_error(error_msg)
             result.success = False
@@ -968,13 +963,13 @@ class InjectionPointDiscovery:
     # Convenience Methods
     # ============================================================
 
-    def get_best_parameter(self) -> Optional[InjectionPointResult]:
+    def get_best_parameter(self) -> InjectionPointResult | None:
         """Get the best injection point."""
         if self.discovery_result:
             return self.discovery_result.get_best_parameter()
         return None
 
-    def get_injectable_parameters(self) -> List[InjectionPointResult]:
+    def get_injectable_parameters(self) -> list[InjectionPointResult]:
         """Get all injectable parameters."""
         if self.discovery_result:
             return self.discovery_result.get_injectable_parameters()

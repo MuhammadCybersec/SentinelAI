@@ -69,7 +69,6 @@ def collect_endpoints(target: str) -> list[str]:
     print("[+] Discovering APIs...")
 
     try:
-
         fake_status = 404
         fake_length = 0
 
@@ -80,9 +79,7 @@ def collect_endpoints(target: str) -> list[str]:
         )
 
         for item in api_results:
-
             if isinstance(item, dict):
-
                 url = item.get("url")
 
                 if url:
@@ -99,7 +96,6 @@ def collect_endpoints(target: str) -> list[str]:
 # ============================================================
 
 if __name__ == "__main__":
-
     TARGET = "https://bugcrowd.com"
 
     result = collect_endpoints(TARGET)

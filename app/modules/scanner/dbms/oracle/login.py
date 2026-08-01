@@ -5,7 +5,7 @@ Oracle-specific login functionality.
 """
 
 import logging
-from typing import Optional, Dict, Any
+
 import requests
 
 
@@ -16,7 +16,7 @@ class OracleLogin:
         self,
         session: requests.Session,
         base_url: str,
-        logger: Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ):
         """
         Initialize Oracle login handler.
@@ -44,9 +44,7 @@ class OracleLogin:
             logger.addHandler(ch)
         return logger
 
-    def login(
-        self, username: str, password: str, login_url: Optional[str] = None
-    ) -> bool:
+    def login(self, username: str, password: str, login_url: str | None = None) -> bool:
         """
         Attempt to login with given credentials.
 

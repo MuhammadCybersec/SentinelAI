@@ -21,11 +21,11 @@ import ollama
 from app.core.config import config
 from app.core.logger import sentinel_logger
 
-
 # ===========================================================
 # AI-CLIENT-002
 # AI Client Class
 # ===========================================================
+
 
 class AIClient:
     """
@@ -36,9 +36,7 @@ class AIClient:
 
         self.model = config.MODEL
 
-        sentinel_logger.info(
-            f"AI Client initialized with model: {self.model}"
-        )
+        sentinel_logger.info(f"AI Client initialized with model: {self.model}")
 
     # =======================================================
     # AI-CLIENT-003
@@ -51,24 +49,13 @@ class AIClient:
         """
 
         try:
-
             response = ollama.chat(
-
-                model=self.model,
-
-                messages=[
-                    {
-                        "role": "user",
-                        "content": prompt
-                    }
-                ]
-
+                model=self.model, messages=[{"role": "user", "content": prompt}]
             )
 
             return response["message"]["content"]
 
         except Exception as e:
-
             sentinel_logger.exception(e)
 
             return ""

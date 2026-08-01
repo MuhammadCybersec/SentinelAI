@@ -6,14 +6,14 @@ Phase 9: Column Detection and Reflection Discovery
 
 import logging
 import time
-import re
 from dataclasses import dataclass, field
-from typing import Optional, Dict, List, Any, Tuple, Set
+from typing import Any
+
 import requests
 
-from .union_sqli import UnionSQLi
 from .html_parser import HTMLParser
 from .regex_utils import RegexUtils
+from .union_sqli import UnionSQLi
 
 # ============================================================
 # Data Classes
@@ -29,24 +29,24 @@ class ColumnDetectionResult:
 
     success: bool = False
     column_count: int = 0
-    reflective_columns: List[int] = field(default_factory=list)
+    reflective_columns: list[int] = field(default_factory=list)
     reflective_column_count: int = 0
-    union_payload: Optional[str] = None
+    union_payload: str | None = None
     confidence: int = 0
     method_used: str = ""  # ORDER_BY, UNION_NULL, BOTH
     execution_time: float = 0.0
     attempts: int = 0
-    errors: List[str] = field(default_factory=list)
-    raw_responses: Dict[str, str] = field(default_factory=dict)
+    errors: list[str] = field(default_factory=list)
+    raw_responses: dict[str, str] = field(default_factory=dict)
 
     # Column details
-    column_details: Dict[int, Dict[str, Any]] = field(default_factory=dict)
+    column_details: dict[int, dict[str, Any]] = field(default_factory=dict)
 
     def add_error(self, error: str):
         """Add an error to the result."""
         self.errors.append(error)
 
-    def add_column_detail(self, index: int, detail: Dict[str, Any]):
+    def add_column_detail(self, index: int, detail: dict[str, Any]):
         """Add detail for a specific column."""
         self.column_details[index] = detail
 
@@ -74,7 +74,7 @@ class ColumnDetectionResult:
             else "Column Detection: No data"
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for logging/output."""
         return {
             "success": self.success,
@@ -147,7 +147,7 @@ class OracleColumnDetector:
         self,
         session: requests.Session,
         base_url: str,
-        logger: Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ):
         """
         Initialize Oracle Column Detector.
@@ -194,7 +194,7 @@ class OracleColumnDetector:
     # Private Methods
     # ============================================================
 
-    def _get_baseline(self, injection_point: str) -> Optional[requests.Response]:
+    def _get_baseline(self, injection_point: str) -> requests.Response | None:
         """Get baseline response for comparison."""
         if self.baseline_response is None:
             self.logger.info("[ColumnDetector] Fetching baseline response...")
@@ -211,8 +211,8 @@ class OracleColumnDetector:
         return self.baseline_response
 
     def _send_payload_with_metrics(
-        self, injection_point: str, payload: str, baseline: Optional[requests.Response]
-    ) -> Dict[str, Any]:
+        self, injection_point: str, payload: str, baseline: requests.Response | None
+    ) -> dict[str, Any]:
         """Send payload and collect metrics."""
         start_time = time.time()
 
@@ -245,7 +245,7 @@ class OracleColumnDetector:
 
     def _detect_reflective_columns(
         self, injection_point: str, column_count: int
-    ) -> List[int]:
+    ) -> list[int]:
         """
         Detect which columns are reflective.
 
@@ -422,8 +422,8 @@ class OracleColumnDetector:
         return max_columns
 
     def _generate_union_payload(
-        self, column_count: int, reflective_indices: List[int]
-    ) -> Optional[str]:
+        self, column_count: int, reflective_indices: list[int]
+    ) -> str | None:
         """
         Generate a UNION payload using reflective columns.
 
@@ -434,7 +434,7 @@ class OracleColumnDetector:
         Returns:
             Optional[str]: UNION payload or None
         """
-        self.logger.info(f"[ColumnDetector] Generating UNION payload...")
+        self.logger.info("[ColumnDetector] Generating UNION payload...")
 
         if not reflective_indices:
             self.logger.warning(
@@ -585,7 +585,7 @@ class OracleColumnDetector:
                 result.success = False
 
         except Exception as e:
-            error_msg = f"Column detection failed: {str(e)}"
+            error_msg = f"Column detection failed: {e!s}"
             self.logger.error(error_msg)
             result.add_error(error_msg)
             result.success = False
@@ -650,7 +650,7 @@ class OracleColumnDetector:
                 result.success = False
 
         except Exception as e:
-            error_msg = f"UNION column detection failed: {str(e)}"
+            error_msg = f"UNION column detection failed: {e!s}"
             self.logger.error(error_msg)
             result.add_error(error_msg)
             result.success = False
@@ -661,7 +661,7 @@ class OracleColumnDetector:
 
     def find_reflective_column(
         self, injection_point: str, column_count: int
-    ) -> List[int]:
+    ) -> list[int]:
         """
         Find reflective columns in a UNION query.
 
@@ -679,8 +679,8 @@ class OracleColumnDetector:
         return self._detect_reflective_columns(injection_point, column_count)
 
     def generate_union_payload(
-        self, column_count: int, reflective_indices: Optional[List[int]] = None
-    ) -> Optional[str]:
+        self, column_count: int, reflective_indices: list[int] | None = None
+    ) -> str | None:
         """
         Generate a UNION payload for the given column count.
 
@@ -700,7 +700,7 @@ class OracleColumnDetector:
 
         return self._generate_union_payload(column_count, reflective_indices)
 
-    def get_best_union_payload(self, injection_point: str) -> Optional[str]:
+    def get_best_union_payload(self, injection_point: str) -> str | None:
         """
         Get the best UNION payload for the detected columns.
 

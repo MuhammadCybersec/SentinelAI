@@ -16,8 +16,8 @@ from __future__ import annotations
 
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.platypus import (
-    SimpleDocTemplate,
     Paragraph,
+    SimpleDocTemplate,
     Spacer,
 )
 
@@ -155,9 +155,7 @@ class PDFReport:
         )
 
         for finding in findings:
-
             if hasattr(finding, "title"):
-
                 title = getattr(finding, "title", "Unknown")
                 severity = getattr(finding, "severity", "Info")
                 evidence = getattr(finding, "evidence", "")
@@ -168,7 +166,6 @@ class PDFReport:
                 cvss = getattr(finding, "cvss", "N/A")
 
             else:
-
                 title = finding.get("title", "Unknown")
                 severity = finding.get("severity", "Info")
                 evidence = finding.get("evidence", "")
@@ -214,7 +211,6 @@ class PDFReport:
             )
 
             if evidence:
-
                 story.append(
                     Paragraph(
                         f"<b>Evidence:</b> {evidence}",
@@ -253,7 +249,6 @@ class PDFReport:
         )
 
         for item in recommendations:
-
             recommendation = item.get(
                 "recommendation",
                 item.get("title", ""),

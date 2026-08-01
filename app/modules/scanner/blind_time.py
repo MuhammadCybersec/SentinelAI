@@ -5,15 +5,16 @@ Phase 12: Time-Based Blind SQL Injection Detection
 """
 
 import logging
-import time
 import statistics
+import time
 from dataclasses import dataclass, field
-from typing import Optional, Dict, List, Any, Tuple
+from typing import Any
+
 import requests
 
-from .union_sqli import UnionSQLi
 from .html_parser import HTMLParser
 from .regex_utils import RegexUtils
+from .union_sqli import UnionSQLi
 
 # ============================================================
 # Data Classes
@@ -33,15 +34,15 @@ class TimeBlindResult:
     delay_detected: bool = False
     delay_seconds: float = 0.0
     expected_delay: float = 0.0
-    working_payloads: List[str] = field(default_factory=list)
+    working_payloads: list[str] = field(default_factory=list)
     confidence: int = 0
-    evidence: List[str] = field(default_factory=list)
-    errors: List[str] = field(default_factory=list)
+    evidence: list[str] = field(default_factory=list)
+    errors: list[str] = field(default_factory=list)
     execution_time: float = 0.0
-    best_payload: Optional[str] = None
-    measurements: List[float] = field(default_factory=list)
-    baseline_measurements: List[float] = field(default_factory=list)
-    delayed_measurements: List[float] = field(default_factory=list)
+    best_payload: str | None = None
+    measurements: list[float] = field(default_factory=list)
+    baseline_measurements: list[float] = field(default_factory=list)
+    delayed_measurements: list[float] = field(default_factory=list)
     network_jitter: float = 0.0
     false_positive_rate: float = 0.0
 
@@ -68,7 +69,7 @@ class TimeBlindResult:
             return "Time-based blind SQL injection not detected"
 
         parts = []
-        parts.append(f"Vulnerable: YES")
+        parts.append("Vulnerable: YES")
         parts.append(f"Delay: {self.delay_seconds:.2f}s")
         parts.append(f"Confidence: {self.confidence}%")
         if self.best_payload:
@@ -78,7 +79,7 @@ class TimeBlindResult:
 
         return f"Time Blind: {', '.join(parts)}"
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for logging/output."""
         return {
             "success": self.success,
@@ -159,7 +160,7 @@ class OracleTimeBlindEngine:
         self,
         session: requests.Session,
         base_url: str,
-        logger: Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ):
         """
         Initialize Oracle Time Blind Engine.
@@ -205,7 +206,7 @@ class OracleTimeBlindEngine:
     # Private Methods
     # ============================================================
 
-    def _get_baseline(self, injection_point: str) -> Optional[requests.Response]:
+    def _get_baseline(self, injection_point: str) -> requests.Response | None:
         """Get baseline response for comparison."""
         if self.baseline_response is None:
             self.logger.info("[TimeBlind] Fetching baseline response...")
@@ -222,7 +223,7 @@ class OracleTimeBlindEngine:
 
     def _send_payload_with_timing(
         self, injection_point: str, payload: str
-    ) -> Tuple[Optional[requests.Response], float]:
+    ) -> tuple[requests.Response | None, float]:
         """
         Send payload and measure response time.
 
@@ -248,9 +249,9 @@ class OracleTimeBlindEngine:
     def _measure_response_time(
         self,
         injection_point: str,
-        payload: Optional[str] = None,
+        payload: str | None = None,
         num_measurements: int = 3,
-    ) -> Tuple[float, List[float]]:
+    ) -> tuple[float, list[float]]:
         """
         Measure response time for a payload.
 
@@ -276,7 +277,7 @@ class OracleTimeBlindEngine:
 
             if elapsed > 0:
                 measurements.append(elapsed)
-                self.logger.debug(f"[TimeBlind] Measurement {i+1}: {elapsed:.3f}s")
+                self.logger.debug(f"[TimeBlind] Measurement {i + 1}: {elapsed:.3f}s")
             else:
                 measurements.append(0.1)  # Minimum baseline
 
@@ -338,7 +339,7 @@ class OracleTimeBlindEngine:
     def detect_time_blind(
         self,
         injection_point: str,
-        delays: List[int] = None,
+        delays: list[int] = None,
         num_measurements: int = MEASUREMENTS_PER_TEST,
     ) -> TimeBlindResult:
         """
@@ -486,7 +487,7 @@ class OracleTimeBlindEngine:
             result.success = True
 
         except Exception as e:
-            error_msg = f"Time blind detection failed: {str(e)}"
+            error_msg = f"Time blind detection failed: {e!s}"
             self.logger.error(error_msg)
             result.add_error(error_msg)
             result.success = False
@@ -542,7 +543,7 @@ class OracleTimeBlindEngine:
         return avg
 
     def calculate_delay(
-        self, injection_point: str, payload: str, baseline_time: Optional[float] = None
+        self, injection_point: str, payload: str, baseline_time: float | None = None
     ) -> float:
         """
         Calculate delay between baseline and payload.
@@ -599,7 +600,7 @@ class OracleTimeBlindEngine:
         )
         return verified
 
-    def build_sleep_payloads(self, delay: int) -> List[str]:
+    def build_sleep_payloads(self, delay: int) -> list[str]:
         """
         Build sleep-based payloads.
 
@@ -615,7 +616,7 @@ class OracleTimeBlindEngine:
             payloads.append(payload)
         return payloads
 
-    def build_pipe_payloads(self, delay: int) -> List[str]:
+    def build_pipe_payloads(self, delay: int) -> list[str]:
         """
         Build DBMS_PIPE payloads.
 
@@ -631,7 +632,7 @@ class OracleTimeBlindEngine:
             f"AND CASE WHEN (1=1) THEN DBMS_PIPE.RECEIVE_MESSAGE('A',{delay}) ELSE 1 END--",
         ]
 
-    def build_case_payloads(self, delay: int) -> List[str]:
+    def build_case_payloads(self, delay: int) -> list[str]:
         """
         Build CASE-based payloads.
 
@@ -648,8 +649,8 @@ class OracleTimeBlindEngine:
         return payloads
 
     def find_best_payload(
-        self, injection_point: str, delays: List[int] = None
-    ) -> Tuple[Optional[str], float, int]:
+        self, injection_point: str, delays: list[int] = None
+    ) -> tuple[str | None, float, int]:
         """
         Find the best payload.
 
@@ -688,7 +689,7 @@ class OracleTimeBlindEngine:
 
     def compare_timings(
         self, injection_point: str, payload: str, baseline_time: float
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Compare timing between baseline and payload.
 
@@ -741,7 +742,7 @@ class OracleTimeBlindEngine:
         result = self.detect_time_blind(injection_point, delays=[5])
         return result.is_vulnerable
 
-    def get_best_time_payload(self, injection_point: str) -> Optional[str]:
+    def get_best_time_payload(self, injection_point: str) -> str | None:
         """
         Get the best time-based payload.
 

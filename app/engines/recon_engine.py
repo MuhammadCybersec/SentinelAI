@@ -16,20 +16,7 @@ all recon modules and collecting their results.
 from __future__ import annotations
 
 from app.core.logger import sentinel_logger
-
 from app.modules.recon import TargetValidator
-
-from app.modules.recon.crawler import crawl_target
-from app.modules.recon.wayback import collect_wayback_urls
-from app.modules.recon.javascript import discover_javascript
-from app.modules.recon.js_endpoints import discover_js_endpoints
-from app.modules.recon.js_secrets import discover_js_secrets
-from app.modules.recon.parameter_discovery import discover_parameters
-from app.modules.recon.api_discovery import discover_api
-from app.modules.recon.headers import analyze_headers
-from app.modules.recon.technology import detect_technology
-from app.modules.recon.waf import detect_waf
-from app.modules.recon.endpoints import collect_endpoints
 
 
 class ReconEngine:
@@ -50,7 +37,6 @@ class ReconEngine:
         sentinel_logger.info(f"Starting Recon: {target}")
 
         if not TargetValidator.is_valid(target):
-
             raise ValueError(f"Invalid target: {target}")
 
         self.results = {
@@ -76,7 +62,6 @@ class ReconEngine:
 # =========================================================
 
 if __name__ == "__main__":
-
     engine = ReconEngine()
 
     result = engine.run("https://bugcrowd.com")

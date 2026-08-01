@@ -18,24 +18,20 @@ Application entry point for Sentinel AI.
 
 from dotenv import load_dotenv
 
-from app.core.logger import sentinel_logger
+from app.agents.manager_agent import ManagerAgent
 from app.core.config import config
-
+from app.core.logger import sentinel_logger
 from app.database.base import Base
 from app.database.connection import engine
-from app.database.session import get_session
-
-from app.database.repositories.project_repository import ProjectRepository
-from app.services.project_service import ProjectService
-
-from app.agents.manager_agent import ManagerAgent
-from app.workflows.cli import CLI
-
-from app.modules.recon import TargetValidator
-from app.services.recon_service import ReconService
-from app.database.repositories.recon_result_repository import ReconResultRepository
 from app.database.repositories.finding_repository import FindingRepository
+from app.database.repositories.project_repository import ProjectRepository
+from app.database.repositories.recon_result_repository import ReconResultRepository
+from app.database.session import get_session
+from app.modules.recon import TargetValidator
 from app.services.finding_service import FindingService
+from app.services.project_service import ProjectService
+from app.services.recon_service import ReconService
+from app.workflows.cli import CLI
 
 # ===========================================================
 # MAIN-002
@@ -80,7 +76,6 @@ def main() -> None:
     db = get_session()
 
     try:
-
         project_repo = ProjectRepository(db)
 
         recon_repo = ReconResultRepository(db)
@@ -128,11 +123,9 @@ def main() -> None:
         cli.start()
 
     except Exception as e:
-
         sentinel_logger.exception(e)
 
     finally:
-
         db.close()
 
     sentinel_logger.success("Application started successfully.")

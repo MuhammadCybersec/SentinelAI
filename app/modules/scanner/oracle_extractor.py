@@ -5,15 +5,16 @@ Phase 4: Oracle Data Extraction
 """
 
 import logging
-import time
 import re
+import time
 from dataclasses import dataclass, field
-from typing import Optional, Dict, List, Any, Union, Iterator
+from typing import Any
+
 import requests
 
-from .union_sqli import UnionSQLi
 from .html_parser import HTMLParser
 from .regex_utils import RegexUtils
+from .union_sqli import UnionSQLi
 
 # ============================================================
 # Data Classes
@@ -28,17 +29,17 @@ class OracleExtractionResult:
     """
 
     success: bool = False
-    schema: Optional[str] = None
-    table: Optional[str] = None
-    columns: List[str] = field(default_factory=list)
-    rows: List[Dict[str, Any]] = field(default_factory=list)
+    schema: str | None = None
+    table: str | None = None
+    columns: list[str] = field(default_factory=list)
+    rows: list[dict[str, Any]] = field(default_factory=list)
     row_count: int = 0
     total_rows: int = 0
     offset: int = 0
     limit: int = 0
     execution_time: float = 0.0
     batch_size: int = 0
-    errors: List[str] = field(default_factory=list)
+    errors: list[str] = field(default_factory=list)
 
     def add_error(self, error: str):
         """Add an error to the result."""
@@ -65,7 +66,7 @@ class OracleExtractionResult:
 
         return f"Extraction: {', '.join(parts)}" if parts else "Extraction: No data"
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for logging/output."""
         return {
             "success": self.success,
@@ -82,19 +83,19 @@ class OracleExtractionResult:
             "summary": self.get_summary(),
         }
 
-    def get_rows_as_list(self) -> List[List[Any]]:
+    def get_rows_as_list(self) -> list[list[Any]]:
         """Get rows as list of lists (for CSV export)."""
         return [[row.get(col) for col in self.columns] for row in self.rows]
 
-    def get_first_row(self) -> Optional[Dict[str, Any]]:
+    def get_first_row(self) -> dict[str, Any] | None:
         """Get the first row."""
         return self.rows[0] if self.rows else None
 
-    def get_last_row(self) -> Optional[Dict[str, Any]]:
+    def get_last_row(self) -> dict[str, Any] | None:
         """Get the last row."""
         return self.rows[-1] if self.rows else None
 
-    def get_column_data(self, column: str) -> List[Any]:
+    def get_column_data(self, column: str) -> list[Any]:
         """Get all values for a specific column."""
         return [row.get(column) for row in self.rows]
 
@@ -154,7 +155,7 @@ class OracleDataExtractor:
         self,
         session: requests.Session,
         base_url: str,
-        logger: Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ):
         """
         Initialize Oracle data extractor.
@@ -199,7 +200,7 @@ class OracleDataExtractor:
     # Private Methods
     # ============================================================
 
-    def _get_baseline(self, injection_point: str) -> Optional[requests.Response]:
+    def _get_baseline(self, injection_point: str) -> requests.Response | None:
         """Get baseline response for comparison."""
         if self.baseline_response is None:
             self.logger.info("[OracleExtractor] Fetching baseline response...")
@@ -216,7 +217,7 @@ class OracleDataExtractor:
 
     def _send_payload(
         self, injection_point: str, payload: str
-    ) -> Optional[requests.Response]:
+    ) -> requests.Response | None:
         """Send a payload and return the response."""
         baseline = self._get_baseline(injection_point)
         result = self.union_sqli.test_payload(injection_point, payload, baseline)
@@ -226,14 +227,14 @@ class OracleDataExtractor:
 
         return result["response"]
 
-    def _extract_values(self, text: str, pattern: str) -> List[str]:
+    def _extract_values(self, text: str, pattern: str) -> list[str]:
         """Extract values from text using regex pattern."""
         matches = re.findall(pattern, text, re.IGNORECASE)
         return list(set(matches))
 
     def _parse_row_data(
-        self, response_text: str, columns: List[str]
-    ) -> Optional[Dict[str, Any]]:
+        self, response_text: str, columns: list[str]
+    ) -> dict[str, Any] | None:
         """
         Parse row data from response text.
 
@@ -313,8 +314,8 @@ class OracleDataExtractor:
         return None
 
     def _parse_rows(
-        self, response_text: str, columns: List[str]
-    ) -> List[Dict[str, Any]]:
+        self, response_text: str, columns: list[str]
+    ) -> list[dict[str, Any]]:
         """
         Parse multiple rows from response text.
 
@@ -346,10 +347,10 @@ class OracleDataExtractor:
 
     def _build_select_payload(
         self,
-        columns: List[str],
+        columns: list[str],
         table: str,
-        limit: Optional[int] = None,
-        offset: Optional[int] = None,
+        limit: int | None = None,
+        offset: int | None = None,
     ) -> str:
         """
         Build a SELECT payload.
@@ -417,7 +418,7 @@ class OracleDataExtractor:
             return -1
 
         except Exception as e:
-            self.logger.error(f"[OracleExtractor] Count rows failed: {str(e)}")
+            self.logger.error(f"[OracleExtractor] Count rows failed: {e!s}")
             return -1
 
     def extract_rows(
@@ -425,10 +426,10 @@ class OracleDataExtractor:
         injection_point: str,
         schema: str,
         table: str,
-        columns: Optional[List[str]] = None,
-        limit: Optional[int] = None,
-        offset: Optional[int] = 0,
-        batch_size: Optional[int] = None,
+        columns: list[str] | None = None,
+        limit: int | None = None,
+        offset: int | None = 0,
+        batch_size: int | None = None,
     ) -> OracleExtractionResult:
         """
         Extract rows from a table with pagination support.
@@ -519,7 +520,7 @@ class OracleDataExtractor:
                 self.logger.error("[OracleExtractor] Payload failed")
 
         except Exception as e:
-            error_msg = f"Extraction failed: {str(e)}"
+            error_msg = f"Extraction failed: {e!s}"
             self.logger.error(error_msg)
             result.add_error(error_msg)
             result.success = False
@@ -536,8 +537,8 @@ class OracleDataExtractor:
         injection_point: str,
         schema: str,
         table: str,
-        columns: Optional[List[str]] = None,
-        max_rows: Optional[int] = None,
+        columns: list[str] | None = None,
+        max_rows: int | None = None,
     ) -> OracleExtractionResult:
         """
         Extract all data from a table.
@@ -579,9 +580,9 @@ class OracleDataExtractor:
         injection_point: str,
         schema: str,
         table: str,
-        columns: Optional[List[str]] = None,
-        batch_size: Optional[int] = None,
-        max_rows: Optional[int] = None,
+        columns: list[str] | None = None,
+        batch_size: int | None = None,
+        max_rows: int | None = None,
     ) -> OracleExtractionResult:
         """
         Extract rows in batches for large tables.
@@ -610,7 +611,7 @@ class OracleDataExtractor:
         )
 
         try:
-            self.logger.info(f"[OracleExtractor] Batched extraction starting...")
+            self.logger.info("[OracleExtractor] Batched extraction starting...")
             self.logger.info(
                 f"[OracleExtractor] Batch size: {batch_size}, Max rows: {max_rows}"
             )
@@ -664,7 +665,7 @@ class OracleDataExtractor:
             )
 
         except Exception as e:
-            error_msg = f"Batched extraction failed: {str(e)}"
+            error_msg = f"Batched extraction failed: {e!s}"
             self.logger.error(error_msg)
             result.add_error(error_msg)
             result.success = False
@@ -677,8 +678,8 @@ class OracleDataExtractor:
         injection_point: str,
         schema: str,
         table: str,
-        columns: Optional[List[str]] = None,
-    ) -> Optional[Dict[str, Any]]:
+        columns: list[str] | None = None,
+    ) -> dict[str, Any] | None:
         """
         Extract the first row from a table.
 
@@ -704,8 +705,8 @@ class OracleDataExtractor:
         injection_point: str,
         schema: str,
         table: str,
-        columns: Optional[List[str]] = None,
-    ) -> Optional[Dict[str, Any]]:
+        columns: list[str] | None = None,
+    ) -> dict[str, Any] | None:
         """
         Extract the last row from a table.
 
@@ -740,7 +741,7 @@ class OracleDataExtractor:
             return None
 
         except Exception as e:
-            self.logger.error(f"[OracleExtractor] Extract last row failed: {str(e)}")
+            self.logger.error(f"[OracleExtractor] Extract last row failed: {e!s}")
             return None
 
     def extract_sample(
@@ -748,7 +749,7 @@ class OracleDataExtractor:
         injection_point: str,
         schema: str,
         table: str,
-        columns: Optional[List[str]] = None,
+        columns: list[str] | None = None,
         sample_percent: int = 10,
     ) -> OracleExtractionResult:
         """
@@ -797,7 +798,7 @@ class OracleDataExtractor:
                 result.add_error("Failed to send sample payload")
 
         except Exception as e:
-            error_msg = f"Sample extraction failed: {str(e)}"
+            error_msg = f"Sample extraction failed: {e!s}"
             self.logger.error(error_msg)
             result.add_error(error_msg)
             result.success = False
@@ -809,7 +810,7 @@ class OracleDataExtractor:
         injection_point: str,
         schema: str,
         table: str,
-        columns: Optional[List[str]] = None,
+        columns: list[str] | None = None,
     ) -> OracleExtractionResult:
         """
         Extract all data from a table (convenience method).
@@ -831,8 +832,8 @@ class OracleDataExtractor:
         schema: str,
         table: str,
         column: str,
-        max_rows: Optional[int] = None,
-    ) -> List[Any]:
+        max_rows: int | None = None,
+    ) -> list[Any]:
         """
         Extract a single column from a table.
 
@@ -865,9 +866,9 @@ class OracleDataExtractor:
         injection_point: str,
         schema: str,
         table: str,
-        columns: List[str],
-        max_rows: Optional[int] = None,
-    ) -> Dict[str, List[Any]]:
+        columns: list[str],
+        max_rows: int | None = None,
+    ) -> dict[str, list[Any]]:
         """
         Extract multiple columns from a table.
 

@@ -354,7 +354,9 @@ class AIVerificationService:
             except TypeError as te:
                 # Some AIService implementations expect positional args
                 try:
-                    ai_service = AIService(model_manager=None, prompt_builder=None, response_parser=None)
+                    ai_service = AIService(
+                        model_manager=None, prompt_builder=None, response_parser=None
+                    )
                 except TypeError:
                     # If both fail, use mock service
                     raise te

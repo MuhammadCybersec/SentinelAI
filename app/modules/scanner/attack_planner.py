@@ -20,27 +20,25 @@ Strategy Priority:
 """
 
 import logging
-import math
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
-import json
+from typing import Any
 
-from .oracle_version import OracleVersionResult
-from .oracle_schema import OracleSchemaResult
-from .oracle_privileges import OraclePrivilegeResult
-from .oracle_database import OracleDatabaseResult
-from .sqli_detector import SQLiDetectionResult
+from .blind_boolean import BlindBooleanResult
+from .blind_extractor import BlindExtractionResult
+from .blind_time import TimeBlindResult
 from .column_detector import ColumnDetectionResult
 from .datatype_detector import DataTypeDetectionResult
-from .blind_boolean import BlindBooleanResult
-from .blind_time import TimeBlindResult
 from .error_based import ErrorBasedResult
-from .waf_detector import WAFDetectionResult
+from .oob_exploiter import OOBExploitResult
+from .oracle_database import OracleDatabaseResult
+from .oracle_privileges import OraclePrivilegeResult
+from .oracle_schema import OracleSchemaResult
+from .oracle_version import OracleVersionResult
+from .sqli_detector import SQLiDetectionResult
 from .tamper_engine import TamperEngine
-from .blind_extractor import BlindExtractionResult, ExtractionTechnique
-from .oob_exploiter import OOBExploitResult, OOBTechnique
+from .waf_detector import WAFDetectionResult
 
 
 class ExploitationStrategy(Enum):
@@ -88,19 +86,19 @@ class AttackPlanResult:
     """
 
     success: bool = False
-    selected_strategy: Optional[ExploitationStrategy] = None
-    fallback_strategy: Optional[ExploitationStrategy] = None
+    selected_strategy: ExploitationStrategy | None = None
+    fallback_strategy: ExploitationStrategy | None = None
     confidence: float = 0.0
-    recommended_tampers: List[str] = field(default_factory=list)
-    execution_order: List[ExploitationStrategy] = field(default_factory=list)
+    recommended_tampers: list[str] = field(default_factory=list)
+    execution_order: list[ExploitationStrategy] = field(default_factory=list)
     estimated_requests: int = 0
     estimated_duration: float = 0.0
     risk_level: RiskLevel = RiskLevel.MEDIUM
-    reasoning: List[str] = field(default_factory=list)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    reasoning: list[str] = field(default_factory=list)
+    metadata: dict[str, Any] = field(default_factory=dict)
     created_at: datetime = field(default_factory=datetime.now)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {
             "success": self.success,
@@ -193,8 +191,8 @@ class AttackPlanner:
 
     def __init__(
         self,
-        logger: Optional[logging.Logger] = None,
-        tamper_engine: Optional[TamperEngine] = None,
+        logger: logging.Logger | None = None,
+        tamper_engine: TamperEngine | None = None,
         max_estimated_requests: int = 10000,
         default_timeout: float = 30.0,
         confidence_threshold: float = 70.0,
@@ -241,19 +239,19 @@ class AttackPlanner:
     def plan_attack(
         self,
         injection_point: str,
-        version_result: Optional[OracleVersionResult] = None,
-        schema_result: Optional[OracleSchemaResult] = None,
-        privilege_result: Optional[OraclePrivilegeResult] = None,
-        database_result: Optional[OracleDatabaseResult] = None,
-        sqli_result: Optional[SQLiDetectionResult] = None,
-        column_result: Optional[ColumnDetectionResult] = None,
-        datatype_result: Optional[DataTypeDetectionResult] = None,
-        blind_boolean_result: Optional[BlindBooleanResult] = None,
-        time_blind_result: Optional[TimeBlindResult] = None,
-        error_based_result: Optional[ErrorBasedResult] = None,
-        waf_result: Optional[WAFDetectionResult] = None,
-        blind_extract_result: Optional[BlindExtractionResult] = None,
-        oob_result: Optional[OOBExploitResult] = None,
+        version_result: OracleVersionResult | None = None,
+        schema_result: OracleSchemaResult | None = None,
+        privilege_result: OraclePrivilegeResult | None = None,
+        database_result: OracleDatabaseResult | None = None,
+        sqli_result: SQLiDetectionResult | None = None,
+        column_result: ColumnDetectionResult | None = None,
+        datatype_result: DataTypeDetectionResult | None = None,
+        blind_boolean_result: BlindBooleanResult | None = None,
+        time_blind_result: TimeBlindResult | None = None,
+        error_based_result: ErrorBasedResult | None = None,
+        waf_result: WAFDetectionResult | None = None,
+        blind_extract_result: BlindExtractionResult | None = None,
+        oob_result: OOBExploitResult | None = None,
         **kwargs,
     ) -> AttackPlanResult:
         """
@@ -350,20 +348,20 @@ class AttackPlanner:
 
     def _score_strategies(
         self,
-        version_result: Optional[OracleVersionResult] = None,
-        schema_result: Optional[OracleSchemaResult] = None,
-        privilege_result: Optional[OraclePrivilegeResult] = None,
-        database_result: Optional[OracleDatabaseResult] = None,
-        sqli_result: Optional[SQLiDetectionResult] = None,
-        column_result: Optional[ColumnDetectionResult] = None,
-        datatype_result: Optional[DataTypeDetectionResult] = None,
-        blind_boolean_result: Optional[BlindBooleanResult] = None,
-        time_blind_result: Optional[TimeBlindResult] = None,
-        error_based_result: Optional[ErrorBasedResult] = None,
-        waf_result: Optional[WAFDetectionResult] = None,
-        blind_extract_result: Optional[BlindExtractionResult] = None,
-        oob_result: Optional[OOBExploitResult] = None,
-    ) -> Dict[ExploitationStrategy, float]:
+        version_result: OracleVersionResult | None = None,
+        schema_result: OracleSchemaResult | None = None,
+        privilege_result: OraclePrivilegeResult | None = None,
+        database_result: OracleDatabaseResult | None = None,
+        sqli_result: SQLiDetectionResult | None = None,
+        column_result: ColumnDetectionResult | None = None,
+        datatype_result: DataTypeDetectionResult | None = None,
+        blind_boolean_result: BlindBooleanResult | None = None,
+        time_blind_result: TimeBlindResult | None = None,
+        error_based_result: ErrorBasedResult | None = None,
+        waf_result: WAFDetectionResult | None = None,
+        blind_extract_result: BlindExtractionResult | None = None,
+        oob_result: OOBExploitResult | None = None,
+    ) -> dict[ExploitationStrategy, float]:
         """
         Score each strategy based on available results.
 
@@ -411,10 +409,10 @@ class AttackPlanner:
 
     def _score_union(
         self,
-        sqli_result: Optional[SQLiDetectionResult],
-        column_result: Optional[ColumnDetectionResult],
-        datatype_result: Optional[DataTypeDetectionResult],
-        waf_result: Optional[WAFDetectionResult],
+        sqli_result: SQLiDetectionResult | None,
+        column_result: ColumnDetectionResult | None,
+        datatype_result: DataTypeDetectionResult | None,
+        waf_result: WAFDetectionResult | None,
     ) -> float:
         """Score UNION strategy."""
         score = 0.0
@@ -443,9 +441,9 @@ class AttackPlanner:
 
     def _score_error_based(
         self,
-        sqli_result: Optional[SQLiDetectionResult],
-        error_based_result: Optional[ErrorBasedResult],
-        waf_result: Optional[WAFDetectionResult],
+        sqli_result: SQLiDetectionResult | None,
+        error_based_result: ErrorBasedResult | None,
+        waf_result: WAFDetectionResult | None,
     ) -> float:
         """Score Error-Based strategy."""
         score = 0.0
@@ -469,9 +467,9 @@ class AttackPlanner:
 
     def _score_boolean_blind(
         self,
-        sqli_result: Optional[SQLiDetectionResult],
-        blind_boolean_result: Optional[BlindBooleanResult],
-        waf_result: Optional[WAFDetectionResult],
+        sqli_result: SQLiDetectionResult | None,
+        blind_boolean_result: BlindBooleanResult | None,
+        waf_result: WAFDetectionResult | None,
     ) -> float:
         """Score Boolean Blind strategy."""
         score = 0.0
@@ -495,9 +493,9 @@ class AttackPlanner:
 
     def _score_time_blind(
         self,
-        sqli_result: Optional[SQLiDetectionResult],
-        time_blind_result: Optional[TimeBlindResult],
-        waf_result: Optional[WAFDetectionResult],
+        sqli_result: SQLiDetectionResult | None,
+        time_blind_result: TimeBlindResult | None,
+        waf_result: WAFDetectionResult | None,
     ) -> float:
         """Score Time Blind strategy."""
         score = 0.0
@@ -521,9 +519,9 @@ class AttackPlanner:
 
     def _score_oob(
         self,
-        oob_result: Optional[OOBExploitResult],
-        waf_result: Optional[WAFDetectionResult],
-    ) -> Dict[ExploitationStrategy, float]:
+        oob_result: OOBExploitResult | None,
+        waf_result: WAFDetectionResult | None,
+    ) -> dict[ExploitationStrategy, float]:
         """Score OOB strategies."""
         scores = {
             ExploitationStrategy.OOB_DNS: 0.0,
@@ -573,7 +571,7 @@ class AttackPlanner:
 
         return scores
 
-    def _score_hybrid(self, scores: Dict[ExploitationStrategy, float]) -> float:
+    def _score_hybrid(self, scores: dict[ExploitationStrategy, float]) -> float:
         """Score Hybrid strategy (combination of multiple)."""
         # Take the best two scores and average them
         sorted_scores = sorted(scores.values(), reverse=True)
@@ -582,8 +580,8 @@ class AttackPlanner:
         return 0.0
 
     def _apply_waf_penalties(
-        self, scores: Dict[ExploitationStrategy, float], waf_result: WAFDetectionResult
-    ) -> Dict[ExploitationStrategy, float]:
+        self, scores: dict[ExploitationStrategy, float], waf_result: WAFDetectionResult
+    ) -> dict[ExploitationStrategy, float]:
         """Apply penalties based on WAF detection."""
         # High confidence WAF detection = higher penalties
         penalty_factor = 1.0 - (waf_result.confidence / 100.0) * 0.5
@@ -599,9 +597,9 @@ class AttackPlanner:
 
     def _apply_privilege_penalties(
         self,
-        scores: Dict[ExploitationStrategy, float],
+        scores: dict[ExploitationStrategy, float],
         privilege_result: OraclePrivilegeResult,
-    ) -> Dict[ExploitationStrategy, float]:
+    ) -> dict[ExploitationStrategy, float]:
         """Apply penalties based on privilege results."""
         # Some strategies require more privileges
         if privilege_result.is_dba:
@@ -661,7 +659,7 @@ class AttackPlanner:
     def _calculate_risk_level(
         self,
         strategy: ExploitationStrategy,
-        waf_result: Optional[WAFDetectionResult],
+        waf_result: WAFDetectionResult | None,
         confidence: float,
     ) -> RiskLevel:
         """Calculate risk level for a strategy."""
@@ -690,8 +688,8 @@ class AttackPlanner:
     # ============================================================
 
     def _recommend_tampers(
-        self, strategy: ExploitationStrategy, waf_result: Optional[WAFDetectionResult]
-    ) -> List[str]:
+        self, strategy: ExploitationStrategy, waf_result: WAFDetectionResult | None
+    ) -> list[str]:
         """Recommend tamper scripts based on strategy and WAF."""
         tampers = []
 
@@ -734,10 +732,10 @@ class AttackPlanner:
     def _build_reasoning(
         self,
         strategy: ExploitationStrategy,
-        scores: Dict[ExploitationStrategy, float],
-        waf_result: Optional[WAFDetectionResult],
+        scores: dict[ExploitationStrategy, float],
+        waf_result: WAFDetectionResult | None,
         confidence: float,
-    ) -> List[str]:
+    ) -> list[str]:
         """Build reasoning for the selected plan."""
         reasoning = []
 
@@ -755,7 +753,7 @@ class AttackPlanner:
                 f"WAF detected: {waf_result.waf_name or 'Unknown'} (Confidence: {waf_result.confidence}%)"
             )
             if waf_result.bypass_recommendations:
-                reasoning.append(f"WAF bypass recommendations available")
+                reasoning.append("WAF bypass recommendations available")
         else:
             reasoning.append("No WAF detected")
 
@@ -787,7 +785,7 @@ class AttackPlanner:
 
     def execute_plan(
         self, plan: AttackPlanResult, execution_function: callable, **kwargs
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Execute a given attack plan.
 
@@ -853,9 +851,9 @@ class AttackPlanner:
 
             except Exception as e:
                 self.logger.error(
-                    f"[AttackPlanner] Strategy {strategy.value} error: {str(e)}"
+                    f"[AttackPlanner] Strategy {strategy.value} error: {e!s}"
                 )
-                results["errors"].append(f"{strategy.value}: {str(e)}")
+                results["errors"].append(f"{strategy.value}: {e!s}")
 
                 results["attempts"].append(
                     {"strategy": strategy.value, "success": False, "error": str(e)}
@@ -878,7 +876,7 @@ class AttackPlanner:
                         results["strategy_used"] = plan.fallback_strategy
                         results["data"] = result.get("data")
                 except Exception as e:
-                    results["errors"].append(f"Fallback failed: {str(e)}")
+                    results["errors"].append(f"Fallback failed: {e!s}")
 
         return results
 
@@ -886,9 +884,9 @@ class AttackPlanner:
         self,
         injection_point: str,
         execution_function: callable,
-        detection_results: Dict[str, Any],
+        detection_results: dict[str, Any],
         **kwargs,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Fully automatic exploitation - plan and execute.
 
@@ -927,7 +925,7 @@ class AttackPlanner:
         """Get the priority score for a strategy."""
         return self.STRATEGY_PRIORITY.get(strategy, 0)
 
-    def get_available_strategies(self) -> List[ExploitationStrategy]:
+    def get_available_strategies(self) -> list[ExploitationStrategy]:
         """Get all available strategies."""
         return list(ExploitationStrategy)
 

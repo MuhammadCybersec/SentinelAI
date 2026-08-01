@@ -4,23 +4,22 @@ Automatic Database Dumper for SentinelAI.
 Phase 17: Enterprise-grade Database Dumping
 """
 
-import json
 import csv
-import sqlite3
+import json
 import logging
+import sqlite3
 import time
 from dataclasses import dataclass, field
-from typing import Optional, Dict, List, Any, Set, Tuple, Iterator
 from pathlib import Path
+from typing import Any
+
 import requests
 
-from .oracle_schema import OracleSchemaEnumerator, OracleSchemaResult
-from .oracle_extractor import OracleDataExtractor, OracleExtractionResult
-from .oracle_database import OracleDatabaseEnumerator, OracleDatabaseResult
-from .union_exploiter import OracleUnionExploiter, UnionExploitResult
-from .blind_boolean import OracleBlindBooleanEngine, BlindBooleanResult
-from .blind_time import OracleTimeBlindEngine, TimeBlindResult
+from .oracle_database import OracleDatabaseEnumerator
+from .oracle_extractor import OracleDataExtractor
+from .oracle_schema import OracleSchemaEnumerator
 from .tamper_engine import TamperEngine
+from .union_exploiter import OracleUnionExploiter
 
 # ============================================================
 # Data Classes
@@ -40,20 +39,20 @@ class DatabaseDumpResult:
     rows_dumped: int = 0
     total_rows: int = 0
     dump_time: float = 0.0
-    tables: Dict[str, Dict[str, List[Dict[str, Any]]]] = field(default_factory=dict)
-    schema_names: List[str] = field(default_factory=list)
-    table_names: List[str] = field(default_factory=list)
-    errors: List[str] = field(default_factory=list)
-    skipped_tables: List[str] = field(default_factory=list)
-    progress: Dict[str, Any] = field(default_factory=dict)
-    export_paths: Dict[str, str] = field(default_factory=dict)
+    tables: dict[str, dict[str, list[dict[str, Any]]]] = field(default_factory=dict)
+    schema_names: list[str] = field(default_factory=list)
+    table_names: list[str] = field(default_factory=list)
+    errors: list[str] = field(default_factory=list)
+    skipped_tables: list[str] = field(default_factory=list)
+    progress: dict[str, Any] = field(default_factory=dict)
+    export_paths: dict[str, str] = field(default_factory=dict)
 
     def add_error(self, error: str):
         """Add an error to the result."""
         if error and error not in self.errors:
             self.errors.append(error)
 
-    def add_table_data(self, schema: str, table: str, rows: List[Dict[str, Any]]):
+    def add_table_data(self, schema: str, table: str, rows: list[dict[str, Any]]):
         """Add table data to the result."""
         if schema not in self.tables:
             self.tables[schema] = {}
@@ -80,7 +79,7 @@ class DatabaseDumpResult:
 
         return f"Dump: {', '.join(parts)}"
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for logging/output."""
         return {
             "success": self.success,
@@ -190,7 +189,7 @@ class OracleDatabaseDumper:
         session: requests.Session,
         base_url: str,
         injection_point: str,
-        logger: Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ):
         """
         Initialize Oracle Database Dumper.
@@ -248,7 +247,7 @@ class OracleDatabaseDumper:
     # Private Methods
     # ============================================================
 
-    def _is_blacklisted(self, table: str, blacklist: Set[str]) -> bool:
+    def _is_blacklisted(self, table: str, blacklist: set[str]) -> bool:
         """Check if a table is blacklisted."""
         table_upper = table.upper()
         for pattern in blacklist:
@@ -262,7 +261,7 @@ class OracleDatabaseDumper:
                 return True
         return False
 
-    def _get_priority_tables(self, tables: List[str]) -> List[str]:
+    def _get_priority_tables(self, tables: list[str]) -> list[str]:
         """Get tables sorted by priority."""
         priority_tables = []
         other_tables = []
@@ -329,10 +328,10 @@ class OracleDatabaseDumper:
         self,
         max_schemas: int = 20,
         max_tables: int = 50,
-        blacklist: Optional[Set[str]] = None,
-        whitelist: Optional[Set[str]] = None,
+        blacklist: set[str] | None = None,
+        whitelist: set[str] | None = None,
         prioritize_sensitive: bool = True,
-    ) -> Dict[str, List[str]]:
+    ) -> dict[str, list[str]]:
         """
         Discover schemas and tables to dump.
 
@@ -408,11 +407,11 @@ class OracleDatabaseDumper:
 
                 except Exception as e:
                     self.logger.warning(
-                        f"[DatabaseDumper] Failed to enumerate tables for {schema}: {str(e)}"
+                        f"[DatabaseDumper] Failed to enumerate tables for {schema}: {e!s}"
                     )
 
         except Exception as e:
-            self.logger.error(f"[DatabaseDumper] Target discovery failed: {str(e)}")
+            self.logger.error(f"[DatabaseDumper] Target discovery failed: {e!s}")
 
         self.logger.info(
             f"[DatabaseDumper] Discovered {len(result)} schemas with tables"
@@ -426,10 +425,10 @@ class OracleDatabaseDumper:
     def dump_schema(
         self,
         schema: str,
-        tables: Optional[List[str]] = None,
-        max_rows: Optional[int] = None,
+        tables: list[str] | None = None,
+        max_rows: int | None = None,
         resume: bool = False,
-    ) -> Dict[str, List[Dict[str, Any]]]:
+    ) -> dict[str, list[dict[str, Any]]]:
         """
         Dump all tables in a schema.
 
@@ -493,12 +492,12 @@ class OracleDatabaseDumper:
 
                 except Exception as e:
                     self.logger.error(
-                        f"[DatabaseDumper] Failed to dump {schema}.{table}: {str(e)}"
+                        f"[DatabaseDumper] Failed to dump {schema}.{table}: {e!s}"
                     )
                     result[table] = []
 
         except Exception as e:
-            self.logger.error(f"[DatabaseDumper] Schema dump failed: {str(e)}")
+            self.logger.error(f"[DatabaseDumper] Schema dump failed: {e!s}")
 
         elapsed = time.time() - start_time
         self.logger.info(
@@ -508,8 +507,8 @@ class OracleDatabaseDumper:
         return result
 
     def dump_table(
-        self, schema: str, table: str, max_rows: Optional[int] = None
-    ) -> List[Dict[str, Any]]:
+        self, schema: str, table: str, max_rows: int | None = None
+    ) -> list[dict[str, Any]]:
         """
         Dump a single table.
 
@@ -541,13 +540,13 @@ class OracleDatabaseDumper:
 
         except Exception as e:
             self.logger.error(
-                f"[DatabaseDumper] Failed to dump {schema}.{table}: {str(e)}"
+                f"[DatabaseDumper] Failed to dump {schema}.{table}: {e!s}"
             )
             return []
 
     def dump_multiple_tables(
-        self, schema: str, tables: List[str], max_rows: Optional[int] = None
-    ) -> Dict[str, List[Dict[str, Any]]]:
+        self, schema: str, tables: list[str], max_rows: int | None = None
+    ) -> dict[str, list[dict[str, Any]]]:
         """
         Dump multiple tables from a schema.
 
@@ -569,7 +568,7 @@ class OracleDatabaseDumper:
                 result[table] = table_data
             except Exception as e:
                 self.logger.error(
-                    f"[DatabaseDumper] Failed to dump {schema}.{table}: {str(e)}"
+                    f"[DatabaseDumper] Failed to dump {schema}.{table}: {e!s}"
                 )
                 result[table] = []
 
@@ -579,9 +578,9 @@ class OracleDatabaseDumper:
         self,
         max_schemas: int = 20,
         max_tables: int = 50,
-        max_rows: Optional[int] = None,
-        blacklist: Optional[Set[str]] = None,
-        whitelist: Optional[Set[str]] = None,
+        max_rows: int | None = None,
+        blacklist: set[str] | None = None,
+        whitelist: set[str] | None = None,
         prioritize_sensitive: bool = True,
         resume: bool = False,
     ) -> DatabaseDumpResult:
@@ -665,7 +664,7 @@ class OracleDatabaseDumper:
             )
 
         except Exception as e:
-            error_msg = f"Database dump failed: {str(e)}"
+            error_msg = f"Database dump failed: {e!s}"
             self.logger.error(error_msg)
             result.add_error(error_msg)
             result.success = False
@@ -754,10 +753,10 @@ class OracleDatabaseDumper:
             return output_path
 
         except Exception as e:
-            self.logger.error(f"[DatabaseDumper] JSON export failed: {str(e)}")
+            self.logger.error(f"[DatabaseDumper] JSON export failed: {e!s}")
             return ""
 
-    def export_csv(self, result: DatabaseDumpResult, output_dir: str) -> List[str]:
+    def export_csv(self, result: DatabaseDumpResult, output_dir: str) -> list[str]:
         """
         Export dump to CSV files.
 
@@ -795,7 +794,7 @@ class OracleDatabaseDumper:
             return output_files
 
         except Exception as e:
-            self.logger.error(f"[DatabaseDumper] CSV export failed: {str(e)}")
+            self.logger.error(f"[DatabaseDumper] CSV export failed: {e!s}")
             return []
 
     def export_sqlite(self, result: DatabaseDumpResult, output_path: str) -> str:
@@ -832,7 +831,7 @@ class OracleDatabaseDumper:
 
                     # Insert data
                     placeholders = ",".join(["?" for _ in columns])
-                    insert_sql = f'INSERT INTO "{schema}_{table}" ({", ".join([f"\"{c}\"" for c in columns])}) VALUES ({placeholders})'
+                    insert_sql = f'INSERT INTO "{schema}_{table}" ({", ".join([f'"{c}"' for c in columns])}) VALUES ({placeholders})'
 
                     for row in rows:
                         values = [row.get(col) for col in columns]
@@ -848,7 +847,7 @@ class OracleDatabaseDumper:
             return output_path
 
         except Exception as e:
-            self.logger.error(f"[DatabaseDumper] SQLite export failed: {str(e)}")
+            self.logger.error(f"[DatabaseDumper] SQLite export failed: {e!s}")
             return ""
 
     def export_markdown(self, result: DatabaseDumpResult, output_path: str) -> str:
@@ -867,7 +866,7 @@ class OracleDatabaseDumper:
         try:
             with open(output_path, "w", encoding="utf-8") as f:
                 f.write("# Database Dump Report\n\n")
-                f.write(f"## Metadata\n\n")
+                f.write("## Metadata\n\n")
                 f.write(f"- Schemas dumped: {result.schemas_dumped}\n")
                 f.write(f"- Tables dumped: {result.tables_dumped}\n")
                 f.write(f"- Rows dumped: {result.rows_dumped}\n")
@@ -903,14 +902,14 @@ class OracleDatabaseDumper:
             return output_path
 
         except Exception as e:
-            self.logger.error(f"[DatabaseDumper] Markdown export failed: {str(e)}")
+            self.logger.error(f"[DatabaseDumper] Markdown export failed: {e!s}")
             return ""
 
     # ============================================================
     # Progress Methods
     # ============================================================
 
-    def track_progress(self) -> Dict[str, Any]:
+    def track_progress(self) -> dict[str, Any]:
         """
         Track current dump progress.
 

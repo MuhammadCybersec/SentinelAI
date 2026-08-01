@@ -14,7 +14,7 @@ Supports both Boolean and Time-based techniques.
 from __future__ import annotations
 
 import logging
-from typing import List, Optional, Dict, Any, Tuple
+from typing import Any
 
 from app.modules.scanner.modules.blind_boolean import BlindBooleanScanner
 from app.modules.scanner.modules.blind_time import BlindTimeScanner
@@ -31,10 +31,10 @@ class BlindExtractor:
         self.target = target
         self.boolean_scanner = BlindBooleanScanner(target)
         self.time_scanner = BlindTimeScanner(target)
-        self.technique: Optional[str] = None
-        self.dbms: Optional[str] = None
+        self.technique: str | None = None
+        self.dbms: str | None = None
 
-        self.extracted_data: Dict[str, Any] = {
+        self.extracted_data: dict[str, Any] = {
             "database": None,
             "version": None,
             "user": None,
@@ -43,7 +43,7 @@ class BlindExtractor:
             "credentials": [],
         }
 
-    def extract(self) -> Dict[str, Any]:
+    def extract(self) -> dict[str, Any]:
         """
         Extract data using the best available technique.
 

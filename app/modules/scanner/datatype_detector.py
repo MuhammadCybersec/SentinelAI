@@ -6,14 +6,14 @@ Phase 10: Detects column data types for UNION-based injection.
 
 import logging
 import time
-import re
 from dataclasses import dataclass, field
-from typing import Optional, Dict, List, Any, Tuple, Set
+from typing import Any
+
 import requests
 
-from .union_sqli import UnionSQLi
 from .html_parser import HTMLParser
 from .regex_utils import RegexUtils
+from .union_sqli import UnionSQLi
 
 # ============================================================
 # Data Classes
@@ -29,15 +29,15 @@ class DataTypeDetectionResult:
 
     success: bool = False
     column_count: int = 0
-    column_types: Dict[int, str] = field(default_factory=dict)  # column_index -> type
-    reflective_columns: List[int] = field(default_factory=list)
-    working_union_payload: Optional[str] = None
-    best_reflective_column: Optional[int] = None
-    best_printable_column: Optional[int] = None
+    column_types: dict[int, str] = field(default_factory=dict)  # column_index -> type
+    reflective_columns: list[int] = field(default_factory=list)
+    working_union_payload: str | None = None
+    best_reflective_column: int | None = None
+    best_printable_column: int | None = None
     confidence: int = 0
     execution_time: float = 0.0
-    errors: List[str] = field(default_factory=list)
-    raw_responses: Dict[str, str] = field(default_factory=dict)
+    errors: list[str] = field(default_factory=list)
+    raw_responses: dict[str, str] = field(default_factory=dict)
 
     def add_error(self, error: str):
         """Add an error to the result."""
@@ -47,7 +47,7 @@ class DataTypeDetectionResult:
         """Set the data type for a column."""
         self.column_types[index] = data_type
 
-    def get_column_type(self, index: int) -> Optional[str]:
+    def get_column_type(self, index: int) -> str | None:
         """Get the data type for a column."""
         return self.column_types.get(index)
 
@@ -76,7 +76,7 @@ class DataTypeDetectionResult:
 
         return f"Data Types: {', '.join(parts)}" if parts else "Data Types: No data"
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for logging/output."""
         return {
             "success": self.success,
@@ -141,7 +141,7 @@ class OracleDataTypeDetector:
         self,
         session: requests.Session,
         base_url: str,
-        logger: Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ):
         """
         Initialize Oracle Data Type Detector.
@@ -192,7 +192,7 @@ class OracleDataTypeDetector:
     # Private Methods
     # ============================================================
 
-    def _get_baseline(self, injection_point: str) -> Optional[requests.Response]:
+    def _get_baseline(self, injection_point: str) -> requests.Response | None:
         """Get baseline response for comparison."""
         if self.baseline_response is None:
             self.logger.info("[DataTypeDetector] Fetching baseline response...")
@@ -211,8 +211,8 @@ class OracleDataTypeDetector:
         return self.baseline_response
 
     def _send_payload_with_metrics(
-        self, injection_point: str, payload: str, baseline: Optional[requests.Response]
-    ) -> Dict[str, Any]:
+        self, injection_point: str, payload: str, baseline: requests.Response | None
+    ) -> dict[str, Any]:
         """Send payload and collect metrics."""
         start_time = time.time()
 
@@ -244,7 +244,7 @@ class OracleDataTypeDetector:
         }
 
     def _build_union_payload(
-        self, column_count: int, column_values: Dict[int, str]
+        self, column_count: int, column_values: dict[int, str]
     ) -> str:
         """
         Build a UNION payload with specified column values.
@@ -271,8 +271,8 @@ class OracleDataTypeDetector:
         injection_point: str,
         column_index: int,
         column_count: int,
-        baseline: Optional[requests.Response],
-    ) -> Tuple[Optional[str], int]:
+        baseline: requests.Response | None,
+    ) -> tuple[str | None, int]:
         """
         Detect the data type of a specific column.
 
@@ -346,8 +346,8 @@ class OracleDataTypeDetector:
         self,
         injection_point: str,
         column_count: int,
-        baseline: Optional[requests.Response],
-    ) -> List[int]:
+        baseline: requests.Response | None,
+    ) -> list[int]:
         """
         Detect which columns are reflective.
 
@@ -359,7 +359,7 @@ class OracleDataTypeDetector:
         Returns:
             List[int]: Reflective column indices
         """
-        self.logger.info(f"[DataTypeDetector] Detecting reflective columns...")
+        self.logger.info("[DataTypeDetector] Detecting reflective columns...")
 
         reflective_indices = []
 
@@ -390,9 +390,7 @@ class OracleDataTypeDetector:
         )
         return reflective_indices
 
-    def _find_best_reflective_column(
-        self, reflective_indices: List[int]
-    ) -> Optional[int]:
+    def _find_best_reflective_column(self, reflective_indices: list[int]) -> int | None:
         """
         Find the best reflective column (first one).
 
@@ -408,9 +406,9 @@ class OracleDataTypeDetector:
         self,
         injection_point: str,
         column_count: int,
-        reflective_indices: List[int],
-        baseline: Optional[requests.Response],
-    ) -> Optional[int]:
+        reflective_indices: list[int],
+        baseline: requests.Response | None,
+    ) -> int | None:
         """
         Find the best printable column (string type).
 
@@ -443,7 +441,7 @@ class OracleDataTypeDetector:
     def detect_column_types(
         self,
         injection_point: str,
-        column_count: Optional[int] = None,
+        column_count: int | None = None,
         max_columns: int = 30,
     ) -> DataTypeDetectionResult:
         """
@@ -561,7 +559,7 @@ class OracleDataTypeDetector:
             result.success = result.column_count > 0 and type_known > 0
 
         except Exception as e:
-            error_msg = f"Data type detection failed: {str(e)}"
+            error_msg = f"Data type detection failed: {e!s}"
             self.logger.error(error_msg)
             result.add_error(error_msg)
             result.success = False
@@ -583,7 +581,7 @@ class OracleDataTypeDetector:
 
     def detect_string_columns(
         self, injection_point: str, column_count: int
-    ) -> List[int]:
+    ) -> list[int]:
         """
         Detect which columns accept string values.
 
@@ -616,7 +614,7 @@ class OracleDataTypeDetector:
 
     def detect_numeric_columns(
         self, injection_point: str, column_count: int
-    ) -> List[int]:
+    ) -> list[int]:
         """
         Detect which columns accept numeric values.
 
@@ -647,7 +645,7 @@ class OracleDataTypeDetector:
         )
         return numeric_columns
 
-    def detect_date_columns(self, injection_point: str, column_count: int) -> List[int]:
+    def detect_date_columns(self, injection_point: str, column_count: int) -> list[int]:
         """
         Detect which columns accept date values.
 
@@ -678,7 +676,7 @@ class OracleDataTypeDetector:
         )
         return date_columns
 
-    def detect_null_columns(self, injection_point: str, column_count: int) -> List[int]:
+    def detect_null_columns(self, injection_point: str, column_count: int) -> list[int]:
         """
         Detect which columns accept NULL values.
 
@@ -711,7 +709,7 @@ class OracleDataTypeDetector:
 
     def detect_reflective_columns(
         self, injection_point: str, column_count: int
-    ) -> List[int]:
+    ) -> list[int]:
         """
         Detect reflective columns.
 
@@ -764,8 +762,8 @@ class OracleDataTypeDetector:
         )
 
     def get_best_union_payload(
-        self, injection_point: str, column_count: Optional[int] = None
-    ) -> Optional[str]:
+        self, injection_point: str, column_count: int | None = None
+    ) -> str | None:
         """
         Get the best UNION payload for injection.
 
@@ -788,8 +786,8 @@ class OracleDataTypeDetector:
         return self.datatype_result.working_union_payload
 
     def get_reflective_column(
-        self, injection_point: str, column_count: Optional[int] = None
-    ) -> Optional[int]:
+        self, injection_point: str, column_count: int | None = None
+    ) -> int | None:
         """
         Get the best reflective column.
 

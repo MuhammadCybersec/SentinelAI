@@ -18,6 +18,7 @@ Loads and validates project configuration from .env.
 # ===========================================================
 
 import os
+
 from dotenv import load_dotenv
 
 # ===========================================================
@@ -32,6 +33,7 @@ load_dotenv()
 # Configuration Class
 # ===========================================================
 
+
 class Config:
     """
     Central configuration for Sentinel AI.
@@ -44,10 +46,8 @@ class Config:
     DATABASE_TYPE: str = os.getenv("DATABASE_TYPE", "sqlite")
 
     DATABASE_NAME: str = os.getenv("DATABASE_NAME", "sentinel.db")
-    DATABASE_PATH: str = os.getenv(
-        "DATABASE_PATH",
-        "data/sentinel.db"
-)
+    DATABASE_PATH: str = os.getenv("DATABASE_PATH", "data/sentinel.db")
+
 
 # ===========================================================
 # CONFIG-004

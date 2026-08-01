@@ -36,13 +36,6 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import (
     Any,
-    Dict,
-    List,
-    Optional,
-    Tuple,
-    Union,
-    Set,
-    FrozenSet,
 )
 
 # =============================================================================
@@ -53,37 +46,25 @@ from typing import (
 class ResponseParserError(Exception):
     """Base exception for response parser errors."""
 
-    pass
-
 
 class EmptyResponseError(ResponseParserError):
     """Raised when the response is empty."""
-
-    pass
 
 
 class InvalidJSONError(ResponseParserError):
     """Raised when the response contains invalid JSON."""
 
-    pass
-
 
 class MalformedResponseError(ResponseParserError):
     """Raised when the response is malformed."""
-
-    pass
 
 
 class MissingFieldError(ResponseParserError):
     """Raised when a required field is missing."""
 
-    pass
-
 
 class InvalidFieldTypeError(ResponseParserError):
     """Raised when a field has an invalid type."""
-
-    pass
 
 
 # =============================================================================
@@ -147,12 +128,12 @@ class VulnerabilityFinding:
     description: str
     severity: SeverityLevel
     confidence: ConfidenceLevel
-    affected_component: Optional[str] = None
-    remediation: Optional[str] = None
-    cve_id: Optional[str] = None
-    references: List[str] = field(default_factory=list)
+    affected_component: str | None = None
+    remediation: str | None = None
+    cve_id: str | None = None
+    references: list[str] = field(default_factory=list)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "title": self.title,
@@ -187,15 +168,15 @@ class ParsedResponse:
     analysis_type: AnalysisType
     raw_text: str
     cleaned_text: str
-    json_data: Optional[Dict[str, Any]] = None
-    findings: List[VulnerabilityFinding] = field(default_factory=list)
+    json_data: dict[str, Any] | None = None
+    findings: list[VulnerabilityFinding] = field(default_factory=list)
     summary: str = ""
     confidence: ConfidenceLevel = ConfidenceLevel.UNKNOWN
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
     parsed_at: float = field(default_factory=time.time)
     is_json: bool = False
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "analysis_type": self.analysis_type.value,
@@ -521,7 +502,7 @@ class ResponseParser:
 
         return text
 
-    def _extract_json_from_markdown(self, text: str) -> Optional[str]:
+    def _extract_json_from_markdown(self, text: str) -> str | None:
         """
         Extract JSON from markdown code fences.
 
@@ -545,7 +526,7 @@ class ResponseParser:
 
         return None
 
-    def _extract_json_from_text(self, text: str) -> Optional[str]:
+    def _extract_json_from_text(self, text: str) -> str | None:
         """
         Extract JSON from plain text.
 
@@ -651,9 +632,9 @@ class ResponseParser:
 
     def _extract_findings_from_json(
         self,
-        json_data: Dict[str, Any],
+        json_data: dict[str, Any],
         expected_type: str,
-    ) -> List[VulnerabilityFinding]:
+    ) -> list[VulnerabilityFinding]:
         """
         Extract findings from JSON data.
 
@@ -707,8 +688,8 @@ class ResponseParser:
         return findings
 
     def _create_finding_from_dict(
-        self, data: Dict[str, Any]
-    ) -> Optional[VulnerabilityFinding]:
+        self, data: dict[str, Any]
+    ) -> VulnerabilityFinding | None:
         """
         Create a VulnerabilityFinding from a dictionary.
 
@@ -752,7 +733,7 @@ class ResponseParser:
         self,
         text: str,
         analysis_type: AnalysisType,
-    ) -> List[VulnerabilityFinding]:
+    ) -> list[VulnerabilityFinding]:
         """
         Extract findings from plain text.
 
@@ -821,7 +802,7 @@ class ResponseParser:
 
         return findings
 
-    def _extract_summary_from_json(self, json_data: Dict[str, Any]) -> str:
+    def _extract_summary_from_json(self, json_data: dict[str, Any]) -> str:
         """
         Extract summary from JSON data.
 
@@ -832,11 +813,11 @@ class ResponseParser:
             Summary string
         """
         for key in ["summary", "overview", "executive_summary", "conclusion"]:
-            if key in json_data and json_data[key]:
+            if json_data.get(key):
                 return str(json_data[key])
 
         # Use first finding's description as summary if available
-        if "vulnerabilities" in json_data and json_data["vulnerabilities"]:
+        if json_data.get("vulnerabilities"):
             first = json_data["vulnerabilities"][0]
             if isinstance(first, dict) and "description" in first:
                 return str(first["description"])[:200]
@@ -844,7 +825,7 @@ class ResponseParser:
         return "Analysis completed successfully"
 
     def _extract_confidence_from_json(
-        self, json_data: Dict[str, Any]
+        self, json_data: dict[str, Any]
     ) -> ConfidenceLevel:
         """
         Extract confidence level from JSON data.

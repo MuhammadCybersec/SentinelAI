@@ -21,10 +21,9 @@ Features:
 
 from __future__ import annotations
 
-import re
 import logging
+import re
 from dataclasses import dataclass, field
-from typing import List, Optional, Dict, Any, Tuple
 from urllib.parse import urljoin, urlparse
 
 from app.modules.scanner.core.request_engine import RequestEngine, ResponseData
@@ -39,9 +38,9 @@ class LoginResult:
 
     success: bool = False
     confidence: float = 0.0
-    session_cookies: Dict[str, str] = field(default_factory=dict)
+    session_cookies: dict[str, str] = field(default_factory=dict)
     redirect_url: str = ""
-    evidence: List[str] = field(default_factory=list)
+    evidence: list[str] = field(default_factory=list)
     error_message: str = ""
     is_authenticated: bool = False
 
@@ -120,7 +119,7 @@ class LoginManager:
         "access denied",
     ]
 
-    def __init__(self, request_engine: Optional[RequestEngine] = None) -> None:
+    def __init__(self, request_engine: RequestEngine | None = None) -> None:
         """
         Initialize LoginManager with optional RequestEngine.
 
@@ -129,10 +128,10 @@ class LoginManager:
         """
         self.request_engine = request_engine or RequestEngine()
         self.session_manager = SessionManager()
-        self.login_url: Optional[str] = None
-        self.csrf_token: Optional[str] = None
-        self.csrf_field: Optional[str] = None
-        self.hidden_fields: Dict[str, str] = {}
+        self.login_url: str | None = None
+        self.csrf_token: str | None = None
+        self.csrf_field: str | None = None
+        self.hidden_fields: dict[str, str] = {}
 
     def login(
         self, base_url: str, username: str, password: str, max_attempts: int = 3
@@ -198,7 +197,7 @@ class LoginManager:
             evidence=["Max attempts reached without success"],
         )
 
-    def _discover_login_page(self, base_url: str) -> Optional[str]:
+    def _discover_login_page(self, base_url: str) -> str | None:
         """
         Discover login page by testing common paths.
 
@@ -319,7 +318,7 @@ class LoginManager:
         ]
 
         for pattern in csrf_patterns:
-            matches = re.findall(pattern, html, re.I)
+            matches = re.findall(pattern, html, re.IGNORECASE)
             for match in matches:
                 if len(match) == 2:
                     self.csrf_field = match[0]
@@ -331,12 +330,12 @@ class LoginManager:
 
         # Extract all hidden fields
         hidden_pattern = r'<input[^>]*type=["\']hidden["\'][^>]*name=["\']([^"\']+)["\'][^>]*value=["\']([^"\']*)["\'][^>]*>'
-        matches = re.findall(hidden_pattern, html, re.I)
+        matches = re.findall(hidden_pattern, html, re.IGNORECASE)
         for name, value in matches:
             self.hidden_fields[name] = value
             logger.debug(f"  📎 Hidden field: {name}={value[:20]}...")
 
-    def _build_login_payload(self, username: str, password: str) -> Dict[str, str]:
+    def _build_login_payload(self, username: str, password: str) -> dict[str, str]:
         """
         Build login payload with credentials and CSRF token.
 
@@ -364,8 +363,8 @@ class LoginManager:
         return data
 
     def _submit_login(
-        self, login_url: str, login_data: Dict[str, str]
-    ) -> Optional[ResponseData]:
+        self, login_url: str, login_data: dict[str, str]
+    ) -> ResponseData | None:
         """
         Submit login request.
 
@@ -511,7 +510,7 @@ class LoginManager:
 
         return result
 
-    def get_authenticated_session(self) -> Dict[str, str]:
+    def get_authenticated_session(self) -> dict[str, str]:
         """
         Get authenticated session cookies.
 

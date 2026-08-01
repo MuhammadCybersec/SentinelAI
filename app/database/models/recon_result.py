@@ -14,12 +14,8 @@ Stores every reconnaissance finding.
 
 from __future__ import annotations
 
-from sqlalchemy import Integer
-from sqlalchemy import String
-from sqlalchemy import Text
-
-from sqlalchemy.orm import Mapped
-from sqlalchemy.orm import mapped_column
+from sqlalchemy import Integer, String, Text
+from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database.models.base_model import BaseModel
 

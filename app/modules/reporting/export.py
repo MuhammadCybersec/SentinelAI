@@ -126,7 +126,6 @@ class ExportEngine:
 # ===========================================================
 
 if __name__ == "__main__":
-
     exporter = ExportEngine()
 
     sample = {
@@ -182,5 +181,4 @@ if __name__ == "__main__":
     print()
 
     for key, value in result.items():
-
         print(f"{key:<12}: {value}")

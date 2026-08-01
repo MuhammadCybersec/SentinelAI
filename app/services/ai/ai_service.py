@@ -7,30 +7,19 @@
 # =============================================================================
 
 import threading
-from typing import Optional, Dict, Any, List, Union
+from typing import Any
 
+from app.services.ai.ai_client import AIClient, AIClientError
+from app.services.ai.model_manager import ModelConfig, ModelManager
 from app.services.ai.prompt_builder import (
     PromptBuilder,
-    PromptType,
-    Prompt,
     PromptBuilderError,
 )
 from app.services.ai.response_parser import (
-    ResponseParser,
     ParsedResponse,
-    AnalysisType,
-    SeverityLevel,
-    ConfidenceLevel,
-    VulnerabilityFinding,
+    ResponseParser,
     ResponseParserError,
-    EmptyResponseError,
-    InvalidJSONError,
-    MalformedResponseError,
-    MissingFieldError,
-    InvalidFieldTypeError,
 )
-from app.services.ai.model_manager import ModelManager, ModelConfig, ModelProvider
-from app.services.ai.ai_client import AIClient, AIClientError
 
 # =============================================================================
 # CUSTOM EXCEPTIONS
@@ -40,31 +29,21 @@ from app.services.ai.ai_client import AIClient, AIClientError
 class AIServiceError(Exception):
     """Base exception for AI service errors."""
 
-    pass
-
 
 class ModelNotConfiguredError(AIServiceError):
     """Raised when no model is configured."""
-
-    pass
 
 
 class PromptBuildError(AIServiceError):
     """Raised when prompt building fails."""
 
-    pass
-
 
 class GenerationError(AIServiceError):
     """Raised when AI generation fails."""
 
-    pass
-
 
 class ParseError(AIServiceError):
     """Raised when response parsing fails."""
-
-    pass
 
 
 # =============================================================================
@@ -116,8 +95,8 @@ class AIService:
         self._prompt_builder = prompt_builder
         self._response_parser = response_parser
 
-        self._client: Optional[AIClient] = None
-        self._active_model: Optional[ModelConfig] = None
+        self._client: AIClient | None = None
+        self._active_model: ModelConfig | None = None
         self._lock = threading.RLock()
 
     # =========================================================================
@@ -159,8 +138,8 @@ class AIService:
     def _build_and_generate(
         self,
         template_name: str,
-        variables: Dict[str, Any],
-        system_prompt: Optional[str] = None,
+        variables: dict[str, Any],
+        system_prompt: str | None = None,
     ) -> str:
         """
         Build a prompt and generate a response.
@@ -183,7 +162,7 @@ class AIService:
                 variables=variables,
             )
         except PromptBuilderError as e:
-            raise PromptBuildError(f"Failed to build prompt: {str(e)}") from e
+            raise PromptBuildError(f"Failed to build prompt: {e!s}") from e
 
         try:
             client = self._get_client()
@@ -191,16 +170,16 @@ class AIService:
             response = client.generate(full_prompt, system_prompt)
             return response
         except AIClientError as e:
-            raise GenerationError(f"Failed to generate response: {str(e)}") from e
+            raise GenerationError(f"Failed to generate response: {e!s}") from e
         except ModelNotConfiguredError as e:
             raise GenerationError(str(e)) from e
 
     def _build_generate_and_parse(
         self,
         template_name: str,
-        variables: Dict[str, Any],
+        variables: dict[str, Any],
         parse_method: str,
-        system_prompt: Optional[str] = None,
+        system_prompt: str | None = None,
     ) -> ParsedResponse:
         """
         Build, generate, and parse a response.
@@ -225,20 +204,20 @@ class AIService:
                 variables=variables,
                 system_prompt=system_prompt,
             )
-        except (PromptBuildError, GenerationError) as e:
+        except (PromptBuildError, GenerationError):
             raise
 
         try:
             parser_method = getattr(self._response_parser, parse_method)
             return parser_method(response_text)
         except (ResponseParserError, AttributeError) as e:
-            raise ParseError(f"Failed to parse response: {str(e)}") from e
+            raise ParseError(f"Failed to parse response: {e!s}") from e
 
     # =========================================================================
     # PUBLIC METHODS
     # =========================================================================
 
-    def generate(self, prompt: str, system_prompt: Optional[str] = None) -> str:
+    def generate(self, prompt: str, system_prompt: str | None = None) -> str:
         """
         Generate a response from the AI model.
 
@@ -257,16 +236,16 @@ class AIService:
             client = self._get_client()
             return client.generate(prompt, system_prompt)
         except AIClientError as e:
-            raise GenerationError(f"Failed to generate response: {str(e)}") from e
+            raise GenerationError(f"Failed to generate response: {e!s}") from e
         except ModelNotConfiguredError as e:
             raise GenerationError(str(e)) from e
 
     def generate_sql_analysis(
         self,
         sql_query: str,
-        context: Optional[str] = None,
-        additional_analysis: Optional[str] = None,
-        system_prompt: Optional[str] = None,
+        context: str | None = None,
+        additional_analysis: str | None = None,
+        system_prompt: str | None = None,
     ) -> ParsedResponse:
         """
         Generate SQL injection analysis.
@@ -295,9 +274,9 @@ class AIService:
     def generate_xss_analysis(
         self,
         code: str,
-        context: Optional[str] = None,
-        additional_analysis: Optional[str] = None,
-        system_prompt: Optional[str] = None,
+        context: str | None = None,
+        additional_analysis: str | None = None,
+        system_prompt: str | None = None,
     ) -> ParsedResponse:
         """
         Generate XSS analysis.
@@ -326,9 +305,9 @@ class AIService:
     def generate_reverse_engineering(
         self,
         binary_info: str,
-        context: Optional[str] = None,
-        additional_analysis: Optional[str] = None,
-        system_prompt: Optional[str] = None,
+        context: str | None = None,
+        additional_analysis: str | None = None,
+        system_prompt: str | None = None,
     ) -> ParsedResponse:
         """
         Generate reverse engineering analysis.
@@ -357,9 +336,9 @@ class AIService:
     def generate_malware_analysis(
         self,
         malware_info: str,
-        context: Optional[str] = None,
-        additional_analysis: Optional[str] = None,
-        system_prompt: Optional[str] = None,
+        context: str | None = None,
+        additional_analysis: str | None = None,
+        system_prompt: str | None = None,
     ) -> ParsedResponse:
         """
         Generate malware analysis.
@@ -388,9 +367,9 @@ class AIService:
     def generate_vulnerability_explanation(
         self,
         vulnerability: str,
-        context: Optional[str] = None,
-        additional_analysis: Optional[str] = None,
-        system_prompt: Optional[str] = None,
+        context: str | None = None,
+        additional_analysis: str | None = None,
+        system_prompt: str | None = None,
     ) -> ParsedResponse:
         """
         Generate vulnerability explanation.
@@ -419,9 +398,9 @@ class AIService:
     def generate_security_report(
         self,
         report_data: str,
-        context: Optional[str] = None,
-        additional_analysis: Optional[str] = None,
-        system_prompt: Optional[str] = None,
+        context: str | None = None,
+        additional_analysis: str | None = None,
+        system_prompt: str | None = None,
     ) -> ParsedResponse:
         """
         Generate security report.
@@ -447,7 +426,7 @@ class AIService:
             system_prompt=system_prompt,
         )
 
-    def get_active_model(self) -> Optional[ModelConfig]:
+    def get_active_model(self) -> ModelConfig | None:
         """
         Get the active model configuration.
 
@@ -471,7 +450,7 @@ class AIService:
             self._client = None
             self._active_model = None
 
-    def get_available_models(self) -> List[ModelConfig]:
+    def get_available_models(self) -> list[ModelConfig]:
         """
         Get all available models.
 
@@ -490,7 +469,7 @@ class AIService:
             self._client = None
             self._active_model = None
 
-    def get_client_status(self) -> Dict[str, Any]:
+    def get_client_status(self) -> dict[str, Any]:
         """
         Get the status of the current client.
 

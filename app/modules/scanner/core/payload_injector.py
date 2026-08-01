@@ -17,7 +17,7 @@ Version: 1.1.0
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import Any
 from urllib.parse import parse_qs, urlencode, urlparse, urlunparse
 
 # ============================================================
@@ -65,14 +65,14 @@ class TransformedRequest:
 
     url: str
     method: str = "GET"
-    headers: Dict[str, str] = field(default_factory=dict)
-    cookies: Dict[str, str] = field(default_factory=dict)
+    headers: dict[str, str] = field(default_factory=dict)
+    cookies: dict[str, str] = field(default_factory=dict)
     body: str = ""
-    json_data: Optional[Dict[str, Any]] = None
-    xml_data: Optional[str] = None
-    form_data: Optional[Dict[str, str]] = None
+    json_data: dict[str, Any] | None = None
+    xml_data: str | None = None
+    form_data: dict[str, str] | None = None
     original_url: str = ""
-    injection_points: List[InjectionPoint] = field(default_factory=list)
+    injection_points: list[InjectionPoint] = field(default_factory=list)
 
     def __post_init__(self) -> None:
         if not self.url or not isinstance(self.url, str):
@@ -121,7 +121,7 @@ class PayloadInjector:
 
         self.original_url: str = url
         self._parsed_url = urlparse(url)
-        self._query_params: Dict[str, List[str]] = self._parse_query_params()
+        self._query_params: dict[str, list[str]] = self._parse_query_params()
 
     # ============================================================
     # Query Parameter Injection
@@ -175,11 +175,11 @@ class PayloadInjector:
 
     def inject_form_field(
         self,
-        form_data: Dict[str, str],
+        form_data: dict[str, str],
         field_name: str,
         payload: str,
         position: str = "replace",
-    ) -> Dict[str, str]:
+    ) -> dict[str, str]:
         """
         Inject payload into a form field.
 
@@ -370,7 +370,7 @@ class PayloadInjector:
     # ============================================================
 
     def inject_json_payload(
-        self, path: List[str], payload: Any, position: str = "replace"
+        self, path: list[str], payload: Any, position: str = "replace"
     ) -> TransformedRequest:
         """
         Inject a payload into a JSON document.
@@ -448,7 +448,7 @@ class PayloadInjector:
     # Helper Methods
     # ============================================================
 
-    def get_all_parameters(self) -> List[str]:
+    def get_all_parameters(self) -> list[str]:
         """Get all query parameter names."""
         return list(self._query_params.keys())
 
@@ -473,12 +473,12 @@ class PayloadInjector:
     # Private Methods
     # ============================================================
 
-    def _parse_query_params(self) -> Dict[str, List[str]]:
+    def _parse_query_params(self) -> dict[str, list[str]]:
         """Parse query parameters from the URL."""
         query = self._parsed_url.query
         return parse_qs(query, keep_blank_values=True) if query else {}
 
-    def _build_url(self, params: Dict[str, List[str]]) -> str:
+    def _build_url(self, params: dict[str, list[str]]) -> str:
         """Build a URL from parsed components."""
         from urllib.parse import quote
 
@@ -505,15 +505,13 @@ class PayloadInjector:
             return payload
         elif position == "prefix":
             return f"{payload}{original}"
-        elif position == "suffix":
-            return f"{original}{payload}"
-        elif position == "append":
+        elif position == "suffix" or position == "append":
             return f"{original}{payload}"
         return original
 
     def _inject_json_path(
-        self, data: Dict[str, Any], path: List[str], value: Any
-    ) -> Dict[str, Any]:
+        self, data: dict[str, Any], path: list[str], value: Any
+    ) -> dict[str, Any]:
         """Recursively inject a value into a JSON path."""
         if not path:
             return data

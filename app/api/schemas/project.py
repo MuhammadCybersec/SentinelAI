@@ -14,9 +14,7 @@ Pydantic schemas for Project API.
 
 from __future__ import annotations
 
-from pydantic import BaseModel
-from pydantic import ConfigDict
-from pydantic import Field
+from pydantic import BaseModel, ConfigDict, Field
 
 # ===========================================================
 # Create Project
@@ -146,7 +144,6 @@ class ProjectListResponse(BaseModel):
 # ===========================================================
 
 if __name__ == "__main__":
-
     sample = ProjectCreate(
         name="OWASP Juice Shop",
         target="https://demo.owasp-juice.shop",

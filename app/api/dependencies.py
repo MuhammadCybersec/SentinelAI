@@ -18,54 +18,42 @@ from collections.abc import Generator
 
 from sqlalchemy.orm import Session
 
-from app.database.session import SessionLocal
-
 from app.database.repositories.finding_repository import (
     FindingRepository,
-)
-
-from app.services.finding_service import (
-    FindingService,
 )
 from app.database.repositories.project_repository import (
     ProjectRepository,
 )
-
-from app.services.project_service import (
-    ProjectService,
-)
-
-
-from app.modules.vulnerability.finding_manager import (
-    FindingManager,
-)
-
-from app.modules.dashboard.statistics_engine import (
-    StatisticsEngine,
-)
-
+from app.database.session import SessionLocal
 from app.modules.dashboard.dashboard_engine import (
     DashboardEngine,
 )
-
-from app.modules.vulnerability.search_engine import (
-    SearchEngine,
+from app.modules.dashboard.statistics_engine import (
+    StatisticsEngine,
 )
-
-from app.modules.vulnerability.status_engine import (
-    StatusEngine,
+from app.modules.vulnerability.evidence_manager import (
+    EvidenceManager,
 )
-
+from app.modules.vulnerability.finding_manager import (
+    FindingManager,
+)
 from app.modules.vulnerability.notes_manager import (
     NotesManager,
 )
-
+from app.modules.vulnerability.search_engine import (
+    SearchEngine,
+)
+from app.modules.vulnerability.status_engine import (
+    StatusEngine,
+)
 from app.modules.vulnerability.tags_manager import (
     TagsManager,
 )
-
-from app.modules.vulnerability.evidence_manager import (
-    EvidenceManager,
+from app.services.finding_service import (
+    FindingService,
+)
+from app.services.project_service import (
+    ProjectService,
 )
 
 # ===========================================================
@@ -81,11 +69,9 @@ def get_db() -> Generator[Session, None, None]:
     db = SessionLocal()
 
     try:
-
         yield db
 
     finally:
-
         db.close()
 
 
@@ -297,7 +283,6 @@ def get_dependencies() -> dict:
 # ===========================================================
 
 if __name__ == "__main__":
-
     print("=" * 60)
     print("Dependencies Test")
     print("=" * 60)
@@ -307,7 +292,6 @@ if __name__ == "__main__":
     print()
 
     for name, dependency in deps.items():
-
         print(f"{name:15} -> {dependency.__class__.__name__}")
 
     print()

@@ -14,19 +14,13 @@ Production REST API for Findings.
 
 from __future__ import annotations
 
-from fastapi import APIRouter
-from fastapi import Depends
-from fastapi import HTTPException
-from fastapi import Query
-from fastapi import status
-
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.api.dependencies import (
     get_db,
     get_finding_manager,
 )
-
 from app.api.schemas.finding import (
     DeleteResponse,
     FindingCreate,
@@ -36,7 +30,6 @@ from app.api.schemas.finding import (
     FindingStatusUpdate,
     FindingSummaryResponse,
 )
-
 from app.database.models.finding import Finding
 
 router = APIRouter(
@@ -67,7 +60,6 @@ def get_finding(
     )
 
     if finding is None:
-
         raise HTTPException(
             status_code=404,
             detail="Finding not found",
@@ -173,7 +165,6 @@ def update_status(
     )
 
     if finding is None:
-
         raise HTTPException(
             status_code=404,
             detail="Finding not found",
@@ -206,7 +197,6 @@ def delete_finding(
     )
 
     if not deleted:
-
         raise HTTPException(
             status_code=404,
             detail="Finding not found",
@@ -387,7 +377,6 @@ def health():
 # ===========================================================
 
 if __name__ == "__main__":
-
     print("=" * 60)
     print("Findings Router Loaded Successfully")
     print("=" * 60)

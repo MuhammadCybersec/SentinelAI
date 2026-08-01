@@ -33,9 +33,7 @@ def discover_parameters(urls: list[str]) -> dict[str, list[str]]:
     parameters: dict[str, list[str]] = {}
 
     for url in urls:
-
         try:
-
             parsed = urlparse(url)
 
             if not parsed.query:
@@ -44,7 +42,6 @@ def discover_parameters(urls: list[str]) -> dict[str, list[str]]:
             query = parse_qs(parsed.query)
 
             for parameter in query.keys():
-
                 if parameter not in parameters:
                     parameters[parameter] = []
 
@@ -62,7 +59,6 @@ def discover_parameters(urls: list[str]) -> dict[str, list[str]]:
 # ==========================================================
 
 if __name__ == "__main__":
-
     urls = [
         "https://bugcrowd.com/search?q=test&page=1",
         "https://bugcrowd.com/login?redirect=dashboard",
@@ -79,7 +75,6 @@ if __name__ == "__main__":
     print("-" * 50)
 
     for parameter, url_list in result.items():
-
         print(parameter)
 
         for url in url_list:

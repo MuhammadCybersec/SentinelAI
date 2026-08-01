@@ -53,7 +53,7 @@ except ImportError:
 # ===========================================================
 
 try:
-    from app.modules.scanner.modules.xss_scanner import XSSScanner, LegacyXSSScanner
+    from app.modules.scanner.modules.xss_scanner import LegacyXSSScanner, XSSScanner
 except ImportError:
     XSSScanner = None
     LegacyXSSScanner = None

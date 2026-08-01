@@ -5,15 +5,15 @@ Phase 14: WAF Detection and Fingerprinting
 """
 
 import logging
-import re
 import time
 from dataclasses import dataclass, field
-from typing import Optional, Dict, List, Any, Tuple, Set
+from typing import Any
+
 import requests
 
-from .union_sqli import UnionSQLi
 from .html_parser import HTMLParser
 from .regex_utils import RegexUtils
+from .union_sqli import UnionSQLi
 
 # ============================================================
 # Data Classes
@@ -28,22 +28,22 @@ class WAFDetectionResult:
 
     success: bool = False
     waf_detected: bool = False
-    waf_name: Optional[str] = None
-    vendor: Optional[str] = None
-    version: Optional[str] = None
+    waf_name: str | None = None
+    vendor: str | None = None
+    version: str | None = None
     confidence: int = 0
-    fingerprints: List[str] = field(default_factory=list)
-    headers: Dict[str, str] = field(default_factory=dict)
-    cookies: List[str] = field(default_factory=list)
-    response_codes: List[int] = field(default_factory=list)
-    blocked_payloads: List[str] = field(default_factory=list)
-    bypass_candidates: List[str] = field(default_factory=list)
-    evidence: List[str] = field(default_factory=list)
-    errors: List[str] = field(default_factory=list)
+    fingerprints: list[str] = field(default_factory=list)
+    headers: dict[str, str] = field(default_factory=dict)
+    cookies: list[str] = field(default_factory=list)
+    response_codes: list[int] = field(default_factory=list)
+    blocked_payloads: list[str] = field(default_factory=list)
+    bypass_candidates: list[str] = field(default_factory=list)
+    evidence: list[str] = field(default_factory=list)
+    errors: list[str] = field(default_factory=list)
     execution_time: float = 0.0
     risk_level: str = "LOW"
-    bypass_recommendations: List[str] = field(default_factory=list)
-    tamper_suggestions: List[str] = field(default_factory=list)
+    bypass_recommendations: list[str] = field(default_factory=list)
+    tamper_suggestions: list[str] = field(default_factory=list)
 
     def add_error(self, error: str):
         """Add an error to the result."""
@@ -99,7 +99,7 @@ class WAFDetectionResult:
 
         return f"WAF: {', '.join(parts)}"
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for logging/output."""
         return {
             "success": self.success,
@@ -380,7 +380,7 @@ class WAFDetector:
         self,
         session: requests.Session,
         base_url: str,
-        logger: Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ):
         """
         Initialize WAF Detector.
@@ -426,7 +426,7 @@ class WAFDetector:
     # Private Methods
     # ============================================================
 
-    def _get_baseline(self) -> Optional[requests.Response]:
+    def _get_baseline(self) -> requests.Response | None:
         """Get baseline response for comparison."""
         if self.baseline_response is None:
             self.logger.info("[WAFDetector] Fetching baseline response...")
@@ -436,11 +436,11 @@ class WAFDetector:
                     f"[WAFDetector] Baseline status: {self.baseline_response.status_code}"
                 )
             except Exception as e:
-                self.logger.warning(f"[WAFDetector] Failed to get baseline: {str(e)}")
+                self.logger.warning(f"[WAFDetector] Failed to get baseline: {e!s}")
 
         return self.baseline_response
 
-    def _detect_by_headers(self, response: requests.Response) -> List[str]:
+    def _detect_by_headers(self, response: requests.Response) -> list[str]:
         """
         Detect WAF by analyzing response headers.
 
@@ -481,7 +481,7 @@ class WAFDetector:
 
         return detected
 
-    def _detect_by_body(self, response: requests.Response) -> List[str]:
+    def _detect_by_body(self, response: requests.Response) -> list[str]:
         """
         Detect WAF by analyzing response body.
 
@@ -553,7 +553,7 @@ class WAFDetector:
 
     def _detect_by_payload(
         self, injection_point: str, test_payload: str
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Detect WAF by testing a payload.
 
@@ -639,7 +639,7 @@ class WAFDetector:
     # Public Methods
     # ============================================================
 
-    def detect(self, injection_point: Optional[str] = None) -> WAFDetectionResult:
+    def detect(self, injection_point: str | None = None) -> WAFDetectionResult:
         """
         Detect and fingerprint WAF.
 
@@ -780,7 +780,7 @@ class WAFDetector:
             result.success = True
 
         except Exception as e:
-            error_msg = f"WAF detection failed: {str(e)}"
+            error_msg = f"WAF detection failed: {e!s}"
             self.logger.error(error_msg)
             result.add_error(error_msg)
             result.success = False
@@ -800,11 +800,11 @@ class WAFDetector:
         self.waf_result = result
         return result
 
-    def detect_by_headers(self, response: requests.Response) -> List[str]:
+    def detect_by_headers(self, response: requests.Response) -> list[str]:
         """Detect WAF by headers."""
         return self._detect_by_headers(response)
 
-    def detect_by_body(self, response: requests.Response) -> List[str]:
+    def detect_by_body(self, response: requests.Response) -> list[str]:
         """Detect WAF by body."""
         return self._detect_by_body(response)
 
@@ -812,7 +812,7 @@ class WAFDetector:
         """Detect WAF by status code."""
         return self._detect_by_status(response)
 
-    def detect_by_cookies(self, response: requests.Response) -> List[str]:
+    def detect_by_cookies(self, response: requests.Response) -> list[str]:
         """Detect WAF by cookies."""
         detected = []
         cookies = response.headers.get("Set-Cookie", "")
@@ -824,7 +824,7 @@ class WAFDetector:
 
         return detected
 
-    def detect_by_response(self, response: requests.Response) -> List[str]:
+    def detect_by_response(self, response: requests.Response) -> list[str]:
         """Detect WAF by response."""
         detected = []
 
@@ -842,20 +842,20 @@ class WAFDetector:
 
     def detect_by_payload(
         self, injection_point: str, test_payload: str
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Detect WAF by payload."""
         return self._detect_by_payload(injection_point, test_payload)
 
-    def fingerprint(self, response: requests.Response) -> List[str]:
+    def fingerprint(self, response: requests.Response) -> list[str]:
         """Fingerprint WAF from response."""
         return self.detect_by_response(response)
 
-    def identify_vendor(self, response: requests.Response) -> Optional[str]:
+    def identify_vendor(self, response: requests.Response) -> str | None:
         """Identify WAF vendor."""
         detected = self.detect_by_response(response)
         return detected[0] if detected else None
 
-    def rank_results(self, results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def rank_results(self, results: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """Rank detection results."""
         ranked = sorted(results, key=lambda x: x.get("score", 0), reverse=True)
         return ranked
@@ -872,7 +872,7 @@ class WAFDetector:
             header_matches, body_matches, status_matches, payload_blocked
         )
 
-    def collect_evidence(self, response: requests.Response) -> List[str]:
+    def collect_evidence(self, response: requests.Response) -> list[str]:
         """Collect evidence from response."""
         evidence = []
 
@@ -889,19 +889,19 @@ class WAFDetector:
 
         return evidence
 
-    def is_waf_present(self, injection_point: Optional[str] = None) -> bool:
+    def is_waf_present(self, injection_point: str | None = None) -> bool:
         """Quick check if WAF is present."""
         result = self.detect(injection_point)
         return result.waf_detected
 
-    def get_waf_name(self, injection_point: Optional[str] = None) -> Optional[str]:
+    def get_waf_name(self, injection_point: str | None = None) -> str | None:
         """Get WAF name."""
         result = self.detect(injection_point)
         return result.waf_name
 
     def get_bypass_recommendations(
-        self, injection_point: Optional[str] = None
-    ) -> List[str]:
+        self, injection_point: str | None = None
+    ) -> list[str]:
         """Get bypass recommendations."""
         result = self.detect(injection_point)
         return result.bypass_recommendations

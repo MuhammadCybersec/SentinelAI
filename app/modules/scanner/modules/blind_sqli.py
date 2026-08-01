@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from typing import List, Optional, Dict, Any
+from typing import Any
 
 from app.modules.scanner.modules.blind_extractor import BlindExtractor
 
@@ -35,11 +35,11 @@ class BlindFinding:
     database: str = ""
     version: str = ""
     user: str = ""
-    tables: List[str] = field(default_factory=list)
-    columns: Dict[str, List[str]] = field(default_factory=dict)
-    credentials: List[Dict[str, str]] = field(default_factory=list)
+    tables: list[str] = field(default_factory=list)
+    columns: dict[str, list[str]] = field(default_factory=dict)
+    credentials: list[dict[str, str]] = field(default_factory=list)
     confidence: float = 0.0
-    evidence: List[str] = field(default_factory=list)
+    evidence: list[str] = field(default_factory=list)
 
 
 class BlindSQLiScanner:
@@ -51,13 +51,13 @@ class BlindSQLiScanner:
     def __init__(self, target: str):
         self.target = target
         self.parameter: str = "category"
-        self.findings: List[BlindFinding] = []
+        self.findings: list[BlindFinding] = []
         self.statistics = {
             "requests": 0,
             "findings": 0,
         }
 
-    def scan(self) -> List[BlindFinding]:
+    def scan(self) -> list[BlindFinding]:
         """
         Execute Blind SQL Injection scan.
 
@@ -124,7 +124,7 @@ class SQLInjectionManager:
         self.blind_scanner = None
         self.result = None
 
-    def scan(self) -> Dict[str, Any]:
+    def scan(self) -> dict[str, Any]:
         """
         Execute SQL Injection scan.
         Tries UNION first, falls back to Blind.

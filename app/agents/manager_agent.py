@@ -7,10 +7,9 @@ Version : 0.0.1
 ===========================================================
 """
 
-from app.services.project_service import ProjectService
-from app.core.ai.intent_classifier import IntentClassifier
 from app.agents.memory_agent import memory_agent
-from app.agents.recon_agent import recon_agent
+from app.core.ai.intent_classifier import IntentClassifier
+from app.services.project_service import ProjectService
 from app.services.recon_service import ReconService
 
 
@@ -41,7 +40,6 @@ class ManagerAgent:
         # ==========================================================
 
         if command_lower in ["recon", "start recon", "scan target"]:
-
             project = memory_agent.current_project()
 
             if project is None:
@@ -57,7 +55,6 @@ class ManagerAgent:
         # ==========================================================
 
         if command_lower == "current project":
-
             project = memory_agent.current_project()
 
             if project is None:
@@ -66,7 +63,6 @@ class ManagerAgent:
             return project
 
         if command_lower == "current target":
-
             target = memory_agent.current_target()
 
             if target is None:
@@ -75,9 +71,22 @@ class ManagerAgent:
             return target
 
         if command_lower == "history":
-
             return memory_agent.history()
-
+        if command_lower == "help":
+            return {
+                "commands": [
+                    "create project <name>",
+                    "list projects",
+                    "current project",
+                    "current target",
+                    "history",
+                    "recon",
+                    "start recon",
+                    "scan target",
+                    "help",
+                    "exit",
+                ]
+            }
         # ==========================================================
         # AI Intent Classification
         # ==========================================================
@@ -89,7 +98,6 @@ class ManagerAgent:
         # ==========================================================
 
         if data.get("intent") == "create_project":
-
             project = self.project_service.create_project(
                 name=data.get("name", "Untitled Project"),
                 target=data.get("target", ""),
@@ -108,7 +116,6 @@ class ManagerAgent:
         # ==========================================================
 
         if data.get("intent") == "use_project":
-
             project = self.project_service.get_project_by_name(data.get("name", ""))
 
             if project is None:
@@ -126,7 +133,6 @@ class ManagerAgent:
         # ==========================================================
 
         if command_lower == "list projects":
-
             return self.project_service.list_projects()
 
             # ==========================================================
@@ -134,7 +140,6 @@ class ManagerAgent:
         # ==========================================================
 
         if data.get("intent") == "recon":
-
             project = memory_agent.current_project()
 
             if project is None:

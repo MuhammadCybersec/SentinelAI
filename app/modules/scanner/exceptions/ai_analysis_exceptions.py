@@ -2,7 +2,7 @@
 Exceptions for AI Analysis Service.
 """
 
-from typing import Optional, Dict, Any
+from typing import Any
 
 
 class ScannerAIAnalysisError(Exception):
@@ -14,12 +14,12 @@ class ScannerAIAnalysisError(Exception):
         details: Additional error details
     """
 
-    __slots__ = ("message", "details")
+    __slots__ = ("details", "message")
 
     def __init__(
         self,
         message: str,
-        details: Optional[Dict[str, Any]] = None,
+        details: dict[str, Any] | None = None,
     ) -> None:
         self.message = message
         self.details = details or {}
@@ -34,22 +34,14 @@ class ScannerAIAnalysisError(Exception):
 class ScannerAINotConfiguredError(ScannerAIAnalysisError):
     """Raised when AI service is not configured."""
 
-    pass
-
 
 class ScannerAIConnectionError(ScannerAIAnalysisError):
     """Raised when connection to AI service fails."""
-
-    pass
 
 
 class ScannerAIParsingError(ScannerAIAnalysisError):
     """Raised when parsing AI response fails."""
 
-    pass
-
 
 class ScannerAIReportError(ScannerAIAnalysisError):
     """Raised when generating AI report fails."""
-
-    pass

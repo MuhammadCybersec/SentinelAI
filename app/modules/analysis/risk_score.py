@@ -62,7 +62,6 @@ class RiskScore:
         self.counter.clear()
 
         for finding in findings:
-
             self.counter[finding.severity] += 1
 
     # =======================================================
@@ -79,7 +78,6 @@ class RiskScore:
         score = 0
 
         for severity, weight in self.SEVERITY_WEIGHTS.items():
-
             score += (
                 self.counter.get(
                     severity,
@@ -106,19 +104,15 @@ class RiskScore:
         """
 
         if self.score >= 90:
-
             return "Critical"
 
         if self.score >= 70:
-
             return "High"
 
         if self.score >= 40:
-
             return "Medium"
 
         if self.score >= 10:
-
             return "Low"
 
         return "Informational"
@@ -160,7 +154,6 @@ class RiskScore:
 # ===========================================================
 
 if __name__ == "__main__":
-
     sample_findings = [
         Finding(
             id="HDR-001",

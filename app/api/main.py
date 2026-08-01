@@ -16,12 +16,10 @@ from __future__ import annotations
 
 from fastapi import FastAPI
 
-from app.api.routers.project import router as project_router
-
-
 from app.api.routers.findings import (
     router as findings_router,
 )
+from app.api.routers.project import router as project_router
 
 # ===========================================================
 # Create FastAPI Application
@@ -29,7 +27,7 @@ from app.api.routers.findings import (
 
 app = FastAPI(
     title="Sentinel AI API",
-    description=("Enterprise AI-Powered " "Vulnerability Assessment Platform"),
+    description=("Enterprise AI-Powered Vulnerability Assessment Platform"),
     version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc",
@@ -140,7 +138,6 @@ async def shutdown_event():
 # ===========================================================
 
 if __name__ == "__main__":
-
     import uvicorn
 
     uvicorn.run(

@@ -4,10 +4,10 @@
 # DESCRIPTION: Model Manager for AI services - Manages model configurations
 # =============================================================================
 
+import threading
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Dict, List, Optional, Any
-import threading
+from typing import Any
 
 
 class ModelProvider(Enum):
@@ -39,13 +39,13 @@ class ModelConfig:
 
     model_id: str
     provider: ModelProvider
-    api_key: Optional[str] = None
-    base_url: Optional[str] = None
+    api_key: str | None = None
+    base_url: str | None = None
     model_name: str = ""
     temperature: float = 0.7
     max_tokens: int = 4096
     timeout: float = 60.0
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         """Validate configuration after initialization."""
@@ -83,8 +83,8 @@ class ModelManager:
 
     def __init__(self) -> None:
         """Initialize the ModelManager."""
-        self._models: Dict[str, ModelConfig] = {}
-        self._active_model_id: Optional[str] = None
+        self._models: dict[str, ModelConfig] = {}
+        self._active_model_id: str | None = None
         self._lock = threading.RLock()
 
     def register_model(self, config: ModelConfig) -> None:
@@ -146,7 +146,7 @@ class ModelManager:
             self._models[config.model_id] = config
             self._active_model_id = config.model_id
 
-    def get_active_model(self) -> Optional[ModelConfig]:
+    def get_active_model(self) -> ModelConfig | None:
         """
         Get the active model configuration.
 
@@ -158,7 +158,7 @@ class ModelManager:
                 return None
             return self._models.get(self._active_model_id)
 
-    def get_model(self, model_id: str) -> Optional[ModelConfig]:
+    def get_model(self, model_id: str) -> ModelConfig | None:
         """
         Get a model configuration by ID.
 
@@ -171,7 +171,7 @@ class ModelManager:
         with self._lock:
             return self._models.get(model_id)
 
-    def get_all_models(self) -> List[ModelConfig]:
+    def get_all_models(self) -> list[ModelConfig]:
         """
         Get all registered model configurations.
 
@@ -181,7 +181,7 @@ class ModelManager:
         with self._lock:
             return list(self._models.values())
 
-    def get_active_model_id(self) -> Optional[str]:
+    def get_active_model_id(self) -> str | None:
         """
         Get the active model ID.
 
@@ -210,7 +210,7 @@ class ModelManager:
             self._models.clear()
             self._active_model_id = None
 
-    def get_active_provider(self) -> Optional[ModelProvider]:
+    def get_active_provider(self) -> ModelProvider | None:
         """
         Get the provider of the active model.
 

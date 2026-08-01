@@ -4,8 +4,6 @@
 Oracle-specific scoring and ranking logic.
 """
 
-from typing import Dict, List, Optional, Tuple
-
 
 class OracleScorer:
     """Oracle-specific scoring for tables and columns."""
@@ -164,7 +162,7 @@ class OracleScorer:
 
         return best_score
 
-    def find_best_table(self, tables: List[str]) -> Optional[str]:
+    def find_best_table(self, tables: list[str]) -> str | None:
         """
         Find the best table from a list based on scoring.
 
@@ -186,7 +184,7 @@ class OracleScorer:
 
         return None
 
-    def find_best_username_column(self, columns: List[str]) -> Optional[str]:
+    def find_best_username_column(self, columns: list[str]) -> str | None:
         """
         Find the best username column from a list.
 
@@ -207,7 +205,7 @@ class OracleScorer:
 
         return None
 
-    def find_best_password_column(self, columns: List[str]) -> Optional[str]:
+    def find_best_password_column(self, columns: list[str]) -> str | None:
         """
         Find the best password column from a list.
 
@@ -229,8 +227,8 @@ class OracleScorer:
         return None
 
     def find_administrator(
-        self, credentials: List[Dict[str, str]]
-    ) -> Optional[Dict[str, str]]:
+        self, credentials: list[dict[str, str]]
+    ) -> dict[str, str] | None:
         """
         Find administrator credentials from a list.
 

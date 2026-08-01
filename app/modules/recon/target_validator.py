@@ -33,14 +33,9 @@ class TargetValidator:
             return False
 
         try:
-
             parsed = urlparse(target)
 
-            return (
-                parsed.scheme in ("http", "https")
-                and parsed.netloc != ""
-            )
+            return parsed.scheme in ("http", "https") and parsed.netloc != ""
 
         except Exception:
-
             return False

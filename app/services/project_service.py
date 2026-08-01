@@ -160,7 +160,6 @@ class ProjectService:
         )
 
         if project is None:
-
             return False
 
         return self.repository.delete_project(
@@ -186,7 +185,6 @@ class ProjectService:
         )
 
         if existing:
-
             return existing
 
         return self.create_project(
@@ -201,7 +199,6 @@ class ProjectService:
 # ===========================================================
 
 if __name__ == "__main__":
-
     print("=" * 60)
     print("Project Service Loaded Successfully")
     print("=" * 60)

@@ -59,7 +59,6 @@ class XSSScanner:
         vulnerable = False
 
         if not vulnerable:
-
             return None
 
         # -------------------------------------------------
@@ -69,7 +68,7 @@ class XSSScanner:
         return Finding(
             project_id=project_id,
             title="Cross Site Scripting (XSS)",
-            description=("Potential reflected " "Cross Site Scripting detected."),
+            description=("Potential reflected Cross Site Scripting detected."),
             severity=self.severity,
             cvss=6.5,
             status="Open",
@@ -79,7 +78,7 @@ class XSSScanner:
             parameter="",
             payload="",
             evidence="",
-            recommendation=("Validate and encode " "all untrusted input."),
+            recommendation=("Validate and encode all untrusted input."),
             reference=("https://owasp.org/www-community/attacks/xss/"),
             cwe="CWE-79",
             owasp="A03:2021 Injection",
@@ -106,7 +105,6 @@ class XSSScanner:
 # ============================================================
 
 if __name__ == "__main__":
-
     scanner = XSSScanner()
 
     result = scanner.scan(
@@ -117,9 +115,7 @@ if __name__ == "__main__":
     print()
 
     if result is None:
-
         print("No XSS Found")
 
     else:
-
         print(result)

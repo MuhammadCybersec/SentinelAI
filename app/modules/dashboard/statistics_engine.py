@@ -51,11 +51,9 @@ class StatisticsEngine:
         }
 
         for finding in findings:
-
             severity = finding.severity
 
             if severity in stats:
-
                 stats[severity] += 1
 
         return stats
@@ -72,7 +70,6 @@ class StatisticsEngine:
         stats = {}
 
         for finding in findings:
-
             status = finding.status
 
             stats[status] = (
@@ -97,7 +94,6 @@ class StatisticsEngine:
         stats = {}
 
         for finding in findings:
-
             module = finding.module
 
             stats[module] = (
@@ -120,7 +116,6 @@ class StatisticsEngine:
     ) -> float:
 
         if not findings:
-
             return 0.0
 
         total = sum(finding.cvss or 0 for finding in findings)
@@ -150,7 +145,6 @@ class StatisticsEngine:
         score = 0
 
         for finding in findings:
-
             score += weights.get(
                 finding.severity,
                 0,
@@ -250,7 +244,6 @@ class StatisticsEngine:
 # ===========================================================
 
 if __name__ == "__main__":
-
     findings = [
         Finding(
             project_id="demo",

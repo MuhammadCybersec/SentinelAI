@@ -44,7 +44,6 @@ def discover_javascript(target: str) -> list[str]:
     js_files: set[str] = set()
 
     for src in matches:
-
         if not src:
             continue
 
@@ -66,7 +65,6 @@ def discover_javascript(target: str) -> list[str]:
 # ======================================================
 
 if __name__ == "__main__":
-
     files = discover_javascript("https://bugcrowd.com")
 
     print(f"JavaScript Files: {len(files)}")

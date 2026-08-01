@@ -53,14 +53,12 @@ class LFIScanner:
         detected_payload = ""
 
         for payload in self.payloads:
-
             # Future:
             # Inject payload
             # Send request
             # Detect file disclosure
 
             if False:
-
                 vulnerable = True
 
                 detected_payload = payload
@@ -68,7 +66,6 @@ class LFIScanner:
                 break
 
         if not vulnerable:
-
             return None
 
         return Finding(
@@ -110,7 +107,6 @@ class LFIScanner:
 # ============================================================
 
 if __name__ == "__main__":
-
     scanner = LFIScanner()
 
     result = scanner.scan(
@@ -121,9 +117,7 @@ if __name__ == "__main__":
     print()
 
     if result is None:
-
         print("No LFI Found")
 
     else:
-
         print(result)

@@ -19,10 +19,11 @@ from __future__ import annotations
 import time
 from typing import Any
 
+from app.modules.scanner.payloads.xss_payloads import get_payloads
+
 from app.modules.scanner.core.base_scanner import BaseScanner
 from app.modules.scanner.core.request_engine import RequestEngine
 from app.modules.scanner.core.response_analyzer_v2 import ResponseAnalyzer
-from app.modules.scanner.payloads.xss_payloads import get_payloads
 
 
 class XSSScanner(BaseScanner):
@@ -91,7 +92,6 @@ class XSSScanner(BaseScanner):
     ) -> float:
 
         if self.end_time == 0:
-
             return 0.0
 
         return round(
@@ -114,7 +114,6 @@ class XSSScanner(BaseScanner):
         parameters: list[dict[str, Any]] = []
 
         for parameter in target.get("get_params", []):
-
             parameters.append(
                 {
                     "location": "GET",
@@ -123,7 +122,6 @@ class XSSScanner(BaseScanner):
             )
 
         for parameter in target.get("post_params", []):
-
             parameters.append(
                 {
                     "location": "POST",
@@ -145,13 +143,10 @@ class XSSScanner(BaseScanner):
         """
 
         for payload in self.payloads:
-
             if isinstance(payload, dict):
-
                 yield payload
 
             else:
-
                 yield {
                     "payload": payload,
                     "context": "generic",
@@ -201,9 +196,7 @@ class XSSScanner(BaseScanner):
         )
 
         for parameter in parameters:
-
             for payload in self._payload_iterator():
-
                 test_cases.append(
                     self._build_test_case(
                         target,
@@ -277,7 +270,6 @@ class XSSScanner(BaseScanner):
         """
 
         if test_case["method"] == "GET":
-
             return self._execute_get(
                 test_case,
             )
@@ -301,9 +293,7 @@ class XSSScanner(BaseScanner):
         responses = []
 
         for test_case in test_cases:
-
             try:
-
                 response = self._execute_test(
                     test_case,
                 )
@@ -316,7 +306,6 @@ class XSSScanner(BaseScanner):
                 )
 
             except Exception:
-
                 continue
 
         return responses
@@ -359,9 +348,7 @@ class XSSScanner(BaseScanner):
         analyzed = []
 
         for item in responses:
-
             try:
-
                 analyzed.append(
                     self._analyze_response(
                         item["test_case"],
@@ -370,7 +357,6 @@ class XSSScanner(BaseScanner):
                 )
 
             except Exception:
-
                 continue
 
         return analyzed
@@ -409,11 +395,9 @@ class XSSScanner(BaseScanner):
         candidates = []
 
         for result in analyzed_results:
-
             if self._is_reflected(
                 result["analysis"],
             ):
-
                 candidates.append(result)
 
         return candidates
@@ -519,7 +503,6 @@ class XSSScanner(BaseScanner):
         findings = []
 
         for candidate in candidates:
-
             findings.append(
                 self._build_finding(
                     candidate,
@@ -545,13 +528,11 @@ class XSSScanner(BaseScanner):
         self.start_time = time.time()
 
         try:
-
             test_cases = self._prepare_scan(
                 target,
             )
 
             if not test_cases:
-
                 self.end_time = time.time()
 
                 return []
@@ -577,7 +558,6 @@ class XSSScanner(BaseScanner):
             return findings
 
         except Exception as exc:
-
             self.end_time = time.time()
 
             print(f"[XSS] Scan failed: {exc}")
@@ -628,7 +608,6 @@ class XSSScanner(BaseScanner):
 # ==========================================================
 
 if __name__ == "__main__":
-
     print("=" * 60)
     print("SentinelAI XSS Scanner")
     print("=" * 60)

@@ -59,7 +59,6 @@ class OpenRedirectScanner:
         detected_payload = ""
 
         for payload in self.payloads:
-
             # -------------------------------------------------
             # Future:
             # Inject redirect payload
@@ -69,7 +68,6 @@ class OpenRedirectScanner:
             # -------------------------------------------------
 
             if False:
-
                 vulnerable = True
 
                 detected_payload = payload
@@ -77,7 +75,6 @@ class OpenRedirectScanner:
                 break
 
         if not vulnerable:
-
             return None
 
         return Finding(
@@ -121,7 +118,6 @@ class OpenRedirectScanner:
 # ============================================================
 
 if __name__ == "__main__":
-
     scanner = OpenRedirectScanner()
 
     result = scanner.scan(
@@ -132,9 +128,7 @@ if __name__ == "__main__":
     print()
 
     if result is None:
-
         print("No Open Redirect Found")
 
     else:
-
         print(result)

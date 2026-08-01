@@ -54,7 +54,6 @@ class ReconResultRepository(BaseRepository[ReconResult]):
         records = []
 
         for item in results:
-
             records.append(
                 ReconResult(
                     project_id=project_id,

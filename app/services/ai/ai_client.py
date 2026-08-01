@@ -5,8 +5,8 @@
 # =============================================================================
 
 import json
-import time
-from typing import Optional, Dict, Any, List
+from typing import Any
+
 import requests
 
 from app.services.ai.model_manager import ModelConfig, ModelProvider
@@ -14,8 +14,6 @@ from app.services.ai.model_manager import ModelConfig, ModelProvider
 
 class AIClientError(Exception):
     """Base exception for AI client errors."""
-
-    pass
 
 
 class AIClient:
@@ -50,7 +48,7 @@ class AIClient:
     def generate(
         self,
         prompt: str,
-        system_prompt: Optional[str] = None,
+        system_prompt: str | None = None,
         **kwargs: Any,
     ) -> str:
         """
@@ -81,7 +79,7 @@ class AIClient:
     def _generate_ollama(
         self,
         prompt: str,
-        system_prompt: Optional[str] = None,
+        system_prompt: str | None = None,
         **kwargs: Any,
     ) -> str:
         """Generate using Ollama API."""
@@ -104,14 +102,14 @@ class AIClient:
             data = response.json()
             return data.get("response", "")
         except requests.RequestException as e:
-            raise AIClientError(f"Ollama request failed: {str(e)}") from e
+            raise AIClientError(f"Ollama request failed: {e!s}") from e
         except json.JSONDecodeError as e:
-            raise AIClientError(f"Invalid JSON response: {str(e)}") from e
+            raise AIClientError(f"Invalid JSON response: {e!s}") from e
 
     def _generate_openai(
         self,
         prompt: str,
-        system_prompt: Optional[str] = None,
+        system_prompt: str | None = None,
         **kwargs: Any,
     ) -> str:
         """Generate using OpenAI API."""
@@ -140,14 +138,14 @@ class AIClient:
             data = response.json()
             return data["choices"][0]["message"]["content"]
         except requests.RequestException as e:
-            raise AIClientError(f"OpenAI request failed: {str(e)}") from e
+            raise AIClientError(f"OpenAI request failed: {e!s}") from e
         except (KeyError, json.JSONDecodeError) as e:
-            raise AIClientError(f"Invalid response: {str(e)}") from e
+            raise AIClientError(f"Invalid response: {e!s}") from e
 
     def _generate_claude(
         self,
         prompt: str,
-        system_prompt: Optional[str] = None,
+        system_prompt: str | None = None,
         **kwargs: Any,
     ) -> str:
         """Generate using Claude API."""
@@ -174,14 +172,14 @@ class AIClient:
             data = response.json()
             return data["content"][0]["text"]
         except requests.RequestException as e:
-            raise AIClientError(f"Claude request failed: {str(e)}") from e
+            raise AIClientError(f"Claude request failed: {e!s}") from e
         except (KeyError, json.JSONDecodeError) as e:
-            raise AIClientError(f"Invalid response: {str(e)}") from e
+            raise AIClientError(f"Invalid response: {e!s}") from e
 
     def _generate_gemini(
         self,
         prompt: str,
-        system_prompt: Optional[str] = None,
+        system_prompt: str | None = None,
         **kwargs: Any,
     ) -> str:
         """Generate using Gemini API."""
@@ -207,14 +205,14 @@ class AIClient:
             data = response.json()
             return data["candidates"][0]["content"]["parts"][0]["text"]
         except requests.RequestException as e:
-            raise AIClientError(f"Gemini request failed: {str(e)}") from e
+            raise AIClientError(f"Gemini request failed: {e!s}") from e
         except (KeyError, json.JSONDecodeError) as e:
-            raise AIClientError(f"Invalid response: {str(e)}") from e
+            raise AIClientError(f"Invalid response: {e!s}") from e
 
     def _generate_custom(
         self,
         prompt: str,
-        system_prompt: Optional[str] = None,
+        system_prompt: str | None = None,
         **kwargs: Any,
     ) -> str:
         """Generate using custom endpoint."""
@@ -244,6 +242,6 @@ class AIClient:
                 "response", data.get("text", data.get("content", str(data)))
             )
         except requests.RequestException as e:
-            raise AIClientError(f"Custom request failed: {str(e)}") from e
+            raise AIClientError(f"Custom request failed: {e!s}") from e
         except json.JSONDecodeError as e:
-            raise AIClientError(f"Invalid JSON response: {str(e)}") from e
+            raise AIClientError(f"Invalid JSON response: {e!s}") from e

@@ -56,14 +56,12 @@ class RFIScanner:
         detected_payload = ""
 
         for payload in self.payloads:
-
             # Future:
             # Inject payload
             # Send request
             # Detect remote file inclusion
 
             if False:
-
                 vulnerable = True
 
                 detected_payload = payload
@@ -71,7 +69,6 @@ class RFIScanner:
                 break
 
         if not vulnerable:
-
             return None
 
         return Finding(
@@ -113,7 +110,6 @@ class RFIScanner:
 # ============================================================
 
 if __name__ == "__main__":
-
     scanner = RFIScanner()
 
     result = scanner.scan(
@@ -124,9 +120,7 @@ if __name__ == "__main__":
     print()
 
     if result is None:
-
         print("No RFI Found")
 
     else:
-
         print(result)

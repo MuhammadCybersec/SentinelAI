@@ -85,7 +85,6 @@ def detect_technology(target: str) -> dict:
 # =========================================================
 
 if __name__ == "__main__":
-
     result = detect_technology("https://bugcrowd.com")
 
     print("-" * 50)
@@ -93,11 +92,8 @@ if __name__ == "__main__":
     print("-" * 50)
 
     if not result:
-
         print("Nothing detected.")
 
     else:
-
         for key, value in result.items():
-
             print(f"{key:15} : {value}")

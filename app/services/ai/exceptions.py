@@ -8,8 +8,8 @@
 # errors including configuration, connection, response, parsing, and provider errors.
 # =============================================================================
 
-from typing import Optional, Dict, Any
 import json
+from typing import Any
 
 # =============================================================================
 # BASE EXCEPTION
@@ -27,14 +27,14 @@ class AIServiceError(Exception):
         details: Optional additional error details
     """
 
-    __slots__ = ("message", "provider", "model", "details")
+    __slots__ = ("details", "message", "model", "provider")
 
     def __init__(
         self,
         message: str,
-        provider: Optional[str] = None,
-        model: Optional[str] = None,
-        details: Optional[Dict[str, Any]] = None,
+        provider: str | None = None,
+        model: str | None = None,
+        details: dict[str, Any] | None = None,
     ) -> None:
         """
         Initialize the exception.
@@ -62,7 +62,7 @@ class AIServiceError(Exception):
             parts.append(f"Details: {json.dumps(self.details, indent=2)}")
         return "\n".join(parts)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """
         Convert exception to structured dictionary.
 
@@ -93,8 +93,6 @@ class AIConfigurationError(AIServiceError):
         - Configuration file errors
     """
 
-    pass
-
 
 class AIModelError(AIServiceError):
     """
@@ -105,8 +103,6 @@ class AIModelError(AIServiceError):
         - Model execution error
         - Model compatibility issues
     """
-
-    pass
 
 
 class AIModelNotFoundError(AIModelError):
@@ -119,8 +115,6 @@ class AIModelNotFoundError(AIModelError):
         - Model ID invalid
     """
 
-    pass
-
 
 class AIModelDisabledError(AIModelError):
     """
@@ -131,8 +125,6 @@ class AIModelDisabledError(AIModelError):
         - Model unavailable
         - Model not authorized
     """
-
-    pass
 
 
 # =============================================================================
@@ -151,8 +143,6 @@ class AIConnectionError(AIServiceError):
         - DNS resolution failed
     """
 
-    pass
-
 
 class AIRequestTimeoutError(AIConnectionError):
     """
@@ -163,8 +153,6 @@ class AIRequestTimeoutError(AIConnectionError):
         - Provider slow to respond
         - Network latency
     """
-
-    pass
 
 
 # =============================================================================
@@ -182,8 +170,6 @@ class AIAuthenticationError(AIServiceError):
         - Insufficient permissions
     """
 
-    pass
-
 
 # =============================================================================
 # REQUEST ERRORS
@@ -200,8 +186,6 @@ class AIRequestError(AIServiceError):
         - Request rejected by provider
     """
 
-    pass
-
 
 class AIRateLimitError(AIRequestError):
     """
@@ -212,8 +196,6 @@ class AIRateLimitError(AIRequestError):
         - Quota exceeded
         - Throttling applied
     """
-
-    pass
 
 
 # =============================================================================
@@ -231,8 +213,6 @@ class AIResponseError(AIServiceError):
         - Unexpected error format
     """
 
-    pass
-
 
 class AIProviderError(AIServiceError):
     """
@@ -243,8 +223,6 @@ class AIProviderError(AIServiceError):
         - Service unavailable
         - Internal server error
     """
-
-    pass
 
 
 # =============================================================================
@@ -262,8 +240,6 @@ class AIParsingError(AIServiceError):
         - Data type mismatch
     """
 
-    pass
-
 
 class ResponseParserError(AIParsingError):
     """
@@ -274,8 +250,6 @@ class ResponseParserError(AIParsingError):
         - Unsupported response format
         - Parser implementation error
     """
-
-    pass
 
 
 class InvalidJSONError(ResponseParserError):
@@ -288,8 +262,6 @@ class InvalidJSONError(ResponseParserError):
         - Incomplete JSON
     """
 
-    pass
-
 
 class EmptyResponseError(ResponseParserError):
     """
@@ -300,8 +272,6 @@ class EmptyResponseError(ResponseParserError):
         - Null response
         - No content
     """
-
-    pass
 
 
 class MalformedResponseError(ResponseParserError):
@@ -314,8 +284,6 @@ class MalformedResponseError(ResponseParserError):
         - Invalid data types
     """
 
-    pass
-
 
 class MissingFieldError(ResponseParserError):
     """
@@ -327,8 +295,6 @@ class MissingFieldError(ResponseParserError):
         - Field empty
     """
 
-    pass
-
 
 class InvalidFieldTypeError(ResponseParserError):
     """
@@ -339,8 +305,6 @@ class InvalidFieldTypeError(ResponseParserError):
         - Unexpected data type
         - Invalid enum value
     """
-
-    pass
 
 
 # =============================================================================
@@ -358,8 +322,6 @@ class PromptBuilderError(AIServiceError):
         - Invalid prompt format
     """
 
-    pass
-
 
 class PromptTemplateError(PromptBuilderError):
     """
@@ -371,8 +333,6 @@ class PromptTemplateError(PromptBuilderError):
         - Template validation failed
     """
 
-    pass
-
 
 class PromptValidationError(PromptBuilderError):
     """
@@ -383,8 +343,6 @@ class PromptValidationError(PromptBuilderError):
         - Invalid variable types
         - Unsafe content detected
     """
-
-    pass
 
 
 # =============================================================================
@@ -401,8 +359,6 @@ class ModelNotConfiguredError(AIServiceError):
         - Model configuration missing
     """
 
-    pass
-
 
 class PromptBuildError(AIServiceError):
     """
@@ -413,8 +369,6 @@ class PromptBuildError(AIServiceError):
         - Missing variables
         - Invalid template
     """
-
-    pass
 
 
 class GenerationError(AIServiceError):
@@ -427,8 +381,6 @@ class GenerationError(AIServiceError):
         - Timeout
     """
 
-    pass
-
 
 class ParseError(AIServiceError):
     """
@@ -439,5 +391,3 @@ class ParseError(AIServiceError):
         - Empty response
         - Missing fields
     """
-
-    pass

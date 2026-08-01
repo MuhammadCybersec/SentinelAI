@@ -27,12 +27,12 @@ Architecture:
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import List, Optional, Dict, Any
+from typing import Any
 
 from app.modules.scanner.core.base_scanner import BaseScanner
 from app.modules.scanner.core.form_parser import FormParser, ParsedForm
-from app.modules.scanner.core.session_manager import SessionManager
 from app.modules.scanner.core.payload_injector import PayloadInjector
+from app.modules.scanner.core.session_manager import SessionManager
 
 
 @dataclass
@@ -46,9 +46,9 @@ class LoginBypassFinding:
     csrf_token: str = ""
     technique: str = "Login Bypass"
     confidence: float = 0.0
-    evidence: List[str] = field(default_factory=list)
-    success_signals: List[str] = field(default_factory=list)
-    request_details: Dict[str, Any] = field(default_factory=dict)
+    evidence: list[str] = field(default_factory=list)
+    success_signals: list[str] = field(default_factory=list)
+    request_details: dict[str, Any] = field(default_factory=dict)
 
 
 class LoginBypassScanner(BaseScanner):
@@ -59,15 +59,15 @@ class LoginBypassScanner(BaseScanner):
 
     def __init__(self, target: str):
         super().__init__(target)
-        self.findings: List[LoginBypassFinding] = []
+        self.findings: list[LoginBypassFinding] = []
         self.form_parser = FormParser()
         self.session_manager = SessionManager()
         self.payload_injector = PayloadInjector(target)
 
-        self.csrf_token: Optional[str] = None
-        self.csrf_field: Optional[str] = None
+        self.csrf_token: str | None = None
+        self.csrf_field: str | None = None
         self.login_url: str = target
-        self._login_form: Optional[ParsedForm] = None
+        self._login_form: ParsedForm | None = None
 
         # Scanner configuration
         self.max_payloads: int = 50
@@ -83,10 +83,10 @@ class LoginBypassScanner(BaseScanner):
         }
 
         # Runtime tracking
-        self.started_at: Optional[float] = None
-        self.finished_at: Optional[float] = None
+        self.started_at: float | None = None
+        self.finished_at: float | None = None
 
-    def scan(self) -> List[LoginBypassFinding]:
+    def scan(self) -> list[LoginBypassFinding]:
         """
         Execute complete login bypass scan.
 
@@ -192,9 +192,7 @@ class LoginBypassScanner(BaseScanner):
             self._update_errors()
             return None
 
-    def _test_payload(
-        self, username: str, password: str
-    ) -> Optional[LoginBypassFinding]:
+    def _test_payload(self, username: str, password: str) -> LoginBypassFinding | None:
         """
         Test a single login payload.
 
@@ -289,7 +287,7 @@ class LoginBypassScanner(BaseScanner):
     # Response Analysis
     # ============================================================
 
-    def _analyze_response(self, response) -> tuple[bool, List[str], float]:
+    def _analyze_response(self, response) -> tuple[bool, list[str], float]:
         """
         Analyze login response for success signals.
 
@@ -382,7 +380,7 @@ class LoginBypassScanner(BaseScanner):
     # Payload Management
     # ============================================================
 
-    def _get_login_payloads(self) -> List[tuple[str, str]]:
+    def _get_login_payloads(self) -> list[tuple[str, str]]:
         """
         Return 50+ login bypass payloads.
 
@@ -500,8 +498,8 @@ class LoginBypassScanner(BaseScanner):
     # ============================================================
 
     def _merge_findings(
-        self, findings: List[LoginBypassFinding]
-    ) -> List[LoginBypassFinding]:
+        self, findings: list[LoginBypassFinding]
+    ) -> list[LoginBypassFinding]:
         """
         Merge duplicate findings.
 

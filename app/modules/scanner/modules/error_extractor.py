@@ -13,9 +13,8 @@ Supports MySQL, PostgreSQL, MSSQL, and Oracle.
 
 from __future__ import annotations
 
-import re
 import logging
-from typing import List, Optional, Dict, Any
+import re
 
 from app.modules.scanner.modules.error_payloads import ErrorPayloadGenerator
 
@@ -38,7 +37,7 @@ class ErrorExtractor:
             "extractions": 0,
         }
 
-    def extract_database(self) -> Optional[str]:
+    def extract_database(self) -> str | None:
         """Extract database name."""
         logger.info("[ErrorExtractor] Extracting database name...")
         payload = self.payload_gen.get_database_payload()
@@ -47,7 +46,7 @@ class ErrorExtractor:
             logger.info(f"[ErrorExtractor] ✅ Database: {result}")
         return result
 
-    def extract_version(self) -> Optional[str]:
+    def extract_version(self) -> str | None:
         """Extract database version."""
         logger.info("[ErrorExtractor] Extracting database version...")
         payload = self.payload_gen.get_version_payload()
@@ -56,7 +55,7 @@ class ErrorExtractor:
             logger.info(f"[ErrorExtractor] ✅ Version: {result}")
         return result
 
-    def extract_user(self) -> Optional[str]:
+    def extract_user(self) -> str | None:
         """Extract current user."""
         logger.info("[ErrorExtractor] Extracting current user...")
         payload = self.payload_gen.get_user_payload()
@@ -65,7 +64,7 @@ class ErrorExtractor:
             logger.info(f"[ErrorExtractor] ✅ User: {result}")
         return result
 
-    def extract_tables(self, limit: int = 50) -> List[str]:
+    def extract_tables(self, limit: int = 50) -> list[str]:
         """Extract table names."""
         logger.info("[ErrorExtractor] Extracting tables...")
         tables = []
@@ -75,13 +74,13 @@ class ErrorExtractor:
             table = self._extract_from_error(payload)
             if table:
                 tables.append(table)
-                logger.info(f"[ErrorExtractor]   Table {i+1}: {table}")
+                logger.info(f"[ErrorExtractor]   Table {i + 1}: {table}")
             else:
                 break
 
         return tables
 
-    def extract_columns(self, table: str, limit: int = 30) -> List[str]:
+    def extract_columns(self, table: str, limit: int = 30) -> list[str]:
         """Extract column names from a table."""
         logger.info(f"[ErrorExtractor] Extracting columns from {table}...")
         columns = []
@@ -91,13 +90,13 @@ class ErrorExtractor:
             column = self._extract_from_error(payload)
             if column:
                 columns.append(column)
-                logger.info(f"[ErrorExtractor]   Column {i+1}: {column}")
+                logger.info(f"[ErrorExtractor]   Column {i + 1}: {column}")
             else:
                 break
 
         return columns
 
-    def extract_data(self, table: str, column: str, limit: int = 20) -> List[str]:
+    def extract_data(self, table: str, column: str, limit: int = 20) -> list[str]:
         """Extract data from a table."""
         logger.info(f"[ErrorExtractor] Extracting data from {table}.{column}...")
         data = []
@@ -107,13 +106,13 @@ class ErrorExtractor:
             value = self._extract_from_error(payload)
             if value:
                 data.append(value)
-                logger.info(f"[ErrorExtractor]   Row {i+1}: {value}")
+                logger.info(f"[ErrorExtractor]   Row {i + 1}: {value}")
             else:
                 break
 
         return data
 
-    def _extract_oracle_value(self, payload: str) -> Optional[str]:
+    def _extract_oracle_value(self, payload: str) -> str | None:
         """
         Extract value from Oracle error message.
         Oracle returns errors like: ORA-01756: quoted string not properly terminated
@@ -135,13 +134,13 @@ class ErrorExtractor:
         ]
 
         for pattern in patterns:
-            match = re.search(pattern, body, re.I)
+            match = re.search(pattern, body, re.IGNORECASE)
             if match:
                 return match.group(1).strip()
 
         return None
 
-    def _extract_oracle_tables(self, limit: int = 50) -> List[str]:
+    def _extract_oracle_tables(self, limit: int = 50) -> list[str]:
         """Extract tables from Oracle using error-based technique."""
         tables = []
 
@@ -151,13 +150,13 @@ class ErrorExtractor:
             table = self._extract_oracle_value(payload)
             if table:
                 tables.append(table)
-                logger.info(f"[ErrorExtractor]   Table {i+1}: {table}")
+                logger.info(f"[ErrorExtractor]   Table {i + 1}: {table}")
             else:
                 break
 
         return tables
 
-    def _extract_from_error(self, payload: str) -> Optional[str]:
+    def _extract_from_error(self, payload: str) -> str | None:
         """
         Send payload and extract value from error message.
 
@@ -193,7 +192,7 @@ class ErrorExtractor:
             )
 
             if response is None:
-                logger.debug(f"[ErrorExtractor] ❌ No response")
+                logger.debug("[ErrorExtractor] ❌ No response")
                 return None
 
             body = response.body
@@ -228,14 +227,14 @@ class ErrorExtractor:
             dbms_patterns = patterns.get(self.dbms, patterns["MySQL"])
 
             for pattern in dbms_patterns:
-                match = re.search(pattern, body, re.I)
+                match = re.search(pattern, body, re.IGNORECASE)
                 if match:
                     extracted = match.group(1).strip()
                     logger.info(f"[ErrorExtractor] ✅ Extracted: {extracted}")
                     self.statistics["extractions"] += 1
                     return extracted
 
-            logger.debug(f"[ErrorExtractor] ❌ No pattern matched in response")
+            logger.debug("[ErrorExtractor] ❌ No pattern matched in response")
             return None
 
         except Exception as e:

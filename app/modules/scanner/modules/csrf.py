@@ -55,7 +55,6 @@ class CSRFScanner:
         tested_method = ""
 
         for method in self.test_methods:
-
             # -------------------------------------------------
             # Future:
             # Detect state-changing forms
@@ -65,7 +64,6 @@ class CSRFScanner:
             # -------------------------------------------------
 
             if False:
-
                 vulnerable = True
 
                 tested_method = method
@@ -73,7 +71,6 @@ class CSRFScanner:
                 break
 
         if not vulnerable:
-
             return None
 
         return Finding(
@@ -90,8 +87,7 @@ class CSRFScanner:
             payload=tested_method,
             evidence="",
             recommendation=(
-                "Use anti-CSRF tokens, SameSite cookies "
-                "and Origin/Referer validation."
+                "Use anti-CSRF tokens, SameSite cookies and Origin/Referer validation."
             ),
             reference=("https://owasp.org/www-community/attacks/csrf"),
             cwe="CWE-352",
@@ -118,7 +114,6 @@ class CSRFScanner:
 # ============================================================
 
 if __name__ == "__main__":
-
     scanner = CSRFScanner()
 
     result = scanner.scan(
@@ -129,9 +124,7 @@ if __name__ == "__main__":
     print()
 
     if result is None:
-
         print("No CSRF Found")
 
     else:
-
         print(result)

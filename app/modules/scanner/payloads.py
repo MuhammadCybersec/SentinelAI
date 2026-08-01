@@ -6,7 +6,6 @@ Phase 2: Oracle Version Fingerprinting (ADDED)
 """
 
 from dataclasses import dataclass
-from typing import List, Dict, Optional
 
 
 @dataclass
@@ -23,7 +22,7 @@ class OracleDetectionPayloads:
     """Oracle-specific detection payloads."""
 
     def __init__(self):
-        self.payloads: List[DetectionPayload] = [
+        self.payloads: list[DetectionPayload] = [
             # ============================================================
             # PHASE 1: Oracle Detection Payloads
             # ============================================================
@@ -128,11 +127,11 @@ class OracleDetectionPayloads:
             },
         ]
 
-    def get_all_payloads(self) -> List[DetectionPayload]:
+    def get_all_payloads(self) -> list[DetectionPayload]:
         """Return all detection payloads."""
         return self.payloads
 
-    def get_payloads_by_weight(self, min_weight: int = 10) -> List[DetectionPayload]:
+    def get_payloads_by_weight(self, min_weight: int = 10) -> list[DetectionPayload]:
         """Get payloads with weight >= min_weight."""
         return [p for p in self.payloads if p.weight >= min_weight]
 
@@ -140,6 +139,6 @@ class OracleDetectionPayloads:
     # Phase 2: Version Payload Methods (ADDED)
     # ============================================================
 
-    def get_version_payloads(self) -> List[Dict[str, any]]:
+    def get_version_payloads(self) -> list[dict[str, any]]:
         """Get version fingerprinting payloads."""
         return self.version_payloads

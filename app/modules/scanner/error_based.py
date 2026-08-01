@@ -8,12 +8,13 @@ import logging
 import re
 import time
 from dataclasses import dataclass, field
-from typing import Optional, Dict, List, Any, Tuple, Set
+from typing import Any
+
 import requests
 
-from .union_sqli import UnionSQLi
 from .html_parser import HTMLParser
 from .regex_utils import RegexUtils
+from .union_sqli import UnionSQLi
 
 # ============================================================
 # Data Classes
@@ -28,17 +29,17 @@ class ErrorBasedResult:
 
     success: bool = False
     is_vulnerable: bool = False
-    oracle_errors: List[str] = field(default_factory=list)
-    detected_error_codes: List[str] = field(default_factory=list)
-    working_payloads: List[str] = field(default_factory=list)
-    best_payload: Optional[str] = None
-    extracted_values: Dict[str, Any] = field(default_factory=dict)
+    oracle_errors: list[str] = field(default_factory=list)
+    detected_error_codes: list[str] = field(default_factory=list)
+    working_payloads: list[str] = field(default_factory=list)
+    best_payload: str | None = None
+    extracted_values: dict[str, Any] = field(default_factory=dict)
     confidence: int = 0
-    evidence: List[str] = field(default_factory=list)
-    errors: List[str] = field(default_factory=list)
+    evidence: list[str] = field(default_factory=list)
+    errors: list[str] = field(default_factory=list)
     execution_time: float = 0.0
-    error_messages: List[str] = field(default_factory=list)
-    ranked_payloads: List[Dict[str, Any]] = field(default_factory=list)
+    error_messages: list[str] = field(default_factory=list)
+    ranked_payloads: list[dict[str, Any]] = field(default_factory=list)
 
     def add_error(self, error: str):
         """Add an error to the result."""
@@ -74,7 +75,7 @@ class ErrorBasedResult:
             return "Error-based SQL injection not detected"
 
         parts = []
-        parts.append(f"Vulnerable: YES")
+        parts.append("Vulnerable: YES")
         if self.detected_error_codes:
             parts.append(f"Error codes: {', '.join(self.detected_error_codes[:3])}")
         if self.best_payload:
@@ -86,7 +87,7 @@ class ErrorBasedResult:
 
         return f"Error Based: {', '.join(parts)}"
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for logging/output."""
         return {
             "success": self.success,
@@ -170,7 +171,7 @@ class OracleErrorBasedEngine:
         self,
         session: requests.Session,
         base_url: str,
-        logger: Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ):
         """
         Initialize Oracle Error-Based Engine.
@@ -216,7 +217,7 @@ class OracleErrorBasedEngine:
     # Private Methods
     # ============================================================
 
-    def _get_baseline(self, injection_point: str) -> Optional[requests.Response]:
+    def _get_baseline(self, injection_point: str) -> requests.Response | None:
         """Get baseline response for comparison."""
         if self.baseline_response is None:
             self.logger.info("[ErrorBased] Fetching baseline response...")
@@ -233,7 +234,7 @@ class OracleErrorBasedEngine:
 
     def _send_payload(
         self, injection_point: str, payload: str
-    ) -> Optional[requests.Response]:
+    ) -> requests.Response | None:
         """Send a payload and return the response."""
         baseline = self._get_baseline(injection_point)
         result = self.union_sqli.test_payload(injection_point, payload, baseline)
@@ -243,7 +244,7 @@ class OracleErrorBasedEngine:
 
         return result["response"]
 
-    def _parse_oracle_error(self, text: str) -> Optional[str]:
+    def _parse_oracle_error(self, text: str) -> str | None:
         """
         Parse Oracle error from text.
 
@@ -269,7 +270,7 @@ class OracleErrorBasedEngine:
 
         return None
 
-    def _detect_error_code(self, text: str) -> Optional[str]:
+    def _detect_error_code(self, text: str) -> str | None:
         """
         Detect Oracle error code from text.
 
@@ -289,7 +290,7 @@ class OracleErrorBasedEngine:
 
         return None
 
-    def _extract_from_error(self, text: str) -> List[str]:
+    def _extract_from_error(self, text: str) -> list[str]:
         """
         Extract leaked values from error message.
 
@@ -448,7 +449,7 @@ class OracleErrorBasedEngine:
 
             # Store extracted values
             for i, value in enumerate(extracted_values[:10]):
-                result.extracted_values[f"value_{i+1}"] = value
+                result.extracted_values[f"value_{i + 1}"] = value
 
             # Calculate confidence
             result.confidence = self._calculate_confidence(
@@ -473,7 +474,7 @@ class OracleErrorBasedEngine:
             result.success = True
 
         except Exception as e:
-            error_msg = f"Error-based detection failed: {str(e)}"
+            error_msg = f"Error-based detection failed: {e!s}"
             self.logger.error(error_msg)
             result.add_error(error_msg)
             result.success = False
@@ -493,7 +494,7 @@ class OracleErrorBasedEngine:
         self.error_result = result
         return result
 
-    def find_best_payload(self, injection_point: str) -> Optional[str]:
+    def find_best_payload(self, injection_point: str) -> str | None:
         """
         Find the best error-based payload.
 
@@ -511,7 +512,7 @@ class OracleErrorBasedEngine:
             return result.best_payload
         return None
 
-    def build_error_payloads(self) -> List[str]:
+    def build_error_payloads(self) -> list[str]:
         """
         Build error-based payloads.
 
@@ -553,7 +554,7 @@ class OracleErrorBasedEngine:
 
         return payloads
 
-    def extract_from_error(self, text: str) -> List[str]:
+    def extract_from_error(self, text: str) -> list[str]:
         """
         Extract values from error message.
 
@@ -565,7 +566,7 @@ class OracleErrorBasedEngine:
         """
         return self._extract_from_error(text)
 
-    def parse_oracle_error(self, text: str) -> Optional[str]:
+    def parse_oracle_error(self, text: str) -> str | None:
         """
         Parse Oracle error from text.
 
@@ -577,7 +578,7 @@ class OracleErrorBasedEngine:
         """
         return self._parse_oracle_error(text)
 
-    def detect_error_code(self, text: str) -> Optional[str]:
+    def detect_error_code(self, text: str) -> str | None:
         """
         Detect Oracle error code from text.
 
@@ -589,7 +590,7 @@ class OracleErrorBasedEngine:
         """
         return self._detect_error_code(text)
 
-    def verify_error(self, injection_point: str, payload: str) -> Dict[str, Any]:
+    def verify_error(self, injection_point: str, payload: str) -> dict[str, Any]:
         """
         Verify an error-based payload.
 
@@ -621,8 +622,8 @@ class OracleErrorBasedEngine:
         }
 
     def rank_payloads(
-        self, payloads: List[str], error_codes: List[str], extracted_values: List[str]
-    ) -> List[Dict[str, Any]]:
+        self, payloads: list[str], error_codes: list[str], extracted_values: list[str]
+    ) -> list[dict[str, Any]]:
         """
         Rank payloads by effectiveness.
 
@@ -719,7 +720,7 @@ class OracleErrorBasedEngine:
         result = self.detect_error_based(injection_point)
         return result.is_vulnerable
 
-    def get_best_error_payload(self, injection_point: str) -> Optional[str]:
+    def get_best_error_payload(self, injection_point: str) -> str | None:
         """
         Get the best error-based payload.
 
@@ -731,7 +732,7 @@ class OracleErrorBasedEngine:
         """
         return self.find_best_payload(injection_point)
 
-    def extract_error_data(self, injection_point: str, payload: str) -> List[str]:
+    def extract_error_data(self, injection_point: str, payload: str) -> list[str]:
         """
         Extract data from error message using a payload.
 

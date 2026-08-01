@@ -34,15 +34,7 @@ DATABASE_URL = f"sqlite:///{config.DATABASE_PATH}"
 # Create Engine
 # ===========================================================
 
-engine = create_engine(
-
-    DATABASE_URL,
-
-    echo=config.DEBUG,
-
-    future=True
-
-)
+engine = create_engine(DATABASE_URL, echo=config.DEBUG, future=True)
 
 # ===========================================================
 # DB-CONNECTION-004

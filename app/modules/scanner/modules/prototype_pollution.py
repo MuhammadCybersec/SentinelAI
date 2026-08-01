@@ -58,7 +58,6 @@ class PrototypePollutionScanner:
         detected_payload = ""
 
         for payload in self.payloads:
-
             # -------------------------------------------------
             # Future:
             # Inject payload into JSON/body/query
@@ -68,7 +67,6 @@ class PrototypePollutionScanner:
             # -------------------------------------------------
 
             if False:
-
                 vulnerable = True
 
                 detected_payload = payload
@@ -76,14 +74,13 @@ class PrototypePollutionScanner:
                 break
 
         if not vulnerable:
-
             return None
 
         return Finding(
             project_id=project_id,
             title="Prototype Pollution",
             description=(
-                "Potential JavaScript Prototype Pollution " "vulnerability detected."
+                "Potential JavaScript Prototype Pollution vulnerability detected."
             ),
             severity=self.severity,
             cvss=8.8,
@@ -126,7 +123,6 @@ class PrototypePollutionScanner:
 # ============================================================
 
 if __name__ == "__main__":
-
     scanner = PrototypePollutionScanner()
 
     result = scanner.scan(
@@ -137,9 +133,7 @@ if __name__ == "__main__":
     print()
 
     if result is None:
-
         print("No Prototype Pollution Found")
 
     else:
-
         print(result)

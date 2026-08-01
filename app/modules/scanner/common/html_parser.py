@@ -5,7 +5,7 @@ HTML parsing utilities for SQL injection detection.
 """
 
 import re
-from typing import List, Set, Optional, Dict
+
 from bs4 import BeautifulSoup
 
 
@@ -14,7 +14,6 @@ class HTMLParser:
 
     def __init__(self):
         """Initialize HTML parser."""
-        pass
 
     def extract_text(self, html: str) -> str:
         """
@@ -36,7 +35,7 @@ class HTMLParser:
         text = soup.get_text(separator=" ", strip=True)
         return text
 
-    def extract_links(self, html: str) -> List[str]:
+    def extract_links(self, html: str) -> list[str]:
         """
         Extract all links from HTML.
 
@@ -52,7 +51,7 @@ class HTMLParser:
             links.append(link["href"])
         return links
 
-    def extract_form_actions(self, html: str) -> List[str]:
+    def extract_form_actions(self, html: str) -> list[str]:
         """
         Extract form actions from HTML.
 
@@ -69,7 +68,7 @@ class HTMLParser:
                 actions.append(form["action"])
         return actions
 
-    def get_elements_by_text(self, html: str, text: str) -> List[str]:
+    def get_elements_by_text(self, html: str, text: str) -> list[str]:
         """
         Find HTML elements containing specific text.
 

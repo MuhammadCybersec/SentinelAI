@@ -132,7 +132,6 @@ def get_payloads() -> list[str]:
 # ===========================================================
 
 if __name__ == "__main__":
-
     print("=" * 60)
     print("SentinelAI XSS Payload Database")
     print("=" * 60)

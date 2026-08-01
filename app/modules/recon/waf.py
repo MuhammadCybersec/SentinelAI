@@ -105,32 +105,24 @@ def detect_waf(target: str) -> dict:
     # ======================================================
 
     for vendor, signatures in WAF_SIGNATURES.items():
-
         evidence = []
 
         for sig in signatures:
-
             # Header name
             if sig in headers:
-
                 evidence.append(f"Header: {sig}")
 
             # Header value
             elif sig in server:
-
                 evidence.append(f"Server: {server}")
 
             # Cookie
             else:
-
                 for cookie in cookies:
-
                     if sig in cookie.name.lower():
-
                         evidence.append(f"Cookie: {cookie.name}")
 
         if evidence:
-
             result["detected"] = True
             result["vendor"] = vendor
             result["confidence"] = "High"
@@ -146,7 +138,6 @@ def detect_waf(target: str) -> dict:
 # ==========================================================
 
 if __name__ == "__main__":
-
     target = "https://bugcrowd.com"
 
     result = detect_waf(target)
@@ -167,11 +158,8 @@ if __name__ == "__main__":
     print("--------")
 
     if result["evidence"]:
-
         for item in result["evidence"]:
-
             print(item)
 
     else:
-
         print("None")

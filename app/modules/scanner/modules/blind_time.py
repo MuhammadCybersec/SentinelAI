@@ -13,10 +13,9 @@ Detects and exploits Time-Based Blind SQLi vulnerabilities.
 
 from __future__ import annotations
 
-import time
 import logging
 import statistics
-from typing import List, Optional, Tuple, Dict, Any
+import time
 
 from app.modules.scanner.core.base_scanner import BaseScanner
 from app.modules.scanner.modules.blind_payloads import BlindPayloadGenerator
@@ -32,13 +31,13 @@ class BlindTimeScanner(BaseScanner):
     def __init__(self, target: str):
         super().__init__(target)
         self.payload_gen = BlindPayloadGenerator()
-        self.dbms: Optional[str] = None
+        self.dbms: str | None = None
         self.parameter: str = "category"
         self.baseline_time: float = 0.0
         self.baseline_std: float = 0.1
         self.delay_threshold: float = 5.0
         self.is_time_vulnerable: bool = False
-        self.detected_payload: Optional[str] = None
+        self.detected_payload: str | None = None
         self.max_retries: int = 3
         self.retry_delay: float = 1.0
         self.baseline_samples: int = 5
@@ -113,7 +112,7 @@ class BlindTimeScanner(BaseScanner):
         logger.info("[BlindTime] ❌ Time-Based Blind SQLi not detected")
         return False
 
-    def extract_database(self) -> Optional[str]:
+    def extract_database(self) -> str | None:
         """Extract database name using Time-Based Blind SQLi."""
         if not self.is_time_vulnerable:
             return None
@@ -125,7 +124,7 @@ class BlindTimeScanner(BaseScanner):
             logger.info(f"[BlindTime] ✅ Database: {result}")
         return result
 
-    def extract_version(self) -> Optional[str]:
+    def extract_version(self) -> str | None:
         """Extract database version using Time-Based Blind SQLi."""
         if not self.is_time_vulnerable:
             return None
@@ -137,7 +136,7 @@ class BlindTimeScanner(BaseScanner):
             logger.info(f"[BlindTime] ✅ Version: {result}")
         return result
 
-    def extract_user(self) -> Optional[str]:
+    def extract_user(self) -> str | None:
         """Extract current user using Time-Based Blind SQLi."""
         if not self.is_time_vulnerable:
             return None
@@ -149,7 +148,7 @@ class BlindTimeScanner(BaseScanner):
             logger.info(f"[BlindTime] ✅ User: {result}")
         return result
 
-    def extract_tables(self) -> List[str]:
+    def extract_tables(self) -> list[str]:
         """Extract table names using Time-Based Blind SQLi."""
         if not self.is_time_vulnerable:
             return []
@@ -162,13 +161,13 @@ class BlindTimeScanner(BaseScanner):
             table_name = self._extract_string(query)
             if table_name:
                 tables.append(table_name)
-                logger.info(f"[BlindTime]   Table {i+1}: {table_name}")
+                logger.info(f"[BlindTime]   Table {i + 1}: {table_name}")
             else:
                 break
 
         return tables
 
-    def extract_columns(self, table: str) -> List[str]:
+    def extract_columns(self, table: str) -> list[str]:
         """Extract column names from a table using Time-Based Blind SQLi."""
         if not self.is_time_vulnerable:
             return []
@@ -181,13 +180,13 @@ class BlindTimeScanner(BaseScanner):
             column_name = self._extract_string(query)
             if column_name:
                 columns.append(column_name)
-                logger.info(f"[BlindTime]   Column {i+1}: {column_name}")
+                logger.info(f"[BlindTime]   Column {i + 1}: {column_name}")
             else:
                 break
 
         return columns
 
-    def extract_data(self, table: str, column: str, limit: int = 20) -> List[str]:
+    def extract_data(self, table: str, column: str, limit: int = 20) -> list[str]:
         """Extract data from a table using Time-Based Blind SQLi."""
         if not self.is_time_vulnerable:
             return []
@@ -200,7 +199,7 @@ class BlindTimeScanner(BaseScanner):
             value = self._extract_string(query)
             if value:
                 data.append(value)
-                logger.info(f"[BlindTime]   Row {i+1}: {value}")
+                logger.info(f"[BlindTime]   Row {i + 1}: {value}")
             else:
                 break
 
@@ -254,7 +253,7 @@ class BlindTimeScanner(BaseScanner):
                 time.sleep(self.retry_delay * (attempt + 1))
         return 0.0
 
-    def _extract_string(self, query: str) -> Optional[str]:
+    def _extract_string(self, query: str) -> str | None:
         """Extract a string using Time-Based Blind SQLi."""
         if not self.detected_payload:
             return None
@@ -293,7 +292,7 @@ class BlindTimeScanner(BaseScanner):
 
         return result
 
-    def _extract_char_at_position(self, query: str, position: int) -> Optional[str]:
+    def _extract_char_at_position(self, query: str, position: int) -> str | None:
         """Extract a character at a position using binary search."""
         low = 32
         high = 126

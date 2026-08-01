@@ -7,13 +7,14 @@ Phase 5: Oracle Privilege Enumeration
 import logging
 import re
 from dataclasses import dataclass, field
-from typing import Optional, Dict, List, Any, Set
+from typing import Any
+
 import requests
 
-from .union_sqli import UnionSQLi
 from .html_parser import HTMLParser
 from .regex_utils import RegexUtils
 from .signatures import OracleSignatures
+from .union_sqli import UnionSQLi
 
 # ============================================================
 # Data Classes
@@ -28,27 +29,27 @@ class OraclePrivilegeResult:
     """
 
     success: bool = False
-    current_user: Optional[str] = None
-    current_schema: Optional[str] = None
-    session_user: Optional[str] = None
-    database_user: Optional[str] = None
-    user_id: Optional[int] = None
-    authentication_type: Optional[str] = None
-    default_tablespace: Optional[str] = None
-    temporary_tablespace: Optional[str] = None
-    profile: Optional[str] = None
-    account_status: Optional[str] = None
+    current_user: str | None = None
+    current_schema: str | None = None
+    session_user: str | None = None
+    database_user: str | None = None
+    user_id: int | None = None
+    authentication_type: str | None = None
+    default_tablespace: str | None = None
+    temporary_tablespace: str | None = None
+    profile: str | None = None
+    account_status: str | None = None
 
     # Roles
-    roles: List[str] = field(default_factory=list)
-    session_roles: List[str] = field(default_factory=list)
-    granted_roles: List[str] = field(default_factory=list)
+    roles: list[str] = field(default_factory=list)
+    session_roles: list[str] = field(default_factory=list)
+    granted_roles: list[str] = field(default_factory=list)
 
     # Privileges
-    system_privileges: List[str] = field(default_factory=list)
-    session_privileges: List[str] = field(default_factory=list)
-    object_privileges: List[Dict[str, str]] = field(default_factory=list)
-    user_privileges: List[str] = field(default_factory=list)
+    system_privileges: list[str] = field(default_factory=list)
+    session_privileges: list[str] = field(default_factory=list)
+    object_privileges: list[dict[str, str]] = field(default_factory=list)
+    user_privileges: list[str] = field(default_factory=list)
 
     # DBA status
     is_dba: bool = False
@@ -56,8 +57,8 @@ class OraclePrivilegeResult:
     is_sysoper: bool = False
 
     # Raw data for debugging
-    raw_responses: List[str] = field(default_factory=list)
-    errors: List[str] = field(default_factory=list)
+    raw_responses: list[str] = field(default_factory=list)
+    errors: list[str] = field(default_factory=list)
 
     def add_error(self, error: str):
         """Add an error to the result."""
@@ -87,7 +88,7 @@ class OraclePrivilegeResult:
         if priv_upper and priv_upper not in self.session_privileges:
             self.session_privileges.append(priv_upper)
 
-    def add_object_privilege(self, privilege: Dict[str, str]):
+    def add_object_privilege(self, privilege: dict[str, str]):
         """Add an object privilege to the result."""
         self.object_privileges.append(privilege)
 
@@ -129,7 +130,7 @@ class OraclePrivilegeResult:
             f"Privileges: {', '.join(parts)}" if parts else "Privileges: No data found"
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for logging/output."""
         return {
             "success": self.success,
@@ -258,7 +259,7 @@ class OraclePrivilegeEnumerator:
         self,
         session: requests.Session,
         base_url: str,
-        logger: Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ):
         """Initialize Oracle privilege enumerator."""
         self.session = session
@@ -298,7 +299,7 @@ class OraclePrivilegeEnumerator:
     # Private Methods
     # ============================================================
 
-    def _get_baseline(self, injection_point: str) -> Optional[requests.Response]:
+    def _get_baseline(self, injection_point: str) -> requests.Response | None:
         """Get baseline response for comparison."""
         if self.baseline_response is None:
             self.logger.info("[OraclePrivileges] Fetching baseline response...")
@@ -317,7 +318,7 @@ class OraclePrivilegeEnumerator:
 
     def _send_payload(
         self, injection_point: str, payload: str
-    ) -> Optional[requests.Response]:
+    ) -> requests.Response | None:
         """Send a payload and return the response."""
         baseline = self._get_baseline(injection_point)
         result = self.union_sqli.test_payload(injection_point, payload, baseline)
@@ -327,7 +328,7 @@ class OraclePrivilegeEnumerator:
 
         return result["response"]
 
-    def _extract_values(self, text: str, pattern: str) -> List[str]:
+    def _extract_values(self, text: str, pattern: str) -> list[str]:
         """Extract values from text using regex pattern."""
         if not text:
             return []
@@ -355,7 +356,7 @@ class OraclePrivilegeEnumerator:
 
         return cleaned
 
-    def _extract_single_value(self, text: str, pattern: str) -> Optional[str]:
+    def _extract_single_value(self, text: str, pattern: str) -> str | None:
         """Extract a single value from text."""
         values = self._extract_values(text, pattern)
         return values[0] if values else None
@@ -374,7 +375,7 @@ class OraclePrivilegeEnumerator:
     def _try_payloads(
         self,
         injection_point: str,
-        payloads: List[str],
+        payloads: list[str],
         extract_pattern: str,
         single: bool = False,
     ) -> Any:
@@ -399,7 +400,7 @@ class OraclePrivilegeEnumerator:
                         if values:
                             return values
             except Exception as e:
-                self.logger.warning(f"[OraclePrivileges] Payload failed: {str(e)}")
+                self.logger.warning(f"[OraclePrivileges] Payload failed: {e!s}")
                 continue
 
         return None if single else []
@@ -408,7 +409,7 @@ class OraclePrivilegeEnumerator:
     # Public Enumeration Methods
     # ============================================================
 
-    def enumerate_current_user(self, injection_point: str) -> Optional[str]:
+    def enumerate_current_user(self, injection_point: str) -> str | None:
         """Enumerate current database user."""
         self.logger.info("[OraclePrivileges] Enumerating current user...")
 
@@ -426,7 +427,7 @@ class OraclePrivilegeEnumerator:
 
         return result
 
-    def enumerate_current_schema(self, injection_point: str) -> Optional[str]:
+    def enumerate_current_schema(self, injection_point: str) -> str | None:
         """Enumerate current schema."""
         self.logger.info("[OraclePrivileges] Enumerating current schema...")
 
@@ -444,7 +445,7 @@ class OraclePrivilegeEnumerator:
 
         return result
 
-    def enumerate_session_user(self, injection_point: str) -> Optional[str]:
+    def enumerate_session_user(self, injection_point: str) -> str | None:
         """Enumerate session user."""
         self.logger.info("[OraclePrivileges] Enumerating session user...")
 
@@ -462,7 +463,7 @@ class OraclePrivilegeEnumerator:
 
         return result
 
-    def enumerate_database_user(self, injection_point: str) -> Optional[str]:
+    def enumerate_database_user(self, injection_point: str) -> str | None:
         """Enumerate database user."""
         self.logger.info("[OraclePrivileges] Enumerating database user...")
 
@@ -480,7 +481,7 @@ class OraclePrivilegeEnumerator:
 
         return result
 
-    def enumerate_user_id(self, injection_point: str) -> Optional[int]:
+    def enumerate_user_id(self, injection_point: str) -> int | None:
         """Enumerate user ID."""
         self.logger.info("[OraclePrivileges] Enumerating user ID...")
 
@@ -495,7 +496,7 @@ class OraclePrivilegeEnumerator:
 
         return int(result) if result else None
 
-    def enumerate_authentication_type(self, injection_point: str) -> Optional[str]:
+    def enumerate_authentication_type(self, injection_point: str) -> str | None:
         """Enumerate authentication type."""
         self.logger.info("[OraclePrivileges] Enumerating authentication type...")
 
@@ -515,7 +516,7 @@ class OraclePrivilegeEnumerator:
 
         return result
 
-    def enumerate_default_tablespace(self, injection_point: str) -> Optional[str]:
+    def enumerate_default_tablespace(self, injection_point: str) -> str | None:
         """Enumerate default tablespace."""
         self.logger.info("[OraclePrivileges] Enumerating default tablespace...")
 
@@ -535,7 +536,7 @@ class OraclePrivilegeEnumerator:
 
         return result
 
-    def enumerate_temporary_tablespace(self, injection_point: str) -> Optional[str]:
+    def enumerate_temporary_tablespace(self, injection_point: str) -> str | None:
         """Enumerate temporary tablespace."""
         self.logger.info("[OraclePrivileges] Enumerating temporary tablespace...")
 
@@ -555,7 +556,7 @@ class OraclePrivilegeEnumerator:
 
         return result
 
-    def enumerate_profile(self, injection_point: str) -> Optional[str]:
+    def enumerate_profile(self, injection_point: str) -> str | None:
         """Enumerate profile."""
         self.logger.info("[OraclePrivileges] Enumerating profile...")
 
@@ -573,7 +574,7 @@ class OraclePrivilegeEnumerator:
 
         return result
 
-    def enumerate_account_status(self, injection_point: str) -> Optional[str]:
+    def enumerate_account_status(self, injection_point: str) -> str | None:
         """Enumerate account status."""
         self.logger.info("[OraclePrivileges] Enumerating account status...")
 
@@ -591,7 +592,7 @@ class OraclePrivilegeEnumerator:
 
         return result
 
-    def enumerate_roles(self, injection_point: str) -> List[str]:
+    def enumerate_roles(self, injection_point: str) -> list[str]:
         """Enumerate roles."""
         self.logger.info("[OraclePrivileges] Enumerating roles...")
 
@@ -611,7 +612,7 @@ class OraclePrivilegeEnumerator:
 
         return roles or []
 
-    def enumerate_session_roles(self, injection_point: str) -> List[str]:
+    def enumerate_session_roles(self, injection_point: str) -> list[str]:
         """Enumerate session roles."""
         self.logger.info("[OraclePrivileges] Enumerating session roles...")
 
@@ -631,7 +632,7 @@ class OraclePrivilegeEnumerator:
 
         return roles or []
 
-    def enumerate_system_privileges(self, injection_point: str) -> List[str]:
+    def enumerate_system_privileges(self, injection_point: str) -> list[str]:
         """Enumerate system privileges."""
         self.logger.info("[OraclePrivileges] Enumerating system privileges...")
 
@@ -653,7 +654,7 @@ class OraclePrivilegeEnumerator:
 
         return privileges or []
 
-    def enumerate_session_privileges(self, injection_point: str) -> List[str]:
+    def enumerate_session_privileges(self, injection_point: str) -> list[str]:
         """Enumerate session privileges."""
         self.logger.info("[OraclePrivileges] Enumerating session privileges...")
 
@@ -675,7 +676,7 @@ class OraclePrivilegeEnumerator:
 
         return privileges or []
 
-    def enumerate_object_privileges(self, injection_point: str) -> List[Dict[str, str]]:
+    def enumerate_object_privileges(self, injection_point: str) -> list[dict[str, str]]:
         """Enumerate object privileges."""
         self.logger.info("[OraclePrivileges] Enumerating object privileges...")
 
@@ -703,7 +704,7 @@ class OraclePrivilegeEnumerator:
                         )
             except Exception as e:
                 self.logger.warning(
-                    f"[OraclePrivileges] Object privilege enumeration failed: {str(e)}"
+                    f"[OraclePrivileges] Object privilege enumeration failed: {e!s}"
                 )
                 continue
 
@@ -839,7 +840,7 @@ class OraclePrivilegeEnumerator:
             result.success = True
 
         except Exception as e:
-            error_msg = f"Privilege enumeration failed: {str(e)}"
+            error_msg = f"Privilege enumeration failed: {e!s}"
             self.logger.error(error_msg)
             result.add_error(error_msg)
             result.success = False
@@ -860,15 +861,15 @@ class OraclePrivilegeEnumerator:
     # Convenience Methods
     # ============================================================
 
-    def get_current_user(self, injection_point: str) -> Optional[str]:
+    def get_current_user(self, injection_point: str) -> str | None:
         """Get current user only."""
         return self.enumerate_current_user(injection_point)
 
-    def get_roles(self, injection_point: str) -> List[str]:
+    def get_roles(self, injection_point: str) -> list[str]:
         """Get roles only."""
         return self.enumerate_roles(injection_point)
 
-    def get_privileges(self, injection_point: str) -> List[str]:
+    def get_privileges(self, injection_point: str) -> list[str]:
         """Get privileges only."""
         return self.enumerate_system_privileges(injection_point)
 

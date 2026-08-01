@@ -21,7 +21,6 @@ def discover_js_endpoints(js_files: list[str]) -> list[str]:
     endpoints = set()
 
     for js in js_files:
-
         print(f"[+] Downloading {js}")
 
         response = http.get(js)
@@ -48,7 +47,6 @@ def discover_js_endpoints(js_files: list[str]) -> list[str]:
 
 
 if __name__ == "__main__":
-
     from app.modules.recon.javascript import discover_javascript
 
     files = discover_javascript("https://bugcrowd.com")

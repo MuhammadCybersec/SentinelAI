@@ -4,8 +4,6 @@
 Oracle-specific SQL injection payloads.
 """
 
-from typing import Dict, List, Optional
-
 
 class OraclePayloads:
     """Oracle-specific payload generation."""
@@ -71,7 +69,7 @@ class OraclePayloads:
         nulls = ",".join(["NULL"] * count)
         return f"UNION SELECT {nulls} FROM dual"
 
-    def generate_injection_payloads(self, column_count: int) -> List[str]:
+    def generate_injection_payloads(self, column_count: int) -> list[str]:
         """
         Generate all injection payloads for a given column count.
 
@@ -94,7 +92,7 @@ class OraclePayloads:
 
         return payloads
 
-    def get_table_payloads(self, table_name: str, columns: List[str]) -> str:
+    def get_table_payloads(self, table_name: str, columns: list[str]) -> str:
         """
         Generate payload to extract data from a table.
 

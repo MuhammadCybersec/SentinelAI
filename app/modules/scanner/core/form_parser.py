@@ -24,7 +24,6 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional
 from urllib.parse import urljoin
 
 
@@ -45,15 +44,15 @@ class ParsedForm:
     action: str = ""
     method: str = "GET"
     enctype: str = "application/x-www-form-urlencoded"
-    fields: List[FormField] = field(default_factory=list)
-    hidden_fields: Dict[str, str] = field(default_factory=dict)
-    csrf_token: Optional[str] = None
-    csrf_field_name: Optional[str] = None
+    fields: list[FormField] = field(default_factory=list)
+    hidden_fields: dict[str, str] = field(default_factory=dict)
+    csrf_token: str | None = None
+    csrf_field_name: str | None = None
     action_url: str = ""
     form_id: str = ""
     form_class: str = ""
-    username_field: Optional[str] = None
-    password_field: Optional[str] = None
+    username_field: str | None = None
+    password_field: str | None = None
 
 
 class FormParser:
@@ -103,7 +102,7 @@ class FormParser:
         "password-confirm",
     ]
 
-    def parse(self, html: str, base_url: str) -> List[ParsedForm]:
+    def parse(self, html: str, base_url: str) -> list[ParsedForm]:
         """
         Parse all forms from HTML.
 
@@ -130,7 +129,7 @@ class FormParser:
 
     def _parse_single_form(
         self, form_html: str, form_inner: str, base_url: str
-    ) -> Optional[ParsedForm]:
+    ) -> ParsedForm | None:
         """
         Parse a single form element.
 
@@ -145,7 +144,9 @@ class FormParser:
         parsed = ParsedForm()
 
         # Extract action
-        action_match = re.search(r'action=["\']([^"\']+)["\']', form_html, re.I)
+        action_match = re.search(
+            r'action=["\']([^"\']+)["\']', form_html, re.IGNORECASE
+        )
         if action_match:
             parsed.action = action_match.group(1)
             parsed.action_url = urljoin(base_url, parsed.action)
@@ -153,40 +154,50 @@ class FormParser:
             parsed.action_url = base_url
 
         # Extract method
-        method_match = re.search(r'method=["\']([^"\']+)["\']', form_html, re.I)
+        method_match = re.search(
+            r'method=["\']([^"\']+)["\']', form_html, re.IGNORECASE
+        )
         if method_match:
             parsed.method = method_match.group(1).upper()
         else:
             parsed.method = "GET"
 
         # Extract enctype
-        enctype_match = re.search(r'enctype=["\']([^"\']+)["\']', form_html, re.I)
+        enctype_match = re.search(
+            r'enctype=["\']([^"\']+)["\']', form_html, re.IGNORECASE
+        )
         if enctype_match:
             parsed.enctype = enctype_match.group(1)
 
         # Extract id
-        id_match = re.search(r'id=["\']([^"\']+)["\']', form_html, re.I)
+        id_match = re.search(r'id=["\']([^"\']+)["\']', form_html, re.IGNORECASE)
         if id_match:
             parsed.form_id = id_match.group(1)
 
         # Extract class
-        class_match = re.search(r'class=["\']([^"\']+)["\']', form_html, re.I)
+        class_match = re.search(r'class=["\']([^"\']+)["\']', form_html, re.IGNORECASE)
         if class_match:
             parsed.form_class = class_match.group(1)
 
         # Extract all input fields
-        input_pattern = re.compile(r'<input[^>]*name=["\']([^"\']+)["\'][^>]*>', re.I)
+        input_pattern = re.compile(
+            r'<input[^>]*name=["\']([^"\']+)["\'][^>]*>', re.IGNORECASE
+        )
 
         for input_match in input_pattern.finditer(form_inner):
             input_html = input_match.group(0)
             name = input_match.group(1)
 
             # Extract value
-            value_match = re.search(r'value=["\']([^"\']*)["\']', input_html, re.I)
+            value_match = re.search(
+                r'value=["\']([^"\']*)["\']', input_html, re.IGNORECASE
+            )
             value = value_match.group(1) if value_match else ""
 
             # Extract type
-            type_match = re.search(r'type=["\']([^"\']+)["\']', input_html, re.I)
+            type_match = re.search(
+                r'type=["\']([^"\']+)["\']', input_html, re.IGNORECASE
+            )
             input_type = type_match.group(1).lower() if type_match else "text"
 
             is_hidden = input_type == "hidden"
@@ -241,8 +252,8 @@ class FormParser:
                     break
 
     def extract_form_data(
-        self, parsed_form: ParsedForm, additional_data: Optional[Dict[str, str]] = None
-    ) -> Dict[str, str]:
+        self, parsed_form: ParsedForm, additional_data: dict[str, str] | None = None
+    ) -> dict[str, str]:
         """
         Extract form data for submission.
 

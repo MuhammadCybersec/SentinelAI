@@ -59,7 +59,6 @@ class CRLFScanner:
         detected_payload = ""
 
         for payload in self.payloads:
-
             # -------------------------------------------------
             # Future:
             # Inject payload
@@ -68,7 +67,6 @@ class CRLFScanner:
             # -------------------------------------------------
 
             if False:
-
                 vulnerable = True
 
                 detected_payload = payload
@@ -76,7 +74,6 @@ class CRLFScanner:
                 break
 
         if not vulnerable:
-
             return None
 
         return Finding(
@@ -93,7 +90,7 @@ class CRLFScanner:
             payload=detected_payload,
             evidence="",
             recommendation=(
-                "Validate and encode user input before " "using it in HTTP headers."
+                "Validate and encode user input before using it in HTTP headers."
             ),
             reference=(
                 "https://owasp.org/www-community/attacks/HTTP_Response_Splitting"
@@ -122,7 +119,6 @@ class CRLFScanner:
 # ============================================================
 
 if __name__ == "__main__":
-
     scanner = CRLFScanner()
 
     result = scanner.scan(
@@ -133,9 +129,7 @@ if __name__ == "__main__":
     print()
 
     if result is None:
-
         print("No CRLF Injection Found")
 
     else:
-
         print(result)

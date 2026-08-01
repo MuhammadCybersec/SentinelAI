@@ -14,23 +14,18 @@ Production REST API for Project Management.
 
 from __future__ import annotations
 
-from fastapi import APIRouter
-from fastapi import Depends
-from fastapi import HTTPException
-from fastapi import status
-
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.api.dependencies import (
     get_db,
     get_project_service,
 )
-
 from app.api.schemas.project import (
     ProjectCreate,
-    ProjectUpdate,
-    ProjectResponse,
     ProjectListResponse,
+    ProjectResponse,
+    ProjectUpdate,
 )
 
 router = APIRouter(
@@ -89,7 +84,6 @@ def get_project(
     )
 
     if project is None:
-
         raise HTTPException(
             status_code=404,
             detail="Project not found",
@@ -120,7 +114,6 @@ def create_project(
     if service.project_exists(
         request.name,
     ):
-
         raise HTTPException(
             status_code=409,
             detail="Project already exists",
@@ -160,7 +153,6 @@ def update_project(
     )
 
     if project is None:
-
         raise HTTPException(
             status_code=404,
             detail="Project not found",
@@ -208,7 +200,6 @@ def delete_project(
     )
 
     if not deleted:
-
         raise HTTPException(
             status_code=404,
             detail="Project not found",
@@ -243,7 +234,6 @@ def project_statistics(
     )
 
     if project is None:
-
         raise HTTPException(
             status_code=404,
             detail="Project not found",
@@ -280,7 +270,6 @@ def project_health(
     )
 
     if project is None:
-
         raise HTTPException(
             status_code=404,
             detail="Project not found",
@@ -298,7 +287,6 @@ def project_health(
 # ===========================================================
 
 if __name__ == "__main__":
-
     print("=" * 60)
     print("Project Router Loaded Successfully")
     print("=" * 60)

@@ -138,5 +138,4 @@ User:
             return json.loads(response)
 
         except Exception:
-
             return {"intent": "unknown", "raw": response}

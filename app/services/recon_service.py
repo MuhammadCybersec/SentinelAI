@@ -52,7 +52,6 @@ class ReconService:
         saved = 0
 
         for module_name, module_results in results.items():
-
             if module_name == "target":
                 continue
 

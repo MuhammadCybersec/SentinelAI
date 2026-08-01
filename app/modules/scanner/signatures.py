@@ -4,9 +4,9 @@ Oracle version and edition signatures for fingerprinting.
 Phase 2: Oracle Version Fingerprinting
 """
 
-from dataclasses import dataclass
-from typing import Dict, List, Optional, Pattern
 import re
+from dataclasses import dataclass
+from re import Pattern
 
 
 @dataclass
@@ -15,7 +15,7 @@ class OracleVersionSignature:
 
     version: str
     display_name: str
-    patterns: List[str]
+    patterns: list[str]
     weight: int
     is_xe: bool = False
 
@@ -25,7 +25,7 @@ class OracleEditionSignature:
     """Oracle edition signature definition."""
 
     edition: str
-    patterns: List[str]
+    patterns: list[str]
     weight: int
 
 
@@ -36,7 +36,7 @@ class OracleSignatures:
     # Oracle Version Signatures
     # ============================================================
 
-    VERSION_SIGNATURES: List[OracleVersionSignature] = [
+    VERSION_SIGNATURES: list[OracleVersionSignature] = [
         # Oracle 10g
         OracleVersionSignature(
             version="10g",
@@ -170,7 +170,7 @@ class OracleSignatures:
     # Oracle Edition Signatures
     # ============================================================
 
-    EDITION_SIGNATURES: List[OracleEditionSignature] = [
+    EDITION_SIGNATURES: list[OracleEditionSignature] = [
         # Enterprise Edition
         OracleEditionSignature(
             edition="Enterprise Edition",
@@ -233,7 +233,7 @@ class OracleSignatures:
     # ============================================================
 
     @classmethod
-    def get_version_patterns(cls) -> Dict[str, List[Pattern]]:
+    def get_version_patterns(cls) -> dict[str, list[Pattern]]:
         """Compile all version patterns for efficient matching."""
         patterns = {}
         for sig in cls.VERSION_SIGNATURES:
@@ -241,7 +241,7 @@ class OracleSignatures:
         return patterns
 
     @classmethod
-    def get_edition_patterns(cls) -> Dict[str, List[Pattern]]:
+    def get_edition_patterns(cls) -> dict[str, list[Pattern]]:
         """Compile all edition patterns for efficient matching."""
         patterns = {}
         for sig in cls.EDITION_SIGNATURES:
@@ -249,7 +249,7 @@ class OracleSignatures:
         return patterns
 
     @classmethod
-    def find_version_by_pattern(cls, text: str) -> List[OracleVersionSignature]:
+    def find_version_by_pattern(cls, text: str) -> list[OracleVersionSignature]:
         """
         Find all version signatures that match the given text.
 
@@ -271,7 +271,7 @@ class OracleSignatures:
         return matches
 
     @classmethod
-    def find_edition_by_pattern(cls, text: str) -> List[OracleEditionSignature]:
+    def find_edition_by_pattern(cls, text: str) -> list[OracleEditionSignature]:
         """
         Find all edition signatures that match the given text.
 
@@ -293,11 +293,11 @@ class OracleSignatures:
         return matches
 
     @classmethod
-    def get_all_versions(cls) -> List[str]:
+    def get_all_versions(cls) -> list[str]:
         """Get list of all supported Oracle versions."""
         return [sig.version for sig in cls.VERSION_SIGNATURES]
 
     @classmethod
-    def get_all_editions(cls) -> List[str]:
+    def get_all_editions(cls) -> list[str]:
         """Get list of all supported Oracle editions."""
         return [sig.edition for sig in cls.EDITION_SIGNATURES]

@@ -18,7 +18,7 @@ import logging
 import os
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 # ============================================================
 # Recon Agent Import (Simple)
@@ -61,14 +61,14 @@ class ScanResult:
     target_url: str
     start_time: datetime
     end_time: datetime
-    recon_data: Dict[str, Any] = field(default_factory=dict)
-    endpoints: List[str] = field(default_factory=list)
-    parameters: List[str] = field(default_factory=list)
-    findings: List[Finding] = field(default_factory=list)
+    recon_data: dict[str, Any] = field(default_factory=dict)
+    endpoints: list[str] = field(default_factory=list)
+    parameters: list[str] = field(default_factory=list)
+    findings: list[Finding] = field(default_factory=list)
     vulnerabilities_found: int = 0
     report_path: str = ""
-    report_formats: List[str] = field(default_factory=list)
-    summary: Dict[str, Any] = field(default_factory=dict)
+    report_formats: list[str] = field(default_factory=list)
+    summary: dict[str, Any] = field(default_factory=dict)
 
 
 # ============================================================
@@ -77,14 +77,14 @@ class ScanResult:
 
 
 class OrchestratorAgent:
-    def __init__(self, config: Optional[Dict[str, Any]] = None) -> None:
+    def __init__(self, config: dict[str, Any] | None = None) -> None:
         self.config = config or {}
         self.recon_agent = None
         if recon_agent_available and ReconAgent is not None:
             self.recon_agent = ReconAgent()
-        self.scanner_modules: Dict[str, Any] = {}
-        self.current_scan: Optional[ScanResult] = None
-        self.findings: List[Finding] = []
+        self.scanner_modules: dict[str, Any] = {}
+        self.current_scan: ScanResult | None = None
+        self.findings: list[Finding] = []
         self.report_formats = self.config.get("report_formats", ["pdf", "html", "json"])
 
     def scan(self, target_url: str) -> ScanResult:
@@ -137,7 +137,7 @@ class OrchestratorAgent:
         return self.current_scan
 
     def _run_scanners(
-        self, target_url: str, endpoints: List[str], parameters: List[str]
+        self, target_url: str, endpoints: list[str], parameters: list[str]
     ) -> None:
         self._load_scanner_modules()
         if not self.scanner_modules:
@@ -201,9 +201,9 @@ class OrchestratorAgent:
             pass
 
     def _generate_reports(
-        self, target_url: str, recon_data: Dict[str, Any]
-    ) -> Dict[str, str]:
-        report_paths: Dict[str, str] = {}
+        self, target_url: str, recon_data: dict[str, Any]
+    ) -> dict[str, str]:
+        report_paths: dict[str, str] = {}
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         base_name = f"sentinelai_report_{timestamp}"
         output_dir = self.config.get("output_dir", "./reports")
@@ -305,13 +305,13 @@ class OrchestratorAgent:
                 color = severity_colors.get(severity, "#6c757d")
                 findings_html += f"""
             <div class="finding" style="border-left: 4px solid {color}; margin: 10px 0; padding: 10px; background: #f8f9fa;">
-                <h3 style="color: {color};">[{severity}] {getattr(f, 'title', 'Unknown')}</h3>
-                <p><strong>URL:</strong> {getattr(f, 'url', 'N/A')}</p>
-                <p><strong>Parameter:</strong> {getattr(f, 'parameter', 'N/A')}</p>
-                <p><strong>Payload:</strong> <code>{getattr(f, 'payload', 'N/A')}</code></p>
-                <p><strong>Confidence:</strong> {getattr(f, 'confidence', 0.0) * 100:.0f}%</p>
-                <p><strong>Description:</strong> {getattr(f, 'description', 'N/A')}</p>
-                <p><strong>Remediation:</strong> {getattr(f, 'remediation', 'N/A')}</p>
+                <h3 style="color: {color};">[{severity}] {getattr(f, "title", "Unknown")}</h3>
+                <p><strong>URL:</strong> {getattr(f, "url", "N/A")}</p>
+                <p><strong>Parameter:</strong> {getattr(f, "parameter", "N/A")}</p>
+                <p><strong>Payload:</strong> <code>{getattr(f, "payload", "N/A")}</code></p>
+                <p><strong>Confidence:</strong> {getattr(f, "confidence", 0.0) * 100:.0f}%</p>
+                <p><strong>Description:</strong> {getattr(f, "description", "N/A")}</p>
+                <p><strong>Remediation:</strong> {getattr(f, "remediation", "N/A")}</p>
             </div>
             """
         else:
@@ -338,20 +338,20 @@ class OrchestratorAgent:
         <body>
             <h1>SentinelAI Security Assessment Report</h1>
             <p><strong>Target:</strong> {self.current_scan.target_url}</p>
-            <p><strong>Date:</strong> {self.current_scan.start_time.strftime('%Y-%m-%d %H:%M:%S')}</p>
-            <p><strong>Duration:</strong> {summary.get('duration_seconds', 0):.2f} seconds</p>
+            <p><strong>Date:</strong> {self.current_scan.start_time.strftime("%Y-%m-%d %H:%M:%S")}</p>
+            <p><strong>Duration:</strong> {summary.get("duration_seconds", 0):.2f} seconds</p>
 
             <div class="summary">
                 <h2>Executive Summary</h2>
                 <table>
                     <tr><td><strong>Total Vulnerabilities:</strong></td><td>{len(self.findings)}</td></tr>
-                    <tr><td><strong>Critical:</strong></td><td style="color: #dc3545;">{summary.get('critical', 0)}</td></tr>
-                    <tr><td><strong>High:</strong></td><td style="color: #fd7e14;">{summary.get('high', 0)}</td></tr>
-                    <tr><td><strong>Medium:</strong></td><td style="color: #ffc107;">{summary.get('medium', 0)}</td></tr>
-                    <tr><td><strong>Low:</strong></td><td style="color: #28a745;">{summary.get('low', 0)}</td></tr>
-                    <tr><td><strong>Endpoints Scanned:</strong></td><td>{summary.get('endpoints_scanned', 0)}</td></tr>
-                    <tr><td><strong>WAF Detected:</strong></td><td>{summary.get('waf_detected', 'None')}</td></tr>
-                    <tr><td><strong>Technologies:</strong></td><td>{', '.join(summary.get('technologies', [])) or 'Unknown'}</td></tr>
+                    <tr><td><strong>Critical:</strong></td><td style="color: #dc3545;">{summary.get("critical", 0)}</td></tr>
+                    <tr><td><strong>High:</strong></td><td style="color: #fd7e14;">{summary.get("high", 0)}</td></tr>
+                    <tr><td><strong>Medium:</strong></td><td style="color: #ffc107;">{summary.get("medium", 0)}</td></tr>
+                    <tr><td><strong>Low:</strong></td><td style="color: #28a745;">{summary.get("low", 0)}</td></tr>
+                    <tr><td><strong>Endpoints Scanned:</strong></td><td>{summary.get("endpoints_scanned", 0)}</td></tr>
+                    <tr><td><strong>WAF Detected:</strong></td><td>{summary.get("waf_detected", "None")}</td></tr>
+                    <tr><td><strong>Technologies:</strong></td><td>{", ".join(summary.get("technologies", [])) or "Unknown"}</td></tr>
                 </table>
             </div>
 
@@ -369,8 +369,8 @@ class OrchestratorAgent:
             return f"{endpoint}&{parameter}=test"
         return f"{endpoint}?{parameter}=test"
 
-    def _extract_endpoints(self, recon_data: Dict[str, Any]) -> List[str]:
-        endpoints: List[str] = []
+    def _extract_endpoints(self, recon_data: dict[str, Any]) -> list[str]:
+        endpoints: list[str] = []
         target = recon_data.get("target", "")
         if target:
             endpoints.append(target)
@@ -387,7 +387,7 @@ class OrchestratorAgent:
         if js_endpoints:
             endpoints.extend([str(ep) for ep in js_endpoints])
 
-        clean_endpoints: List[str] = []
+        clean_endpoints: list[str] = []
         for ep in endpoints:
             if ep and isinstance(ep, str):
                 if ep.startswith("/") and target:
@@ -395,8 +395,8 @@ class OrchestratorAgent:
                 clean_endpoints.append(ep)
         return list(set(clean_endpoints))
 
-    def _extract_parameters(self, recon_data: Dict[str, Any]) -> List[str]:
-        parameters: List[str] = []
+    def _extract_parameters(self, recon_data: dict[str, Any]) -> list[str]:
+        parameters: list[str] = []
         common_params = [
             "id",
             "page",
@@ -441,7 +441,7 @@ class OrchestratorAgent:
         parameters.extend(common_params)
         return list(set(parameters))
 
-    def _generate_summary(self) -> Dict[str, Any]:
+    def _generate_summary(self) -> dict[str, Any]:
         if self.current_scan is None:
             return {}
         critical = sum(
@@ -490,7 +490,7 @@ def main() -> None:
     else:
         logging.basicConfig(level=logging.INFO)
 
-    config: Dict[str, Any] = {
+    config: dict[str, Any] = {
         "report_formats": (
             ["pdf", "html", "json"]
             if args.report_format == "all"
@@ -502,9 +502,9 @@ def main() -> None:
     orchestrator = OrchestratorAgent(config)
     result = orchestrator.scan(args.target)
 
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print("SCAN COMPLETE")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
     print(f"Target: {result.target_url}")
     print(f"Duration: {result.summary['duration_seconds']:.2f} seconds")
     print(f"Vulnerabilities Found: {result.vulnerabilities_found}")
@@ -513,7 +513,7 @@ def main() -> None:
     print(f"  Medium: {result.summary['medium']}")
     print(f"  Low: {result.summary['low']}")
     print(f"Reports: {', '.join(result.report_formats)}")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
 
 if __name__ == "__main__":

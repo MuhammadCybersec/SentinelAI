@@ -14,25 +14,17 @@ Design Principles:
 - Provider Independent: No external dependencies
 """
 
+import html
+import json
 import re
 import threading
+import time
+import xml.sax.saxutils as xml_utils
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import (
     Any,
-    Dict,
-    FrozenSet,
-    List,
-    Optional,
-    Set,
-    Tuple,
-    Union,
 )
-from collections.abc import Mapping, Sequence
-import html
-import json
-import xml.sax.saxutils as xml_utils
-import time
 
 # =============================================================================
 # Custom Exceptions
@@ -42,31 +34,21 @@ import time
 class PromptBuilderError(Exception):
     """Base exception for prompt builder errors."""
 
-    pass
-
 
 class TemplateNotFoundError(PromptBuilderError):
     """Raised when a template is not found."""
-
-    pass
 
 
 class MissingVariableError(PromptBuilderError):
     """Raised when a required variable is missing."""
 
-    pass
-
 
 class InvalidTemplateError(PromptBuilderError):
     """Raised when a template is invalid."""
 
-    pass
-
 
 class UnsafeValueError(PromptBuilderError):
     """Raised when a value contains unsafe content."""
-
-    pass
 
 
 # =============================================================================
@@ -125,13 +107,13 @@ class PromptTemplate:
     name: str
     prompt_type: PromptType
     user_prompt_template: str
-    system_prompt: Optional[str] = None
+    system_prompt: str | None = None
     description: str = ""
-    required_variables: FrozenSet[str] = field(default_factory=frozenset)
-    optional_variables: FrozenSet[str] = field(default_factory=frozenset)
+    required_variables: frozenset[str] = field(default_factory=frozenset)
+    optional_variables: frozenset[str] = field(default_factory=frozenset)
     escape_strategy: EscapeStrategy = EscapeStrategy.NONE
     version: str = "1.0.0"
-    tags: FrozenSet[str] = field(default_factory=frozenset)
+    tags: frozenset[str] = field(default_factory=frozenset)
 
     def __post_init__(self) -> None:
         """Validate template after initialization."""
@@ -142,7 +124,7 @@ class PromptTemplate:
         if self.system_prompt is not None and not self.system_prompt.strip():
             raise InvalidTemplateError("System prompt cannot be empty string")
 
-    def get_all_variables(self) -> FrozenSet[str]:
+    def get_all_variables(self) -> frozenset[str]:
         """Get all variables (required + optional)."""
         return self.required_variables | self.optional_variables
 
@@ -161,14 +143,14 @@ class Prompt:
         rendered_at: Timestamp of rendering (set by builder)
     """
 
-    system_prompt: Optional[str]
+    system_prompt: str | None
     user_prompt: str
     template_name: str
-    variables: Dict[str, Any]
+    variables: dict[str, Any]
     prompt_type: PromptType
-    rendered_at: Optional[float] = None
+    rendered_at: float | None = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {
             "system_prompt": self.system_prompt,
@@ -232,7 +214,7 @@ class PromptBuilder:
 
     def __init__(self) -> None:
         """Initialize the PromptBuilder with empty template storage."""
-        self._templates: Dict[str, PromptTemplate] = {}
+        self._templates: dict[str, PromptTemplate] = {}
         self._lock = threading.RLock()
         self._builtin_templates = self._create_builtin_templates()
 
@@ -277,7 +259,7 @@ class PromptBuilder:
                 raise ValueError(f"Cannot unregister built-in template '{name}'")
             return self._templates.pop(name, None) is not None
 
-    def get_template(self, name: str) -> Optional[PromptTemplate]:
+    def get_template(self, name: str) -> PromptTemplate | None:
         """
         Get a template by name.
 
@@ -290,7 +272,7 @@ class PromptBuilder:
         with self._lock:
             return self._templates.get(name)
 
-    def get_all_templates(self) -> List[PromptTemplate]:
+    def get_all_templates(self) -> list[PromptTemplate]:
         """
         Get all registered templates.
 
@@ -316,8 +298,8 @@ class PromptBuilder:
     def build_prompt(
         self,
         template_name: str,
-        variables: Dict[str, Any],
-        escape_strategy: Optional[EscapeStrategy] = None,
+        variables: dict[str, Any],
+        escape_strategy: EscapeStrategy | None = None,
         strict_validation: bool = True,
     ) -> Prompt:
         """
@@ -390,8 +372,8 @@ class PromptBuilder:
     def build_sql_injection_prompt(
         self,
         sql_query: str,
-        context: Optional[str] = None,
-        additional_analysis: Optional[str] = None,
+        context: str | None = None,
+        additional_analysis: str | None = None,
     ) -> Prompt:
         """
         Build a SQL injection analysis prompt.
@@ -414,8 +396,8 @@ class PromptBuilder:
     def build_xss_analysis_prompt(
         self,
         code: str,
-        context: Optional[str] = None,
-        additional_analysis: Optional[str] = None,
+        context: str | None = None,
+        additional_analysis: str | None = None,
     ) -> Prompt:
         """
         Build an XSS analysis prompt.
@@ -438,8 +420,8 @@ class PromptBuilder:
     def build_reverse_engineering_prompt(
         self,
         binary_info: str,
-        context: Optional[str] = None,
-        additional_analysis: Optional[str] = None,
+        context: str | None = None,
+        additional_analysis: str | None = None,
     ) -> Prompt:
         """
         Build a reverse engineering analysis prompt.
@@ -462,8 +444,8 @@ class PromptBuilder:
     def build_malware_analysis_prompt(
         self,
         malware_info: str,
-        context: Optional[str] = None,
-        additional_analysis: Optional[str] = None,
+        context: str | None = None,
+        additional_analysis: str | None = None,
     ) -> Prompt:
         """
         Build a malware analysis prompt.
@@ -486,8 +468,8 @@ class PromptBuilder:
     def build_vulnerability_explanation_prompt(
         self,
         vulnerability: str,
-        context: Optional[str] = None,
-        additional_analysis: Optional[str] = None,
+        context: str | None = None,
+        additional_analysis: str | None = None,
     ) -> Prompt:
         """
         Build a vulnerability explanation prompt.
@@ -510,8 +492,8 @@ class PromptBuilder:
     def build_security_report_prompt(
         self,
         report_data: str,
-        context: Optional[str] = None,
-        additional_analysis: Optional[str] = None,
+        context: str | None = None,
+        additional_analysis: str | None = None,
     ) -> Prompt:
         """
         Build a security report prompt.
@@ -531,7 +513,7 @@ class PromptBuilder:
         }
         return self.build_prompt("security_report", variables)
 
-    def get_builtin_templates(self) -> List[PromptTemplate]:
+    def get_builtin_templates(self) -> list[PromptTemplate]:
         """
         Get the built-in templates.
 
@@ -544,7 +526,7 @@ class PromptBuilder:
     # Private Methods
     # =========================================================================
 
-    def _create_builtin_templates(self) -> List[PromptTemplate]:
+    def _create_builtin_templates(self) -> list[PromptTemplate]:
         """
         Create the built-in prompt templates.
 
@@ -737,7 +719,7 @@ Please provide a comprehensive report including:
     def _validate_variables(
         self,
         template: PromptTemplate,
-        variables: Dict[str, Any],
+        variables: dict[str, Any],
         strict: bool,
     ) -> None:
         """
@@ -766,9 +748,9 @@ Please provide a comprehensive report including:
 
     def _sanitize_variables(
         self,
-        variables: Dict[str, Any],
+        variables: dict[str, Any],
         escape_strategy: EscapeStrategy,
-    ) -> Dict[str, str]:
+    ) -> dict[str, str]:
         """
         Sanitize variables by escaping unsafe values.
 
@@ -882,9 +864,9 @@ Please provide a comprehensive report including:
     def _render_template_with_defaults(
         self,
         template: str,
-        variables: Dict[str, str],
-        required_variables: FrozenSet[str],
-        optional_variables: FrozenSet[str],
+        variables: dict[str, str],
+        required_variables: frozenset[str],
+        optional_variables: frozenset[str],
         strict: bool,
     ) -> str:
         """

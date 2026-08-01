@@ -175,7 +175,6 @@ def get_payloads() -> list[str]:
 # ===========================================================
 
 if __name__ == "__main__":
-
     print("=" * 60)
     print("SentinelAI SQL Injection Payload Database")
     print("=" * 60)
@@ -244,14 +243,12 @@ class SQLiScanner:
         detected_payload = ""
 
         for payload in self.payloads:
-
             # Future:
             # Inject payload into parameters
             # Send request
             # Compare responses
 
             if False:
-
                 vulnerable = True
 
                 detected_payload = payload
@@ -259,7 +256,6 @@ class SQLiScanner:
                 break
 
         if not vulnerable:
-
             return None
 
         # -------------------------------------------------
@@ -307,7 +303,6 @@ class SQLiScanner:
 # ============================================================
 
 if __name__ == "__main__":
-
     scanner = SQLiScanner()
 
     result = scanner.scan(
@@ -318,9 +313,7 @@ if __name__ == "__main__":
     print()
 
     if result is None:
-
         print("No SQL Injection Found")
 
     else:
-
         print(result)

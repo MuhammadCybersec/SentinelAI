@@ -5,7 +5,7 @@ Response diff utilities for SQL injection detection.
 """
 
 import difflib
-from typing import List, Set, Optional, Tuple
+
 from .html_parser import HTMLParser
 
 
@@ -78,7 +78,7 @@ class ResponseDiff:
         """
         return abs(len(payload) - len(baseline))
 
-    def find_new_elements(self, baseline: str, payload: str) -> List[str]:
+    def find_new_elements(self, baseline: str, payload: str) -> list[str]:
         """
         Find new HTML elements in payload response.
 

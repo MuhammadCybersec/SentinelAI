@@ -16,42 +16,6 @@
 # =============================================================================
 # EXCEPTIONS - Import first to avoid circular imports
 # =============================================================================
-from app.services.ai.exceptions import (
-    AIServiceError,
-    AIConfigurationError,
-    AIConnectionError,
-    AIResponseError,
-    AIProviderError,
-    AIModelError,
-    AIModelNotFoundError,
-    AIModelDisabledError,
-    AIRequestError,
-    AIRequestTimeoutError,
-    AIRateLimitError,
-    AIAuthenticationError,
-    AIParsingError,
-    ResponseParserError,
-    InvalidJSONError,
-    EmptyResponseError,
-    MalformedResponseError,
-    MissingFieldError,
-    InvalidFieldTypeError,
-    PromptBuilderError,
-    PromptTemplateError,
-    PromptValidationError,
-    ModelNotConfiguredError,
-    PromptBuildError,
-    GenerationError,
-    ParseError,
-)
-
-# =============================================================================
-# SERVICE LAYER
-# =============================================================================
-from app.services.ai.ai_service import (
-    AIService,
-)
-
 # =============================================================================
 # CLIENT LAYER
 # =============================================================================
@@ -61,11 +25,46 @@ from app.services.ai.ai_client import (
 )
 
 # =============================================================================
+# SERVICE LAYER
+# =============================================================================
+from app.services.ai.ai_service import (
+    AIService,
+)
+from app.services.ai.exceptions import (
+    AIAuthenticationError,
+    AIConfigurationError,
+    AIConnectionError,
+    AIModelDisabledError,
+    AIModelError,
+    AIModelNotFoundError,
+    AIParsingError,
+    AIProviderError,
+    AIRateLimitError,
+    AIRequestError,
+    AIRequestTimeoutError,
+    AIResponseError,
+    AIServiceError,
+    EmptyResponseError,
+    GenerationError,
+    InvalidFieldTypeError,
+    InvalidJSONError,
+    MalformedResponseError,
+    MissingFieldError,
+    ModelNotConfiguredError,
+    ParseError,
+    PromptBuilderError,
+    PromptBuildError,
+    PromptTemplateError,
+    PromptValidationError,
+    ResponseParserError,
+)
+
+# =============================================================================
 # MODEL MANAGEMENT
 # =============================================================================
 from app.services.ai.model_manager import (
-    ModelManager,
     ModelConfig,
+    ModelManager,
     ModelProvider,
 )
 
@@ -73,14 +72,14 @@ from app.services.ai.model_manager import (
 # PROMPT BUILDER
 # =============================================================================
 from app.services.ai.prompt_builder import (
+    EscapeStrategy,
+    InvalidTemplateError,
+    MissingVariableError,
+    Prompt,
     PromptBuilder,
     PromptTemplate,
-    Prompt,
     PromptType,
-    EscapeStrategy,
     TemplateNotFoundError,
-    MissingVariableError,
-    InvalidTemplateError,
     UnsafeValueError,
 )
 
@@ -88,11 +87,11 @@ from app.services.ai.prompt_builder import (
 # RESPONSE PARSER
 # =============================================================================
 from app.services.ai.response_parser import (
-    ParsedResponse,
-    VulnerabilityFinding,
     AnalysisType,
-    SeverityLevel,
     ConfidenceLevel,
+    ParsedResponse,
+    SeverityLevel,
+    VulnerabilityFinding,
 )
 
 # =============================================================================

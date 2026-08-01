@@ -10,7 +10,6 @@ Version : 1.0.0
 from __future__ import annotations
 
 import random
-from typing import Optional
 
 import requests
 from requests import Response, Session
@@ -24,7 +23,7 @@ USER_AGENTS = [
         "AppleWebKit/537.36 (KHTML, like Gecko) "
         "Chrome/138.0.0.0 Safari/537.36"
     ),
-    ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) " "Firefox/140.0"),
+    ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) Firefox/140.0"),
     (
         "Mozilla/5.0 (X11; Linux x86_64) "
         "AppleWebKit/537.36 (KHTML, like Gecko) "
@@ -66,19 +65,17 @@ class HTTPClient:
         self,
         url: str,
         **kwargs,
-    ) -> Optional[Response]:
+    ) -> Response | None:
         kwargs.setdefault("timeout", self.timeout)
         kwargs.setdefault("allow_redirects", True)
 
         try:
-
             return self.session.get(
                 url,
                 **kwargs,
             )
 
         except requests.RequestException:
-
             return None
 
     # =====================================================
@@ -89,19 +86,17 @@ class HTTPClient:
         self,
         url: str,
         **kwargs,
-    ) -> Optional[Response]:
+    ) -> Response | None:
         kwargs.setdefault("timeout", self.timeout)
         kwargs.setdefault("allow_redirects", True)
 
         try:
-
             return self.session.post(
                 url,
                 **kwargs,
             )
 
         except requests.RequestException:
-
             return None
 
     # =====================================================
@@ -112,19 +107,17 @@ class HTTPClient:
         self,
         url: str,
         **kwargs,
-    ) -> Optional[Response]:
+    ) -> Response | None:
         kwargs.setdefault("timeout", self.timeout)
         kwargs.setdefault("allow_redirects", True)
 
         try:
-
             return self.session.head(
                 url,
                 **kwargs,
             )
 
         except requests.RequestException:
-
             return None
 
     # =====================================================
@@ -144,14 +137,11 @@ http = HTTPClient()
 
 # Temporary test
 if __name__ == "__main__":
-
     response = http.get("https://bugcrowd.com")
 
     if response:
-
         print(response.status_code)
         print(response.url)
 
     else:
-
         print("Request Failed")

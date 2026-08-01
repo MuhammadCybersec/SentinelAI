@@ -24,20 +24,19 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional
 
 
 @dataclass
 class SessionState:
     """Represents a session state."""
 
-    cookies: Dict[str, str] = field(default_factory=dict)
-    headers: Dict[str, str] = field(default_factory=dict)
-    session_id: Optional[str] = None
+    cookies: dict[str, str] = field(default_factory=dict)
+    headers: dict[str, str] = field(default_factory=dict)
+    session_id: str | None = None
     is_authenticated: bool = False
     last_response_url: str = ""
     redirect_count: int = 0
-    login_timestamp: Optional[float] = None
+    login_timestamp: float | None = None
 
 
 class SessionManager:
@@ -48,7 +47,7 @@ class SessionManager:
 
     def __init__(self):
         self._state = SessionState()
-        self._history: List[Dict[str, str]] = []
+        self._history: list[dict[str, str]] = []
 
     def update_from_response(self, response) -> None:
         """
@@ -109,21 +108,21 @@ class SessionManager:
         ]
 
         for pattern in session_patterns:
-            match = re.search(rf"{pattern}=([^;]+)", set_cookie, re.I)
+            match = re.search(rf"{pattern}=([^;]+)", set_cookie, re.IGNORECASE)
             if match:
                 self._state.session_id = match.group(1)
                 self._state.is_authenticated = True
                 break
 
-    def get_cookies(self) -> Dict[str, str]:
+    def get_cookies(self) -> dict[str, str]:
         """Get all cookies."""
         return dict(self._state.cookies)
 
-    def get_headers(self) -> Dict[str, str]:
+    def get_headers(self) -> dict[str, str]:
         """Get all headers."""
         return dict(self._state.headers)
 
-    def get_session_id(self) -> Optional[str]:
+    def get_session_id(self) -> str | None:
         """Get session ID if available."""
         return self._state.session_id
 
@@ -135,7 +134,7 @@ class SessionManager:
         """Get number of redirects in current session."""
         return self._state.redirect_count
 
-    def get_history(self) -> List[Dict[str, str]]:
+    def get_history(self) -> list[dict[str, str]]:
         """Get session history."""
         return self._history.copy()
 

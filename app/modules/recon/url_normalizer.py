@@ -29,11 +29,9 @@ def normalize_url(url: str) -> str:
         return ""
 
     try:
-
         parts = urlsplit(url)
 
     except Exception:
-
         return url
 
     # ======================================================
@@ -48,18 +46,14 @@ def normalize_url(url: str) -> str:
 
     port = parts.port
 
-    if port is None:
-
-        netloc = hostname
-
-    elif (parts.scheme == "http" and port == 80) or (
-        parts.scheme == "https" and port == 443
+    if (
+        port is None
+        or (parts.scheme == "http" and port == 80)
+        or (parts.scheme == "https" and port == 443)
     ):
-
         netloc = hostname
 
     else:
-
         netloc = f"{hostname}:{port}"
 
     # ======================================================
@@ -69,11 +63,9 @@ def normalize_url(url: str) -> str:
     path = re.sub(r"/{2,}", "/", parts.path)
 
     if path.endswith("/") and path != "/":
-
         path = path[:-1]
 
     if path == "/":
-
         path = ""
 
     # ======================================================

@@ -204,7 +204,6 @@ class ScopeManager:
         self.clear()
 
         for item in scope:
-
             pattern = item.get("pattern", "")
 
             if not pattern:
@@ -221,14 +220,12 @@ class ScopeManager:
             )
 
             if include:
-
                 self.add_scope(
                     pattern,
                     allow_subdomains,
                 )
 
             else:
-
                 self.add_out_of_scope(
                     pattern,
                     allow_subdomains,
@@ -251,19 +248,16 @@ class ScopeManager:
 
         # Wildcard (*.example.com)
         if pattern.startswith("*."):
-
             base = pattern[2:]
 
             return host == base or host.endswith("." + base)
 
         # Exact match
         if host == pattern:
-
             return True
 
         # Subdomains allowed
         if rule.allow_subdomains:
-
             return host.endswith("." + pattern)
 
         return False
@@ -283,33 +277,27 @@ class ScopeManager:
         host = self.host(url)
 
         if not host:
-
             return False
 
         # Explicitly blocked
         if host in self.blocked_hosts:
-
             return False
 
         # Explicitly allowed
         if host in self.allowed_hosts:
-
             return True
 
         # Out-of-scope rules
         for rule in self.out_of_scope:
-
             if rule.enabled and self._match_host(host, rule):
                 return False
 
         # No in-scope rules means allow everything
         if not self.in_scope:
-
             return True
 
         # In-scope rules
         for rule in self.in_scope:
-
             if rule.enabled and self._match_host(host, rule):
                 return True
 

@@ -13,8 +13,6 @@ Supports MySQL, PostgreSQL, MSSQL, and Oracle.
 
 from __future__ import annotations
 
-from typing import Dict, List, Optional, Tuple
-
 
 class ErrorPayloadGenerator:
     """

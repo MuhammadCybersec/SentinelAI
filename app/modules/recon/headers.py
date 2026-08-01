@@ -67,15 +67,12 @@ def analyze_headers(target: str) -> dict:
     # =====================================================
 
     for header in SECURITY_HEADERS:
-
         value = headers.get(header)
 
         if value:
-
             result["present"][header] = value
 
         else:
-
             result["missing"].append(header)
 
     return result
@@ -86,7 +83,6 @@ def analyze_headers(target: str) -> dict:
 # =========================================================
 
 if __name__ == "__main__":
-
     target = "https://bugcrowd.com"
 
     result = analyze_headers(target)
@@ -113,15 +109,12 @@ if __name__ == "__main__":
     print("----------------")
 
     if result["present"]:
-
         for header, value in result["present"].items():
-
             print(f"[+] {header}")
 
             print(f"    {value}")
 
     else:
-
         print("None")
 
     print()
@@ -130,11 +123,8 @@ if __name__ == "__main__":
     print("----------------")
 
     if result["missing"]:
-
         for header in result["missing"]:
-
             print(f"[-] {header}")
 
     else:
-
         print("None")

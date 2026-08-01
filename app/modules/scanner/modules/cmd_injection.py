@@ -63,7 +63,6 @@ class CommandInjectionScanner:
         detected_payload = ""
 
         for payload in self.payloads:
-
             # -------------------------------------------------
             # Future:
             # Inject payload
@@ -72,7 +71,6 @@ class CommandInjectionScanner:
             # -------------------------------------------------
 
             if False:
-
                 vulnerable = True
 
                 detected_payload = payload
@@ -80,7 +78,6 @@ class CommandInjectionScanner:
                 break
 
         if not vulnerable:
-
             return None
 
         return Finding(
@@ -125,7 +122,6 @@ class CommandInjectionScanner:
 # ============================================================
 
 if __name__ == "__main__":
-
     scanner = CommandInjectionScanner()
 
     result = scanner.scan(
@@ -136,9 +132,7 @@ if __name__ == "__main__":
     print()
 
     if result is None:
-
         print("No Command Injection Found")
 
     else:
-
         print(result)

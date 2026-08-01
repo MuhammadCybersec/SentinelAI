@@ -36,7 +36,6 @@ def discover_js_secrets(js_files: list[str]) -> list[dict]:
     seen: set[tuple[str, str]] = set()
 
     for js in js_files:
-
         response = http.get(js)
 
         if response is None:
@@ -48,11 +47,9 @@ def discover_js_secrets(js_files: list[str]) -> list[dict]:
         content = response.text
 
         for secret_type, pattern in SECRET_PATTERNS.items():
-
             matches = re.findall(pattern, content)
 
             for secret in matches:
-
                 key = (secret_type, secret)
 
                 if key in seen:
@@ -76,7 +73,6 @@ def discover_js_secrets(js_files: list[str]) -> list[dict]:
 # ============================================================
 
 if __name__ == "__main__":
-
     from app.modules.recon.javascript import discover_javascript
 
     js_files = discover_javascript("https://bugcrowd.com")
@@ -95,7 +91,6 @@ if __name__ == "__main__":
     print()
 
     for secret in secrets:
-
         print(secret["type"])
         print("Value :", secret["value"])
         print("Source:", secret["source"])

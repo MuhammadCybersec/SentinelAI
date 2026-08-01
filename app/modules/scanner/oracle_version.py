@@ -7,14 +7,14 @@ Phase 2: Oracle Version Fingerprinting
 import logging
 import re
 from dataclasses import dataclass, field
-from typing import Optional, Dict, List, Any, Tuple
+from typing import Any
+
 import requests
 
-from .union_sqli import UnionSQLi
 from .html_parser import HTMLParser
 from .regex_utils import RegexUtils
-from .payloads import OracleDetectionPayloads, DetectionPayload
-from .signatures import OracleSignatures, OracleVersionSignature, OracleEditionSignature
+from .signatures import OracleSignatures
+from .union_sqli import UnionSQLi
 
 # ============================================================
 # Data Classes
@@ -25,15 +25,15 @@ from .signatures import OracleSignatures, OracleVersionSignature, OracleEditionS
 class OracleVersionResult:
     """Oracle version fingerprinting result."""
 
-    version: Optional[str] = None
-    display_name: Optional[str] = None
-    edition: Optional[str] = None
-    full_version: Optional[str] = None
+    version: str | None = None
+    display_name: str | None = None
+    edition: str | None = None
+    full_version: str | None = None
     is_xe: bool = False
     confidence: int = 0
-    version_indicators: Dict[str, int] = field(default_factory=dict)
-    edition_indicators: Dict[str, int] = field(default_factory=dict)
-    raw_responses: List[str] = field(default_factory=list)
+    version_indicators: dict[str, int] = field(default_factory=dict)
+    edition_indicators: dict[str, int] = field(default_factory=dict)
+    raw_responses: list[str] = field(default_factory=list)
 
     def add_version_indicator(self, version: str, score: int):
         """Add a version indicator and its score."""
@@ -55,7 +55,7 @@ class OracleVersionResult:
                 f"Oracle detected but version unknown (Confidence: {self.confidence})"
             )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for logging/output."""
         return {
             "version": self.version,
@@ -176,7 +176,7 @@ class OracleVersionFingerprinter:
         self,
         session: requests.Session,
         base_url: str,
-        logger: Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ):
         """Initialize Oracle version fingerprinter."""
         self.session = session
@@ -216,7 +216,7 @@ class OracleVersionFingerprinter:
     # Private Methods
     # ============================================================
 
-    def _get_baseline(self, injection_point: str) -> Optional[requests.Response]:
+    def _get_baseline(self, injection_point: str) -> requests.Response | None:
         """Get baseline response for comparison."""
         if self.baseline_response is None:
             self.logger.info("[OracleVersion] Fetching baseline response...")
@@ -231,7 +231,7 @@ class OracleVersionFingerprinter:
 
         return self.baseline_response
 
-    def _extract_version_from_text(self, text: str) -> Tuple[Optional[str], int]:
+    def _extract_version_from_text(self, text: str) -> tuple[str | None, int]:
         """Extract Oracle version from text using patterns."""
         if not text:
             return None, 0
@@ -257,7 +257,7 @@ class OracleVersionFingerprinter:
 
         return None, 0
 
-    def _extract_edition_from_text(self, text: str) -> Tuple[Optional[str], int]:
+    def _extract_edition_from_text(self, text: str) -> tuple[str | None, int]:
         """Extract Oracle edition from text using patterns."""
         if not text:
             return None, 0
@@ -291,9 +291,9 @@ class OracleVersionFingerprinter:
     def _test_version_payload(
         self,
         injection_point: str,
-        payload_info: Dict[str, Any],
-        baseline: Optional[requests.Response],
-    ) -> Dict[str, Any]:
+        payload_info: dict[str, Any],
+        baseline: requests.Response | None,
+    ) -> dict[str, Any]:
         """Test a single version fingerprinting payload."""
         payload = payload_info["payload"]
         description = payload_info["description"]
@@ -435,12 +435,12 @@ class OracleVersionFingerprinter:
         self.version_result = result
         return result
 
-    def get_version(self, injection_point: str) -> Optional[str]:
+    def get_version(self, injection_point: str) -> str | None:
         """Get Oracle version only."""
         result = self.fingerprint(injection_point)
         return result.version
 
-    def get_edition(self, injection_point: str) -> Optional[str]:
+    def get_edition(self, injection_point: str) -> str | None:
         """Get Oracle edition only."""
         result = self.fingerprint(injection_point)
         return result.edition

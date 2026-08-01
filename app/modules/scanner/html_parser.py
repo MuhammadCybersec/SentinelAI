@@ -4,7 +4,7 @@ HTML parsing utilities for SQL injection detection.
 """
 
 import re
-from typing import Optional, List, Set
+
 from bs4 import BeautifulSoup
 
 
@@ -57,7 +57,7 @@ class HTMLParser:
         return HTMLParser.extract_text(html)
 
     @staticmethod
-    def get_page_title(html: str) -> Optional[str]:
+    def get_page_title(html: str) -> str | None:
         """
         Extract the page title from HTML.
 
@@ -129,7 +129,7 @@ class HTMLParser:
 
     @staticmethod
     def contains_text(
-        html: str, text_patterns: List[str], case_sensitive: bool = False
+        html: str, text_patterns: list[str], case_sensitive: bool = False
     ) -> bool:
         """
         Check if HTML contains any of the given text patterns.
@@ -155,7 +155,7 @@ class HTMLParser:
         return False
 
     @staticmethod
-    def extract_patterns(html: str, patterns: List[str]) -> List[str]:
+    def extract_patterns(html: str, patterns: list[str]) -> list[str]:
         """
         Extract specific patterns from HTML.
 

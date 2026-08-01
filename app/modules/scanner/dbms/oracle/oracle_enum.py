@@ -5,17 +5,17 @@ Main Oracle Enumeration module.
 """
 
 import logging
-import time
-from typing import Dict, List, Optional, Tuple, Any
+from typing import Any
+
 import requests
 
 from ...common.html_parser import HTMLParser
+from ...common.payload_builder import PayloadBuilder
 from ...common.regex_utils import RegexUtils
 from ...common.response_diff import ResponseDiff
-from ...common.payload_builder import PayloadBuilder
+from .login import OracleLogin
 from .payloads import OraclePayloads
 from .scorer import OracleScorer
-from .login import OracleLogin
 
 
 class OracleEnum:
@@ -30,7 +30,7 @@ class OracleEnum:
         self,
         session: requests.Session,
         base_url: str,
-        logger: Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ):
         """
         Initialize the Oracle Enumeration module.
@@ -85,8 +85,8 @@ class OracleEnum:
         return logger
 
     def _send_request(
-        self, url: str, params: Optional[Dict] = None
-    ) -> Optional[requests.Response]:
+        self, url: str, params: dict | None = None
+    ) -> requests.Response | None:
         """
         Send HTTP request with error handling.
 
@@ -102,14 +102,14 @@ class OracleEnum:
             response.raise_for_status()
             return response
         except requests.RequestException as e:
-            self.logger.error(f"[OracleEnum] Request failed: {str(e)}")
+            self.logger.error(f"[OracleEnum] Request failed: {e!s}")
             return None
 
     # ==================================================
     # PHASE 1: Oracle Detection
     # ==================================================
 
-    def detect_oracle(self, injection_point: Optional[str] = None) -> bool:
+    def detect_oracle(self, injection_point: str | None = None) -> bool:
         """
         Phase 1: Detect if the target DBMS is Oracle.
 
@@ -154,10 +154,10 @@ class OracleEnum:
             return is_oracle
 
         except Exception as e:
-            self.logger.error(f"[OracleEnum] Error during Oracle detection: {str(e)}")
+            self.logger.error(f"[OracleEnum] Error during Oracle detection: {e!s}")
             return False
 
-    def run_phase_1(self, injection_point: Optional[str] = None) -> bool:
+    def run_phase_1(self, injection_point: str | None = None) -> bool:
         """
         Convenience method to run Phase 1 only.
 
@@ -200,7 +200,7 @@ class OracleEnum:
     # FULL EXECUTION
     # ==================================================
 
-    def run_full_enumeration(self, injection_point: str) -> Dict[str, Any]:
+    def run_full_enumeration(self, injection_point: str) -> dict[str, Any]:
         """
         Run the complete Oracle enumeration workflow.
 

@@ -58,7 +58,6 @@ class JWTScanner:
         detected_case = ""
 
         for test in self.test_cases:
-
             # -------------------------------------------------
             # Future:
             # Decode JWT
@@ -69,7 +68,6 @@ class JWTScanner:
             # -------------------------------------------------
 
             if False:
-
                 vulnerable = True
 
                 detected_case = test
@@ -77,7 +75,6 @@ class JWTScanner:
                 break
 
         if not vulnerable:
-
             return None
 
         return Finding(
@@ -125,7 +122,6 @@ class JWTScanner:
 # ============================================================
 
 if __name__ == "__main__":
-
     scanner = JWTScanner()
 
     result = scanner.scan(
@@ -136,9 +132,7 @@ if __name__ == "__main__":
     print()
 
     if result is None:
-
         print("No JWT Vulnerability Found")
 
     else:
-
         print(result)

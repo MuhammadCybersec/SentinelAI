@@ -46,7 +46,6 @@ def crawl_target(
     base_domain = urlparse(response.url).netloc
 
     for tag in soup.find_all("a", href=True):
-
         href = str(tag["href"]).strip()
 
         if not href:
@@ -77,11 +76,9 @@ def crawl_target(
 # ==========================================================
 
 if __name__ == "__main__":
-
     urls = crawl_target("https://bugcrowd.com")
 
     print(f"Internal URLs: {len(urls)}")
 
     for url in urls:
-
         print(url)

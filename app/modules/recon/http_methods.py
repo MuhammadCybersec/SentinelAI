@@ -30,9 +30,7 @@ def detect_http_methods(target: str) -> list[str]:
     supported: list[str] = []
 
     for method in COMMON_METHODS:
-
         try:
-
             response = http.session.request(
                 method=method,
                 url=target,
@@ -57,7 +55,6 @@ def detect_http_methods(target: str) -> list[str]:
 # ============================================================
 
 if __name__ == "__main__":
-
     target = "https://bugcrowd.com"
 
     methods = detect_http_methods(target)

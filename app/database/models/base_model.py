@@ -18,12 +18,10 @@ Common base model inherited by all ORM models.
 # ===========================================================
 
 import uuid
-
 from datetime import datetime
 
 from sqlalchemy import DateTime
-from sqlalchemy.orm import Mapped
-from sqlalchemy.orm import mapped_column
+from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database.base import Base
 
@@ -32,6 +30,7 @@ from app.database.base import Base
 # Base Model
 # ===========================================================
 
+
 class BaseModel(Base):
     """
     Base model for every database entity.
@@ -39,23 +38,12 @@ class BaseModel(Base):
 
     __abstract__ = True
 
-    id: Mapped[str] = mapped_column(
-        primary_key=True,
-        default=lambda: str(uuid.uuid4())
-    )
+    id: Mapped[str] = mapped_column(primary_key=True, default=lambda: str(uuid.uuid4()))
 
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime,
-        default=datetime.utcnow
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime,
-        default=datetime.utcnow,
-        onupdate=datetime.utcnow
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
     )
 
-    deleted_at: Mapped[datetime | None] = mapped_column(
-        DateTime,
-        nullable=True
-    )
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)

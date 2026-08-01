@@ -15,9 +15,9 @@ security reports from analysis results.
 
 from __future__ import annotations
 
+from app.modules.reporting.ai_report import AIReport
 from app.modules.reporting.html_report import HTMLReport
 from app.modules.reporting.pdf_report import PDFReport
-from app.modules.reporting.ai_report import AIReport
 
 
 class ReportEngine:
@@ -68,7 +68,6 @@ class ReportEngine:
 # ===========================================================
 
 if __name__ == "__main__":
-
     sample_analysis = {
         "target": "https://bugcrowd.com",
         "summary": {
@@ -121,7 +120,6 @@ if __name__ == "__main__":
     print("-" * 60)
 
     for name in reports:
-
         print(f"✔ {name}")
 
     print()

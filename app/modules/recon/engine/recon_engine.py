@@ -116,7 +116,6 @@ class ReconEngine:
 # ============================================================
 
 if __name__ == "__main__":
-
     engine = ReconEngine()
 
     result = engine.run("https://bugcrowd.com")

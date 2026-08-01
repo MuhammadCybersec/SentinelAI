@@ -81,9 +81,7 @@ USER_AGENTS = [
 # ===========================================================
 
 DEFAULT_HEADERS = {
-    "Accept": (
-        "text/html," "application/xhtml+xml," "application/xml;q=0.9," "*/*;q=0.8"
-    ),
+    "Accept": ("text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"),
     "Accept-Encoding": ("gzip, deflate, br"),
     "Accept-Language": ("en-US,en;q=0.9"),
     "Connection": "keep-alive",
@@ -220,7 +218,6 @@ class RequestEngine:
         request_headers["User-Agent"] = self.random_user_agent()
 
         if headers:
-
             request_headers.update(
                 headers,
             )
@@ -239,7 +236,6 @@ class RequestEngine:
         """
 
         if self.session is not None:
-
             return self.session
 
         self.logger.debug(
@@ -255,7 +251,6 @@ class RequestEngine:
         }
 
         if self.proxy is not None:
-
             client_args["proxy"] = self.proxy
 
             self.logger.debug(
@@ -285,7 +280,6 @@ class RequestEngine:
         """
 
         if self.session is None:
-
             return self.create_session()
 
         return self.session
@@ -302,7 +296,6 @@ class RequestEngine:
         """
 
         if self.session is not None:
-
             self.session.close()
 
             self.session = None
@@ -472,7 +465,6 @@ class RequestEngine:
         headers = self.build_headers(headers)
 
         if self.before_request_hook:
-
             self.before_request_hook(
                 method,
                 url,
@@ -496,7 +488,6 @@ class RequestEngine:
                 self.response_count += 1
 
                 if self.after_request_hook:
-
                     self.after_request_hook(
                         response,
                     )

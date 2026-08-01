@@ -62,7 +62,6 @@ class FileUploadScanner:
         detected_file = ""
 
         for file_name in self.test_files:
-
             # -------------------------------------------------
             # Future:
             # Upload test file
@@ -72,7 +71,6 @@ class FileUploadScanner:
             # -------------------------------------------------
 
             if False:
-
                 vulnerable = True
 
                 detected_file = file_name
@@ -80,7 +78,6 @@ class FileUploadScanner:
                 break
 
         if not vulnerable:
-
             return None
 
         return Finding(
@@ -128,7 +125,6 @@ class FileUploadScanner:
 # ============================================================
 
 if __name__ == "__main__":
-
     scanner = FileUploadScanner()
 
     result = scanner.scan(
@@ -139,9 +135,7 @@ if __name__ == "__main__":
     print()
 
     if result is None:
-
         print("No File Upload Vulnerability Found")
 
     else:
-
         print(result)

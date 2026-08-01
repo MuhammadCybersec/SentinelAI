@@ -121,7 +121,6 @@ class RecommendationEngine:
         recommendations: list[dict] = []
 
         for finding in findings:
-
             recommendations.append(self._build(finding))
 
         return recommendations
@@ -132,7 +131,6 @@ class RecommendationEngine:
 # ===========================================================
 
 if __name__ == "__main__":
-
     sample_findings = [
         Finding(
             id="HDR-001",
@@ -209,7 +207,6 @@ if __name__ == "__main__":
     print()
 
     for item in recommendations:
-
         print("-" * 60)
 
         print(f"Finding      : {item['title']}")
@@ -222,22 +219,19 @@ if __name__ == "__main__":
 
         print(f"Fix Time     : {item['estimated_fix_time']}")
 
-        print(f"Recommendation:")
+        print("Recommendation:")
 
         print(f"  {item['recommendation']}")
 
         print()
 
         if item["references"]:
-
             print("References:")
 
             for ref in item["references"]:
-
                 print(f"  - {ref}")
 
         else:
-
             print("References: None")
 
         print()

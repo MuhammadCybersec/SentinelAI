@@ -15,7 +15,6 @@ SQL Injection Scanner.
 from __future__ import annotations
 
 from app.database.models.finding import Finding
-
 from app.modules.scanner.payload.sql_payloads import (
     get_payloads,
 )
@@ -67,14 +66,12 @@ class SQLiScanner:
         detected_payload = ""
 
         for payload in self.payloads:
-
             # Future:
             # Inject payload into parameters
             # Send request
             # Compare responses
 
             if False:
-
                 vulnerable = True
 
                 detected_payload = payload
@@ -82,7 +79,6 @@ class SQLiScanner:
                 break
 
         if not vulnerable:
-
             return None
 
         # -------------------------------------------------
@@ -130,7 +126,6 @@ class SQLiScanner:
 # ============================================================
 
 if __name__ == "__main__":
-
     scanner = SQLiScanner()
 
     result = scanner.scan(
@@ -141,9 +136,7 @@ if __name__ == "__main__":
     print()
 
     if result is None:
-
         print("No SQL Injection Found")
 
     else:
-
         print(result)

@@ -56,7 +56,6 @@ class CORSScanner:
         detected_origin = ""
 
         for origin in self.test_origins:
-
             # -------------------------------------------------
             # Future:
             # Send request with Origin header
@@ -65,7 +64,6 @@ class CORSScanner:
             # -------------------------------------------------
 
             if False:
-
                 vulnerable = True
 
                 detected_origin = origin
@@ -73,14 +71,13 @@ class CORSScanner:
                 break
 
         if not vulnerable:
-
             return None
 
         return Finding(
             project_id=project_id,
             title="CORS Misconfiguration",
             description=(
-                "Potential Cross-Origin Resource Sharing " "misconfiguration detected."
+                "Potential Cross-Origin Resource Sharing misconfiguration detected."
             ),
             severity=self.severity,
             cvss=6.5,
@@ -122,7 +119,6 @@ class CORSScanner:
 # ============================================================
 
 if __name__ == "__main__":
-
     scanner = CORSScanner()
 
     result = scanner.scan(
@@ -133,9 +129,7 @@ if __name__ == "__main__":
     print()
 
     if result is None:
-
         print("No CORS Misconfiguration Found")
 
     else:
-
         print(result)

@@ -3,21 +3,9 @@ Attack Planning Helpers
 Phase 20
 """
 
-import logging
-from typing import Any, Dict, Optional
-
-from .attack_planner import (
-    AttackPlanner,
-    AttackPlanResult,
-    ExploitationStrategy,
-    RiskLevel,
-)
-
 
 class OracleAttackHelper:
     """Attack planning helper functions."""
-
-    pass
 
 
 def plan_attack_impl(oracle_enum, *args, **kwargs):

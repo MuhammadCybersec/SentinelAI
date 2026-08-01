@@ -97,11 +97,9 @@ class Analyzer:
         }
 
         for header in missing:
-
             template = mapping.get(header)
 
             if template:
-
                 self._create_finding(
                     template_id=template,
                     target=target,
@@ -130,7 +128,6 @@ class Analyzer:
         )
 
         if detected:
-
             vendor = waf.get(
                 "vendor",
                 "Unknown",
@@ -143,7 +140,6 @@ class Analyzer:
             )
 
         else:
-
             self._create_finding(
                 template_id="WAF-002",
                 target=target,
@@ -167,7 +163,6 @@ class Analyzer:
             return
 
         for secret in secrets:
-
             secret_type = secret.get(
                 "type",
                 "Unknown",
@@ -186,7 +181,7 @@ class Analyzer:
             self._create_finding(
                 template_id="JS-001",
                 target=target,
-                evidence=(f"{secret_type}\n" f"{value}\n" f"{source}"),
+                evidence=(f"{secret_type}\n{value}\n{source}"),
             )
 
     # =======================================================
@@ -206,7 +201,6 @@ class Analyzer:
             return
 
         for api in apis:
-
             if isinstance(api, dict):
                 endpoint = api.get("url", "")
             else:
@@ -235,11 +229,9 @@ class Analyzer:
             return
 
         for parameter, urls in parameters.items():
-
             evidence = parameter
 
             if urls:
-
                 evidence += "\n"
 
                 evidence += "\n".join(urls)
@@ -267,7 +259,6 @@ class Analyzer:
             return
 
         for name, value in technologies.items():
-
             self._create_finding(
                 template_id="TECH-001",
                 target=target,
@@ -349,7 +340,6 @@ class Analyzer:
 # ===========================================================
 
 if __name__ == "__main__":
-
     analyzer = Analyzer()
 
     sample = {
@@ -406,7 +396,6 @@ if __name__ == "__main__":
     print()
 
     for finding in findings:
-
         print(f"[{finding.severity}] {finding.title}")
 
         print(f"Evidence : {finding.evidence}")

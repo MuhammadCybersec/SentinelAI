@@ -16,10 +16,10 @@ Engine into one complete analysis pipeline.
 from __future__ import annotations
 
 from app.modules.analysis.analyzer import Analyzer
-from app.modules.analysis.risk_score import RiskScore
 from app.modules.analysis.recommendation import (
     RecommendationEngine,
 )
+from app.modules.analysis.risk_score import RiskScore
 
 
 class AnalysisEngine:
@@ -105,7 +105,6 @@ class AnalysisEngine:
 # ===========================================================
 
 if __name__ == "__main__":
-
     sample_results = {
         "headers": {
             "missing": [
@@ -184,7 +183,6 @@ if __name__ == "__main__":
     print("-" * 60)
 
     for finding in report["findings"]:
-
         print(f"[{finding.severity}] {finding.title}")
 
     print()
@@ -194,5 +192,4 @@ if __name__ == "__main__":
     print("-" * 60)
 
     for recommendation in report["recommendations"]:
-
-        print(f"{recommendation['priority']:15}" f"{recommendation['title']}")
+        print(f"{recommendation['priority']:15}{recommendation['title']}")

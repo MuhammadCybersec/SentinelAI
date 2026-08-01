@@ -24,11 +24,12 @@ from sqlalchemy.orm import DeclarativeBase
 # Base Class
 # ===========================================================
 
+
 class Base(DeclarativeBase):
     """
     Base class inherited by every database model.
     """
-    pass
+
 
 """
 ===========================================================

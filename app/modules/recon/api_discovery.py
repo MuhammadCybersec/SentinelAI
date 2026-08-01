@@ -56,7 +56,6 @@ def discover_api(
     base_url = base_url.rstrip("/")
 
     for path in COMMON_API_PATHS:
-
         url = base_url + path
 
         response = http.get(url)
@@ -89,7 +88,6 @@ def discover_api(
             401,
             403,
         ):
-
             findings.append(
                 {
                     "path": path,
@@ -106,7 +104,6 @@ def discover_api(
 # ==========================================================
 
 if __name__ == "__main__":
-
     TARGET = "https://bugcrowd.com"
 
     results = discover_api(
@@ -124,8 +121,6 @@ if __name__ == "__main__":
         print("No API endpoints found.")
 
     else:
-
         for item in results:
-
-            print(f'{item["status"]:<4} {item["path"]}')
-            print(f'      {item["url"]}')
+            print(f"{item['status']:<4} {item['path']}")
+            print(f"      {item['url']}")

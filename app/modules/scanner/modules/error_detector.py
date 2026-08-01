@@ -13,11 +13,10 @@ Identifies DBMS from error messages.
 
 from __future__ import annotations
 
-import re
 import logging
-from typing import Optional, Dict, Any, Tuple
+import re
+from typing import Any
 
-from app.modules.scanner.core.base_scanner import BaseScanner
 from app.modules.scanner.modules.error_payloads import ErrorPayloadGenerator
 
 logger = logging.getLogger(__name__)
@@ -71,17 +70,17 @@ class ErrorDetector:
         self.target = target
         self.parameter: str = "category"
         self.payload_gen = ErrorPayloadGenerator()
-        self.dbms: Optional[str] = None
+        self.dbms: str | None = None
         self.is_error_vulnerable: bool = False
-        self.error_payload: Optional[str] = None
-        self.error_response: Optional[Any] = None
+        self.error_payload: str | None = None
+        self.error_response: Any | None = None
 
         self.statistics = {
             "requests": 0,
             "errors": 0,
         }
 
-    def detect(self) -> Tuple[bool, Optional[str]]:
+    def detect(self) -> tuple[bool, str | None]:
         """
         Detect if Error-Based SQL Injection is possible.
 
@@ -171,7 +170,7 @@ class ErrorDetector:
         """Detect DBMS from error message."""
         for dbms, signatures in self.DBMS_SIGNATURES.items():
             for signature in signatures:
-                if re.search(signature, body, re.I):
+                if re.search(signature, body, re.IGNORECASE):
                     return dbms
         return "Unknown"
 

@@ -4,9 +4,10 @@ Union-based SQL injection detection and exploitation.
 """
 
 import logging
+from typing import Any
+from urllib.parse import parse_qs, urlencode, urlparse
+
 import requests
-from typing import Optional, Dict, Any, Tuple
-from urllib.parse import urlparse, parse_qs, urlencode
 
 
 class UnionSQLi:
@@ -18,7 +19,7 @@ class UnionSQLi:
         self,
         session: requests.Session,
         base_url: str,
-        logger: Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ):
         """
         Initialize UnionSQLi module.
@@ -47,8 +48,8 @@ class UnionSQLi:
         return logger
 
     def _build_url(
-        self, injection_point: Optional[str] = None, payload: Optional[str] = None
-    ) -> Tuple[str, Dict]:
+        self, injection_point: str | None = None, payload: str | None = None
+    ) -> tuple[str, dict]:
         """
         Build URL with injection payload.
 
@@ -74,10 +75,10 @@ class UnionSQLi:
 
     def send_request(
         self,
-        injection_point: Optional[str] = None,
-        payload: Optional[str] = None,
-        params: Optional[Dict] = None,
-    ) -> Optional[requests.Response]:
+        injection_point: str | None = None,
+        payload: str | None = None,
+        params: dict | None = None,
+    ) -> requests.Response | None:
         """
         Send HTTP request with optional injection payload.
 
@@ -112,12 +113,12 @@ class UnionSQLi:
             return response
 
         except requests.RequestException as e:
-            self.logger.error(f"[UnionSQLi] Request failed: {str(e)}")
+            self.logger.error(f"[UnionSQLi] Request failed: {e!s}")
             return None
 
     def get_baseline(
-        self, injection_point: Optional[str] = None
-    ) -> Optional[requests.Response]:
+        self, injection_point: str | None = None
+    ) -> requests.Response | None:
         """
         Get baseline response without injection.
 
@@ -133,8 +134,8 @@ class UnionSQLi:
         self,
         injection_point: str,
         payload: str,
-        baseline: Optional[requests.Response] = None,
-    ) -> Dict[str, Any]:
+        baseline: requests.Response | None = None,
+    ) -> dict[str, Any]:
         """
         Test a single payload and return response with metadata.
 

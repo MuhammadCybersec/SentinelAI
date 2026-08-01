@@ -13,8 +13,6 @@ Supports Boolean-Based and Time-Based techniques.
 
 from __future__ import annotations
 
-from typing import Dict, List, Optional, Tuple
-
 
 class BlindPayloadGenerator:
     """
@@ -166,11 +164,11 @@ class BlindPayloadGenerator:
             dbms, self.TIME_EXTRACTION["MySQL"]
         )
 
-    def get_boolean_detection_pairs(self) -> List[Tuple[str, str]]:
+    def get_boolean_detection_pairs(self) -> list[tuple[str, str]]:
         """Get boolean detection payload pairs."""
         return self._detection_payloads.get("boolean", [])
 
-    def get_time_detection_payloads(self) -> List[str]:
+    def get_time_detection_payloads(self) -> list[str]:
         """Get time detection payloads."""
         return self._detection_payloads.get("time", [])
 
