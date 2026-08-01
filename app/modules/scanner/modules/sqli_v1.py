@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from app.database.models.finding import Finding
 
-from app.modules.scanner.payloads.sql_payloads import (
+from app.modules.scanner.payload.sql_payloads import (
     get_payloads,
 )
 

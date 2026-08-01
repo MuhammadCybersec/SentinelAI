@@ -23,7 +23,7 @@ from app.modules.recon.scope_manager import ScopeManager
 from app.modules.scanner.core.base_scanner import BaseScanner
 from app.modules.scanner.core.request_engine import RequestEngine
 from app.modules.scanner.core.response_analyzer import AnalysisResult, ResponseAnalyzer
-from app.modules.scanner.payloads.sql_payloads import get_payloads
+from app.modules.scanner.payload.sql_payloads import get_payloads
 
 # ==========================================================
 # Metadata
