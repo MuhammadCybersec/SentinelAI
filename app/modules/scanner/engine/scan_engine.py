@@ -22,84 +22,64 @@ Responsible for:
 
 from __future__ import annotations
 
-
 from app.database.models.finding import Finding
-
-from app.services.finding_service import FindingService
-
 from app.modules.recon.engine.recon_engine import (
     ReconEngine,
 )
-
 from app.modules.recon.scope_manager import (
     ScopeManager,
+)
+from app.modules.scanner.modules.clickjacking import (
+    ClickjackingScanner,
+)
+from app.modules.scanner.modules.cmd_injection import (
+    CommandInjectionScanner,
+)
+from app.modules.scanner.modules.cors import (
+    CORSScanner,
+)
+from app.modules.scanner.modules.crlf import (
+    CRLFScanner,
+)
+from app.modules.scanner.modules.csrf import (
+    CSRFScanner,
+)
+from app.modules.scanner.modules.file_upload import (
+    FileUploadScanner,
+)
+from app.modules.scanner.modules.host_header import (
+    HostHeaderScanner,
+)
+from app.modules.scanner.modules.idor import (
+    IDORScanner,
+)
+from app.modules.scanner.modules.jwt import (
+    JWTScanner,
+)
+from app.modules.scanner.modules.lfi import (
+    LFIScanner,
+)
+from app.modules.scanner.modules.open_redirect import (
+    OpenRedirectScanner,
+)
+from app.modules.scanner.modules.prototype_pollution import (
+    PrototypePollutionScanner,
+)
+from app.modules.scanner.modules.rfi import (
+    RFIScanner,
+)
+from app.modules.scanner.modules.sqli_v2 import SQLiV2Scanner as SQLiScanner
+from app.modules.scanner.modules.ssrf import (
+    SSRFScanner,
 )
 
 # ===========================================================
 # Scanner Modules
 # ===========================================================
-
 from app.modules.scanner.modules.xss_v1 import (
     XSSScanner,
 )
-
-from app.modules.scanner.modules.sqli_v2 import SQLiV2Scanner as SQLiScanner
-
-from app.modules.scanner.modules.ssrf import (
-    SSRFScanner,
-)
-
-from app.modules.scanner.modules.lfi import (
-    LFIScanner,
-)
-
-from app.modules.scanner.modules.rfi import (
-    RFIScanner,
-)
-
-from app.modules.scanner.modules.idor import (
-    IDORScanner,
-)
-
-from app.modules.scanner.modules.open_redirect import (
-    OpenRedirectScanner,
-)
-
-from app.modules.scanner.modules.cmd_injection import (
-    CommandInjectionScanner,
-)
-
-from app.modules.scanner.modules.crlf import (
-    CRLFScanner,
-)
-
-from app.modules.scanner.modules.cors import (
-    CORSScanner,
-)
-
-from app.modules.scanner.modules.csrf import (
-    CSRFScanner,
-)
-
-from app.modules.scanner.modules.clickjacking import (
-    ClickjackingScanner,
-)
-
-from app.modules.scanner.modules.file_upload import (
-    FileUploadScanner,
-)
-
-from app.modules.scanner.modules.jwt import (
-    JWTScanner,
-)
-
-from app.modules.scanner.modules.host_header import (
-    HostHeaderScanner,
-)
-
-from app.modules.scanner.modules.prototype_pollution import (
-    PrototypePollutionScanner,
-)
+from app.services.finding_service import FindingService
 
 # ===========================================================
 # Scan Engine
@@ -226,11 +206,9 @@ class ScanEngine:
         scoped_urls: list[str] = []
 
         for url in urls:
-
             if self.scope_manager.is_allowed(
                 url=url,
             ):
-
                 scoped_urls.append(
                     url,
                 )
@@ -253,15 +231,12 @@ class ScanEngine:
             scoped_urls,
             start=1,
         ):
-
             print(f"[{index}/{self.total_urls}] {url}")
 
             self.scanned_urls += 1
 
             for scanner in self.scanners:
-
                 try:
-
                     finding = self._run_scanner(
                         scanner=scanner,
                         project_id=project_id,
@@ -269,18 +244,14 @@ class ScanEngine:
                     )
 
                     if finding is not None:
-
                         self._save_finding(
                             finding,
                         )
 
-                except Exception as exc:
-
+                except (ValueError, RuntimeError) as exc:
                     self.failed_scanners += 1
 
-                    self.scan_errors.append(
-                        (f"{scanner.__class__.__name__}: " f"{exc}")
-                    )
+                    self.scan_errors.append(f"{scanner.__class__.__name__}: {exc}")
 
                     print(f"ERROR -> {scanner.__class__.__name__}")
 
@@ -325,7 +296,6 @@ class ScanEngine:
         """
 
         try:
-
             self.finding_service.create(
                 finding,
             )
@@ -334,9 +304,8 @@ class ScanEngine:
 
             print(f"      [+] {finding.title}")
 
-        except Exception as exc:
-
-            self.scan_errors.append((f"Save Finding Failed: " f"{exc}"))
+        except Exception as exc:  # noqa: BLE001
+            self.scan_errors.append(f"Save Finding Failed: {exc}")
 
             print("      [!] Failed to save finding")
 
@@ -365,12 +334,10 @@ class ScanEngine:
 # ===========================================================
 
 if __name__ == "__main__":
-
-    from app.database.session import SessionLocal
-
     from app.database.repositories.finding_repository import (
         FindingRepository,
     )
+    from app.database.session import SessionLocal
 
     print("=" * 60)
     print("Sentinel AI Scanner Engine Test")
@@ -380,7 +347,6 @@ if __name__ == "__main__":
     db = SessionLocal()
 
     try:
-
         repository = FindingRepository(
             db,
         )
@@ -415,15 +381,12 @@ if __name__ == "__main__":
         print(f"Errors              : {len(result['errors'])}")
 
         if result["errors"]:
-
             print()
 
             print("Error Log")
 
             for error in result["errors"]:
-
                 print(f" - {error}")
 
     finally:
-
         db.close()
