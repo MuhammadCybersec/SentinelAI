@@ -43,7 +43,7 @@ from app.modules.scanner.modules.xss_v1 import (
     XSSScanner,
 )
 
-from app.modules.scanner.modules.sqli_v2 import SQLiScanner
+from app.modules.scanner.modules.sqli_v2 import SQLiV2Scanner as SQLiScanner
 
 from app.modules.scanner.modules.ssrf import (
     SSRFScanner,
