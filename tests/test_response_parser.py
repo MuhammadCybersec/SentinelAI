@@ -1,32 +1,28 @@
-﻿# =============================================================================
+# =============================================================================
 # FILE: tests/test_response_parser.py
 # =============================================================================
 # DESCRIPTION: Unit tests for ResponseParser - Complete Version
 # =============================================================================
 
-import pytest
-import threading
-import json
-from typing import List, Dict, Any
-
-import sys
 import os
+import sys
+import threading
+from typing import Any
+
+import pytest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.services.ai.response_parser import (
-    ResponseParser,
-    ParsedResponse,
-    VulnerabilityFinding,
     AnalysisType,
-    SeverityLevel,
     ConfidenceLevel,
-    ResponseParserError,
     EmptyResponseError,
     InvalidJSONError,
-    MalformedResponseError,
-    MissingFieldError,
-    InvalidFieldTypeError,
+    ParsedResponse,
+    ResponseParser,
+    ResponseParserError,
+    SeverityLevel,
+    VulnerabilityFinding,
 )
 
 
@@ -150,7 +146,7 @@ def empty_response() -> str:
 
 
 @pytest.fixture
-def sample_finding_data() -> Dict[str, Any]:
+def sample_finding_data() -> dict[str, Any]:
     return {
         "title": "Test Finding",
         "description": "Test description",
@@ -687,8 +683,8 @@ class TestEdgeCases:
 
 class TestThreadSafety:
     def test_concurrent_parsing(self, parser: ResponseParser) -> None:
-        results: List[ParsedResponse] = []
-        errors: List[Exception] = []
+        results: list[ParsedResponse] = []
+        errors: list[Exception] = []
         lock = threading.Lock()
 
         def parse_response(index: int) -> None:
@@ -719,7 +715,7 @@ class TestThreadSafety:
             '{"findings": [{"name": "XSS", "details": "Cross-site scripting", "risk_level": "medium"}]}',
             '{"issues": [{"issue": "Buffer Overflow", "details": "Overflow", "severity": "critical"}]}',
         ]
-        errors: List[Exception] = []
+        errors: list[Exception] = []
         lock = threading.Lock()
 
         def parse_analysis(index: int) -> None:

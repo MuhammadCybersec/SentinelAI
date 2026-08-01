@@ -2,15 +2,14 @@
 Unit tests for XSS Scanner.
 """
 
-import pytest
 from unittest.mock import Mock, patch
-from datetime import datetime
+
+import pytest
 
 from app.modules.scanner.modules.xss_scanner import (
-    XSSScanner,
     LegacyXSSScanner,
+    XSSScanner,
 )
-from app.modules.scanner.core.base_scanner import ScanResult
 
 
 class TestXSSScanner:

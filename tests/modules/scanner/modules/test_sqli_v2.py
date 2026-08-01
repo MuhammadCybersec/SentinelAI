@@ -15,11 +15,12 @@ class TestSQLiV2Scanner:
     @pytest.fixture
     def scanner(self):
         """Create SQLiV2Scanner instance."""
-        with patch(
-            "app.modules.scanner.modules.sqli_v2.RequestEngine"
-        ) as mock_request, patch(
-            "app.modules.scanner.modules.sqli_v2.ResponseAnalyzer"
-        ) as mock_analyzer:
+        with (
+            patch("app.modules.scanner.modules.sqli_v2.RequestEngine") as mock_request,
+            patch(
+                "app.modules.scanner.modules.sqli_v2.ResponseAnalyzer"
+            ) as mock_analyzer,
+        ):
             mock_request.return_value = MagicMock()
             mock_analyzer.return_value = MagicMock()
             return SQLiV2Scanner(target="https://example.com/page?id=1")
@@ -212,11 +213,12 @@ class TestSQLiV2Scanner:
 
     def test_scan_invalid_target(self):
         """Test scan with invalid target."""
-        with patch(
-            "app.modules.scanner.modules.sqli_v2.RequestEngine"
-        ) as mock_request, patch(
-            "app.modules.scanner.modules.sqli_v2.ResponseAnalyzer"
-        ) as mock_analyzer:
+        with (
+            patch("app.modules.scanner.modules.sqli_v2.RequestEngine") as mock_request,
+            patch(
+                "app.modules.scanner.modules.sqli_v2.ResponseAnalyzer"
+            ) as mock_analyzer,
+        ):
             mock_request.return_value = MagicMock()
             mock_analyzer.return_value = MagicMock()
             scanner = SQLiV2Scanner(target="not_a_url")

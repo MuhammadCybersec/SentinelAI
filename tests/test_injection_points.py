@@ -4,21 +4,20 @@ Unit tests for Injection Point Discovery.
 Phase 8: Injection Point Discovery
 """
 
-import unittest
 import logging
-from unittest.mock import Mock, patch, PropertyMock
-import requests
-import json
-
-import sys
 import os
+import sys
+import unittest
+from unittest.mock import Mock
+
+import requests
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.modules.scanner.injection_points import (
+    InjectionDiscoveryResult,
     InjectionPointDiscovery,
     InjectionPointResult,
-    InjectionDiscoveryResult,
 )
 
 

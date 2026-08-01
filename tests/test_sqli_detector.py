@@ -4,18 +4,17 @@ Unit tests for SQL Injection detection.
 Phase 7: SQL Injection Detection
 """
 
-import unittest
 import logging
-from unittest.mock import Mock, patch, PropertyMock
-import requests
-import time
-
-import sys
 import os
+import sys
+import unittest
+from unittest.mock import Mock, PropertyMock, patch
+
+import requests
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app.modules.scanner.sqli_detector import SQLiDetector, SQLiDetectionResult
+from app.modules.scanner.sqli_detector import SQLiDetectionResult, SQLiDetector
 
 
 class TestSQLiDetectionResult(unittest.TestCase):

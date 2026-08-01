@@ -4,11 +4,10 @@ Unit tests for Payload Tamper Engine.
 Phase 15: Tamper Engine Tests
 """
 
-import unittest
 import logging
-from unittest.mock import Mock, patch
-import sys
 import os
+import sys
+import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 

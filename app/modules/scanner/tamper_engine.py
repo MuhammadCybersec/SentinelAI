@@ -245,14 +245,10 @@ class TamperEngine:
     def _tamper_random_case(self, payload: str) -> str:
         """
         Randomize case of alphabetic characters.
-
-        Args:
-            payload: Original payload
-
-        Returns:
-            str: Tampered payload
         """
+
         result = []
+
         for char in payload:
             if char.isalpha():
                 result.append(
@@ -260,7 +256,14 @@ class TamperEngine:
                 )
             else:
                 result.append(char)
-        return "".join(result)
+
+        tampered = "".join(result)
+
+        # Make sure payload is always modified
+        if tampered == payload:
+            tampered = payload.swapcase()
+
+        return tampered
 
     def _tamper_space_to_comment(self, payload: str) -> str:
         """

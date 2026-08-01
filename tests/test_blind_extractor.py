@@ -4,29 +4,27 @@
 Unit tests for Phase 18: Blind Data Extractor.
 """
 
-import unittest
-import logging
 import json
-import time
+import logging
+import os
+import sys
 import tempfile
-from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock, call
+import unittest
 from datetime import datetime, timedelta
+from pathlib import Path
+from unittest.mock import Mock, patch
 
 import requests
-
-import sys
-import os
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.modules.scanner.blind_extractor import (
-    BlindExtractor,
     BlindExtractionResult,
-    ExtractionTechnique,
-    ExtractionStatus,
+    BlindExtractor,
     CharacterSet,
     ExtractionCheckpoint,
+    ExtractionStatus,
+    ExtractionTechnique,
 )
 
 
@@ -637,81 +635,81 @@ class TestBlindExtractor(unittest.TestCase):
     def test_detect_best_technique(self):
         """Test best technique detection."""
         # Mock the detect methods instead of is_vulnerable
-        with patch.object(
-            self.extractor.boolean_engine, "detect_boolean_blind"
-        ) as mock_bool:
-            with patch.object(
-                self.extractor.time_engine, "detect_time_blind"
-            ) as mock_time:
-                # Create mock results
-                mock_bool_result = Mock()
-                mock_bool_result.is_vulnerable = True
-                mock_bool.return_value = mock_bool_result
+        with (
+            patch.object(
+                self.extractor.boolean_engine, "detect_boolean_blind"
+            ) as mock_bool,
+            patch.object(self.extractor.time_engine, "detect_time_blind") as mock_time,
+        ):
+            # Create mock results
+            mock_bool_result = Mock()
+            mock_bool_result.is_vulnerable = True
+            mock_bool.return_value = mock_bool_result
 
-                mock_time_result = Mock()
-                mock_time_result.is_vulnerable = False
-                mock_time.return_value = mock_time_result
+            mock_time_result = Mock()
+            mock_time_result.is_vulnerable = False
+            mock_time.return_value = mock_time_result
 
-                technique = self.extractor._detect_best_technique()
-                self.assertEqual(technique, ExtractionTechnique.BOOLEAN)
+            technique = self.extractor._detect_best_technique()
+            self.assertEqual(technique, ExtractionTechnique.BOOLEAN)
 
     def test_detect_best_technique_time(self):
         """Test best technique detection for time-based."""
-        with patch.object(
-            self.extractor.boolean_engine, "detect_boolean_blind"
-        ) as mock_bool:
-            with patch.object(
-                self.extractor.time_engine, "detect_time_blind"
-            ) as mock_time:
-                mock_bool_result = Mock()
-                mock_bool_result.is_vulnerable = False
-                mock_bool.return_value = mock_bool_result
+        with (
+            patch.object(
+                self.extractor.boolean_engine, "detect_boolean_blind"
+            ) as mock_bool,
+            patch.object(self.extractor.time_engine, "detect_time_blind") as mock_time,
+        ):
+            mock_bool_result = Mock()
+            mock_bool_result.is_vulnerable = False
+            mock_bool.return_value = mock_bool_result
 
-                mock_time_result = Mock()
-                mock_time_result.is_vulnerable = True
-                mock_time.return_value = mock_time_result
+            mock_time_result = Mock()
+            mock_time_result.is_vulnerable = True
+            mock_time.return_value = mock_time_result
 
-                technique = self.extractor._detect_best_technique()
-                self.assertEqual(technique, ExtractionTechnique.TIME)
+            technique = self.extractor._detect_best_technique()
+            self.assertEqual(technique, ExtractionTechnique.TIME)
 
     def test_detect_best_technique_hybrid(self):
         """Test best technique detection for hybrid."""
-        with patch.object(
-            self.extractor.boolean_engine, "detect_boolean_blind"
-        ) as mock_bool:
-            with patch.object(
-                self.extractor.time_engine, "detect_time_blind"
-            ) as mock_time:
-                mock_bool_result = Mock()
-                mock_bool_result.is_vulnerable = True
-                mock_bool.return_value = mock_bool_result
+        with (
+            patch.object(
+                self.extractor.boolean_engine, "detect_boolean_blind"
+            ) as mock_bool,
+            patch.object(self.extractor.time_engine, "detect_time_blind") as mock_time,
+        ):
+            mock_bool_result = Mock()
+            mock_bool_result.is_vulnerable = True
+            mock_bool.return_value = mock_bool_result
 
-                mock_time_result = Mock()
-                mock_time_result.is_vulnerable = True
-                mock_time.return_value = mock_time_result
+            mock_time_result = Mock()
+            mock_time_result.is_vulnerable = True
+            mock_time.return_value = mock_time_result
 
-                technique = self.extractor._detect_best_technique()
-                self.assertEqual(technique, ExtractionTechnique.HYBRID)
+            technique = self.extractor._detect_best_technique()
+            self.assertEqual(technique, ExtractionTechnique.HYBRID)
 
     def test_detect_best_technique_none(self):
         """Test best technique detection when none available."""
-        with patch.object(
-            self.extractor.boolean_engine, "detect_boolean_blind"
-        ) as mock_bool:
-            with patch.object(
-                self.extractor.time_engine, "detect_time_blind"
-            ) as mock_time:
-                mock_bool_result = Mock()
-                mock_bool_result.is_vulnerable = False
-                mock_bool.return_value = mock_bool_result
+        with (
+            patch.object(
+                self.extractor.boolean_engine, "detect_boolean_blind"
+            ) as mock_bool,
+            patch.object(self.extractor.time_engine, "detect_time_blind") as mock_time,
+        ):
+            mock_bool_result = Mock()
+            mock_bool_result.is_vulnerable = False
+            mock_bool.return_value = mock_bool_result
 
-                mock_time_result = Mock()
-                mock_time_result.is_vulnerable = False
-                mock_time.return_value = mock_time_result
+            mock_time_result = Mock()
+            mock_time_result.is_vulnerable = False
+            mock_time.return_value = mock_time_result
 
-                # Should default to boolean
-                technique = self.extractor._detect_best_technique()
-                self.assertEqual(technique, ExtractionTechnique.BOOLEAN)
+            # Should default to boolean
+            technique = self.extractor._detect_best_technique()
+            self.assertEqual(technique, ExtractionTechnique.BOOLEAN)
 
 
 class TestBlindExtractorParallel(unittest.TestCase):

@@ -4,13 +4,13 @@ Unit tests for Oracle database and environment enumeration.
 Phase 6: Oracle Database & Environment Enumeration
 """
 
-import unittest
 import logging
-from unittest.mock import Mock, patch, PropertyMock
-import requests
-
-import sys
 import os
+import sys
+import unittest
+from unittest.mock import Mock, PropertyMock, patch
+
+import requests
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -428,8 +428,8 @@ class TestOracleDatabaseEnumerator(unittest.TestCase):
         enumerator.enumerate_service_name = lambda x: "orcl.domain.com"
         enumerator.enumerate_hostname = lambda x: "server.domain.com"
         enumerator.enumerate_global_name = lambda x: "orcl.domain.com"
-        enumerator.enumerate_oracle_home = (
-            lambda x: "/u01/app/oracle/product/19.0.0/dbhome_1"
+        enumerator.enumerate_oracle_home = lambda x: (
+            "/u01/app/oracle/product/19.0.0/dbhome_1"
         )
         enumerator.enumerate_platform = lambda x: "Linux x86_64"
         enumerator.enumerate_operating_system = lambda x: "Linux"
@@ -453,8 +453,8 @@ class TestOracleDatabaseEnumerator(unittest.TestCase):
         enumerator.enumerate_components = lambda x: ["JAVA", "XML"]
         enumerator.enumerate_options = lambda x: ["RAC", "PARTITIONING"]
         enumerator.enumerate_edition = lambda x: "Enterprise Edition"
-        enumerator.enumerate_full_version = (
-            lambda x: "Oracle Database 19c Enterprise Edition Release 19.3.0.0.0"
+        enumerator.enumerate_full_version = lambda x: (
+            "Oracle Database 19c Enterprise Edition Release 19.3.0.0.0"
         )
 
         result = enumerator.enumerate_all(self.injection_point)

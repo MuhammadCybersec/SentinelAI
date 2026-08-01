@@ -4,17 +4,17 @@ Unit tests for WAF Detection & Fingerprinting Engine.
 Phase 14: WAF Detection
 """
 
-import unittest
 import logging
-from unittest.mock import Mock, patch, PropertyMock
-import requests
-
-import sys
 import os
+import sys
+import unittest
+from unittest.mock import Mock, PropertyMock, patch
+
+import requests
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app.modules.scanner.waf_detector import WAFDetector, WAFDetectionResult
+from app.modules.scanner.waf_detector import WAFDetectionResult, WAFDetector
 
 
 class TestWAFDetectionResult(unittest.TestCase):

@@ -4,13 +4,13 @@ Unit tests for Oracle data extraction.
 Phase 4: Oracle Data Extraction
 """
 
-import unittest
 import logging
-from unittest.mock import Mock, patch, PropertyMock
-import requests
-
-import sys
 import os
+import sys
+import unittest
+from unittest.mock import Mock, PropertyMock, patch
+
+import requests
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 

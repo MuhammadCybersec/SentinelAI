@@ -2,21 +2,18 @@
 Tests for AI Verification Service.
 """
 
-from unittest.mock import MagicMock, patch
-from uuid import UUID
+from unittest.mock import MagicMock
 
 import pytest
 
 from app.modules.scanner.services.ai_verification_service import (
     AIVerificationService,
+    CVSSInfo,
+    SeverityLevel,
     VerificationConfig,
     VerificationContext,
     VerificationResult,
-    VerificationStats,
     VerificationStatus,
-    SeverityLevel,
-    CVSSInfo,
-    CWEInfo,
 )
 
 

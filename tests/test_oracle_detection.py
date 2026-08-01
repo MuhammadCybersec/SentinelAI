@@ -4,18 +4,18 @@ Unit tests for Oracle detection module.
 Phase 1: Oracle Detection
 """
 
-import unittest
 import logging
-from unittest.mock import Mock, patch, MagicMock, PropertyMock
-import requests
-
-import sys
 import os
+import sys
+import unittest
+from unittest.mock import Mock, PropertyMock, patch
+
+import requests
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app.modules.scanner.oracle_enum import OracleEnum, DetectionResult
-from app.modules.scanner.payloads import OracleDetectionPayloads, DetectionPayload
+from app.modules.scanner.oracle_enum import DetectionResult, OracleEnum
+from app.modules.scanner.payloads import OracleDetectionPayloads
 
 # ============================================================
 # TEST CLASS 1: Payload Tests

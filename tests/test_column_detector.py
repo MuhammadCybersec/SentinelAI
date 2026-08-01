@@ -4,20 +4,19 @@ Unit tests for Column Detection and Reflective Column Discovery.
 Phase 9: Column Detection
 """
 
-import unittest
 import logging
-from unittest.mock import Mock, patch, PropertyMock
-import requests
-import time
-
-import sys
 import os
+import sys
+import unittest
+from unittest.mock import Mock, PropertyMock, patch
+
+import requests
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.modules.scanner.column_detector import (
-    OracleColumnDetector,
     ColumnDetectionResult,
+    OracleColumnDetector,
 )
 
 

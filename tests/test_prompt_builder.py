@@ -13,26 +13,26 @@ Tests include:
 - Edge cases
 """
 
-import pytest
-import threading
-import sys
 import os
-from typing import Dict, Any, List
+import sys
+import threading
+
+import pytest
 
 # Add the project root to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.services.ai.prompt_builder import (
+    EscapeStrategy,
+    InvalidTemplateError,
+    MissingVariableError,
+    Prompt,
     PromptBuilder,
+    PromptBuilderError,
     PromptTemplate,
     PromptType,
-    EscapeStrategy,
-    PromptBuilderError,
     TemplateNotFoundError,
-    MissingVariableError,
-    InvalidTemplateError,
     UnsafeValueError,
-    Prompt,
 )
 
 # =============================================================================
@@ -61,7 +61,7 @@ def sample_template() -> PromptTemplate:
 
 
 @pytest.fixture
-def builtin_template_names() -> List[str]:
+def builtin_template_names() -> list[str]:
     """Get names of built-in templates."""
     return [
         "sql_injection_analysis",
@@ -222,7 +222,7 @@ class TestPromptBuilder:
     def test_builtin_templates_exist(
         self,
         builder: PromptBuilder,
-        builtin_template_names: List[str],
+        builtin_template_names: list[str],
     ) -> None:
         """Test that built-in templates exist."""
         for name in builtin_template_names:
@@ -724,7 +724,7 @@ class TestThreadSafety:
         )
         builder.register_template(template)
 
-        results: List[Prompt] = []
+        results: list[Prompt] = []
 
         def build_prompt(index: int) -> None:
             prompt = builder.build_prompt(

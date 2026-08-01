@@ -4,74 +4,56 @@
 # DESCRIPTION: Unit tests for AI service package initialization
 # =============================================================================
 
-import pytest
-import sys
 import os
-from typing import List, Set
+import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Import the package
+# Note: ResponseParser is not exported from the package,
+# but it exists in the response_parser module
+import app.services.ai as ai_package
 from app.services.ai import (
+    AIAuthenticationError,
+    # Client Layer
+    AIClient,
+    AIConfigurationError,
+    AIConnectionError,
+    AIModelDisabledError,
+    AIModelError,
+    AIModelNotFoundError,
+    AIParsingError,
+    AIProviderError,
+    AIRateLimitError,
+    AIRequestError,
+    AIRequestTimeoutError,
+    AIResponseError,
     # Service Layer
     AIService,
     AIServiceError,
-    ModelNotConfiguredError,
-    PromptBuildError,
+    AnalysisType,
+    ConfidenceLevel,
+    EscapeStrategy,
     GenerationError,
-    ParseError,
-    # Client Layer
-    AIClient,
-    AIClientError,
-    # Model Management
-    ModelManager,
     ModelConfig,
+    ModelManager,
+    ModelNotConfiguredError,
     ModelProvider,
+    ParsedResponse,
+    ParseError,
+    Prompt,
     # Prompt Builder
     PromptBuilder,
     PromptBuilderError,
+    PromptBuildError,
     PromptTemplate,
-    Prompt,
-    PromptType,
-    EscapeStrategy,
-    TemplateNotFoundError,
-    MissingVariableError,
-    InvalidTemplateError,
-    UnsafeValueError,
-    # Response Parser
-    ResponseParserError,
-    ParsedResponse,
-    VulnerabilityFinding,
-    AnalysisType,
-    SeverityLevel,
-    ConfidenceLevel,
-    EmptyResponseError,
-    InvalidJSONError,
-    MalformedResponseError,
-    MissingFieldError,
-    InvalidFieldTypeError,
-    # Exceptions
-    AIConfigurationError,
-    AIConnectionError,
-    AIResponseError,
-    AIProviderError,
-    AIModelError,
-    AIModelNotFoundError,
-    AIModelDisabledError,
-    AIRequestError,
-    AIRequestTimeoutError,
-    AIRateLimitError,
-    AIAuthenticationError,
-    AIParsingError,
     PromptTemplateError,
+    PromptType,
     PromptValidationError,
+    ResponseParserError,
+    SeverityLevel,
+    VulnerabilityFinding,
 )
-
-# Note: ResponseParser is not exported from the package,
-# but it exists in the response_parser module
-from app.services.ai.response_parser import ResponseParser
-
-import app.services.ai as ai_package
 
 # =============================================================================
 # TEST: PACKAGE IMPORTS
@@ -150,9 +132,9 @@ class TestPackageImports:
         }
 
         all_set = set(ai_package.__all__)
-        assert (
-            all_set == expected_names
-        ), f"Missing: {expected_names - all_set}, Extra: {all_set - expected_names}"
+        assert all_set == expected_names, (
+            f"Missing: {expected_names - all_set}, Extra: {all_set - expected_names}"
+        )
 
     def test_no_duplicate_exports(self) -> None:
         """Test that there are no duplicate exports in __all__."""
@@ -368,9 +350,9 @@ class TestWildcardImports:
         public_names = set(ai_package.__all__)
         all_defined = set(dir(ai_package))
         public_defined = {name for name in all_defined if not name.startswith("_")}
-        assert public_names.issubset(
-            public_defined
-        ), "Some names in __all__ are not defined"
+        assert public_names.issubset(public_defined), (
+            "Some names in __all__ are not defined"
+        )
 
 
 # =============================================================================

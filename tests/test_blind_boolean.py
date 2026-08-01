@@ -4,19 +4,19 @@ Unit tests for Boolean-Based Blind SQL Injection Detection.
 Phase 11: Boolean Blind Detection
 """
 
-import unittest
 import logging
-from unittest.mock import Mock, patch, PropertyMock
-import requests
-
-import sys
 import os
+import sys
+import unittest
+from unittest.mock import Mock, PropertyMock, patch
+
+import requests
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.modules.scanner.blind_boolean import (
-    OracleBlindBooleanEngine,
     BlindBooleanResult,
+    OracleBlindBooleanEngine,
 )
 
 

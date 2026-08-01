@@ -2,15 +2,12 @@
 Unit tests for AIAnalysisService.
 """
 
-import pytest
-import threading
-import json
-from unittest.mock import Mock
-from datetime import datetime
-from typing import List
-
-import sys
 import os
+import sys
+import threading
+from unittest.mock import Mock
+
+import pytest
 
 sys.path.insert(
     0,
@@ -19,31 +16,29 @@ sys.path.insert(
     ),
 )
 
-from app.modules.scanner.services.ai_analysis_service import (
-    AIAnalysisService,
-    ScannerFinding,
-    ScanContext,
-)
 from app.modules.scanner.exceptions.ai_analysis_exceptions import (
     ScannerAIAnalysisError,
-    ScannerAINotConfiguredError,
     ScannerAIConnectionError,
+    ScannerAINotConfiguredError,
     ScannerAIParsingError,
     ScannerAIReportError,
 )
+from app.modules.scanner.services.ai_analysis_service import (
+    AIAnalysisService,
+    ScanContext,
+    ScannerFinding,
+)
 from app.services.ai import (
-    AIService,
-    ParsedResponse,
-    AnalysisType,
-    SeverityLevel,
-    ConfidenceLevel,
-    VulnerabilityFinding,
-    AIServiceError,
-    ModelNotConfiguredError,
     AIConnectionError,
     AIParsingError,
-    GenerationError,
-    ParseError,
+    AIService,
+    AIServiceError,
+    AnalysisType,
+    ConfidenceLevel,
+    ModelNotConfiguredError,
+    ParsedResponse,
+    SeverityLevel,
+    VulnerabilityFinding,
 )
 
 

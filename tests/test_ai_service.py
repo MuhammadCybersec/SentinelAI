@@ -4,44 +4,39 @@
 # DESCRIPTION: Unit tests for AIService - Complete Fixed Version
 # =============================================================================
 
-import pytest
-import threading
-from unittest.mock import Mock, patch, MagicMock, call
-from typing import List, Dict, Any
-
-import sys
 import os
+import sys
+import threading
+from unittest.mock import Mock, patch
+
+import pytest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+from app.services.ai.ai_client import AIClient, AIClientError
 from app.services.ai.ai_service import (
     AIService,
-    AIServiceError,
-    ModelNotConfiguredError,
-    PromptBuildError,
     GenerationError,
+    ModelNotConfiguredError,
     ParseError,
+    PromptBuildError,
 )
+from app.services.ai.model_manager import ModelConfig, ModelManager, ModelProvider
 from app.services.ai.prompt_builder import (
-    PromptBuilder,
-    PromptTemplate,
-    PromptType,
     Prompt,
+    PromptBuilder,
     PromptBuilderError,
+    PromptType,
 )
 from app.services.ai.response_parser import (
-    ResponseParser,
-    ParsedResponse,
     AnalysisType,
-    SeverityLevel,
     ConfidenceLevel,
-    VulnerabilityFinding,
+    ParsedResponse,
+    ResponseParser,
     ResponseParserError,
-    EmptyResponseError,
-    InvalidJSONError,
+    SeverityLevel,
+    VulnerabilityFinding,
 )
-from app.services.ai.model_manager import ModelManager, ModelConfig, ModelProvider
-from app.services.ai.ai_client import AIClient, AIClientError
 
 # =============================================================================
 # FIXTURES

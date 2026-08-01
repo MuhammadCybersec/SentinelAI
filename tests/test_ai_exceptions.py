@@ -4,38 +4,35 @@
 # DESCRIPTION: Unit tests for AI service exceptions
 # =============================================================================
 
-import pytest
 import json
-from typing import Dict, Any
-
-import sys
 import os
+import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.services.ai.exceptions import (
-    AIServiceError,
+    AIAuthenticationError,
     AIConfigurationError,
     AIConnectionError,
-    AIResponseError,
-    AIProviderError,
+    AIModelDisabledError,
     AIModelError,
     AIModelNotFoundError,
-    AIModelDisabledError,
+    AIParsingError,
+    AIProviderError,
+    AIRateLimitError,
     AIRequestError,
     AIRequestTimeoutError,
-    AIRateLimitError,
-    AIAuthenticationError,
-    AIParsingError,
+    AIResponseError,
+    AIServiceError,
+    EmptyResponseError,
+    InvalidFieldTypeError,
+    InvalidJSONError,
+    MalformedResponseError,
+    MissingFieldError,
     PromptBuilderError,
     PromptTemplateError,
     PromptValidationError,
     ResponseParserError,
-    InvalidJSONError,
-    EmptyResponseError,
-    MalformedResponseError,
-    MissingFieldError,
-    InvalidFieldTypeError,
 )
 
 # =============================================================================

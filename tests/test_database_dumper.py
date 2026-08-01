@@ -4,24 +4,22 @@ Unit tests for Database Dumper.
 Phase 17: Database Dumper Tests
 """
 
-import unittest
-import logging
-import json
 import csv
+import json
+import logging
+import os
 import sqlite3
-import time  # ADDED
-from unittest.mock import Mock, patch, PropertyMock
-import requests
-from pathlib import Path
-import tempfile
-import os
-
 import sys
-import os
+import tempfile
+import time  # ADDED
+import unittest
+from unittest.mock import Mock, PropertyMock, patch
+
+import requests
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app.modules.scanner.database_dumper import OracleDatabaseDumper, DatabaseDumpResult
+from app.modules.scanner.database_dumper import DatabaseDumpResult, OracleDatabaseDumper
 
 
 class TestDatabaseDumpResult(unittest.TestCase):
@@ -309,7 +307,6 @@ class TestOracleDatabaseDumper(unittest.TestCase):
 
     def test_track_progress(self):
         """Test progress tracking."""
-        import time
 
         dumper = OracleDatabaseDumper(self.session, self.base_url, self.injection_point)
 
@@ -453,7 +450,6 @@ class TestOracleDatabaseDumper(unittest.TestCase):
     @patch("app.modules.scanner.database_dumper.OracleSchemaEnumerator")
     def test_estimate_remaining_time(self, mock_schema_enumerator):
         """Test estimating remaining time."""
-        import time
 
         dumper = OracleDatabaseDumper(self.session, self.base_url, self.injection_point)
 

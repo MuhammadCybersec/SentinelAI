@@ -3,8 +3,8 @@ PortSwigger Lab #7: UNION Attack
 SQL injection UNION attack, retrieving data from other tables
 """
 
-import sys
 import os
+import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -31,13 +31,13 @@ def main():
     scanner.parameter = "category"  # Force category parameter
     findings = scanner.scan()
 
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print("RESULTS")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
     print(f"Findings: {len(findings)}")
 
     for f in findings:
-        print(f"\n  ✅ Vulnerability Found!")
+        print("\n  ✅ Vulnerability Found!")
         print(f"  Payload: {f.payload}")
         print(f"  Column Count: {f.column_count}")
         print(f"  Visible Columns: {f.visible_columns}")
@@ -48,7 +48,7 @@ def main():
             print(f"    Username: {row.get('username', 'N/A')}")
             print(f"    Password: {row.get('password', 'N/A')}")
 
-        print(f"  Evidence:")
+        print("  Evidence:")
         for evidence in f.evidence:
             print(f"    - {evidence}")
 

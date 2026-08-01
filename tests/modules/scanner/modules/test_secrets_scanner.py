@@ -2,14 +2,12 @@
 Tests for Secrets Scanner.
 """
 
-import json
 import tempfile
-from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
-from app.modules.scanner.modules.secrets_scanner import SecretsScanner, SecretFinding
+from app.modules.scanner.modules.secrets_scanner import SecretFinding, SecretsScanner
 
 
 class TestSecretsScanner:
@@ -300,7 +298,6 @@ class TestSecretsScanner:
     def test_scan_with_file(self, scanner):
         """Test scan with file."""
         import os
-        import tempfile
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as f:
             f.write("AKIAIOSFODNN7EXAMPLE")
