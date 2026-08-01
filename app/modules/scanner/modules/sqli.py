@@ -29,7 +29,7 @@ try:
     from app.modules.scanner.payload.sql_payloads import get_payloads
 except ImportError:
     # Fallback: define inline payloads or import from another location
-    from app.modules.scanner.payloads import get_sql_payloads as get_payloads
+    from app.modules.scanner.payload.sql_payloads import get_payloads
 
 # ==========================================================
 # Scanner Metadata
