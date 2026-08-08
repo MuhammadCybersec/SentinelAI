@@ -821,7 +821,7 @@ class BlindExtractor:
                         FROM {table_name}
                     ) WHERE rn = {row_idx + 1}
                 """
-                value, confidence = self.extract_string(query, 1000)
+                value, _confidence = self.extract_string(query, 1000)
 
                 if value is not None:
                     row[col] = value

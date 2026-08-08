@@ -446,7 +446,6 @@ class OracleBlindBooleanEngine:
             false_responses = []
             best_true = None
             best_false = None
-            best_confidence = 0
 
             # Limit payloads
             true_payloads = self.TRUE_PAYLOADS[: max_payloads // 2]
@@ -595,7 +594,7 @@ class OracleBlindBooleanEngine:
         """
         self.logger.info("[BlindBoolean] Comparing true/false conditions...")
 
-        baseline = self._get_baseline(injection_point)
+        self._get_baseline(injection_point)
 
         true_response = self._send_payload(injection_point, true_payload)
         false_response = self._send_payload(injection_point, false_payload)
@@ -663,7 +662,7 @@ class OracleBlindBooleanEngine:
         """
         self.logger.info("[BlindBoolean] Finding best true payload...")
 
-        baseline = self._get_baseline(injection_point)
+        self._get_baseline(injection_point)
         best_payload = None
         best_length = 0
 
@@ -689,7 +688,7 @@ class OracleBlindBooleanEngine:
         """
         self.logger.info("[BlindBoolean] Finding best false payload...")
 
-        baseline = self._get_baseline(injection_point)
+        self._get_baseline(injection_point)
         best_payload = None
         best_length = 0
 

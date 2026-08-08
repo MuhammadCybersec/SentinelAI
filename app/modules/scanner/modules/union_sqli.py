@@ -1492,10 +1492,9 @@ class UnionSQLiScanner(BaseScanner):
             return False
 
         # Must contain at least one letter
-        if not re.search(r"[a-zA-Z]", username) or not re.search(r"[a-zA-Z]", password):
-            return False
-
-        return True
+        return not (
+            not re.search(r"[a-zA-Z]", username) or not re.search(r"[a-zA-Z]", password)
+        )
 
     def _get_html_noise_list(self) -> list[str]:
         """Return list of HTML noise keywords."""

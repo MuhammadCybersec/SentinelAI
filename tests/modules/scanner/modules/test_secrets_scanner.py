@@ -362,11 +362,11 @@ class TestSecretsScanner:
 
     def test_duplicate_removal(self, scanner, sample_content):
         """Test duplicate removal during detection."""
-        findings1 = scanner.detect_secrets(sample_content, "test.txt")
+        scanner.detect_secrets(sample_content, "test.txt")
         # scanner._seen_secrets.clear()
 
         # Scan same content twice
-        findings2 = scanner.detect_secrets(sample_content, "test.txt")
+        scanner.detect_secrets(sample_content, "test.txt")
         assert scanner.statistics["duplicates_removed"] > 0
 
     def test_false_positive_filtering(self, scanner):

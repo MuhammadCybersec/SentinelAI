@@ -260,7 +260,7 @@ class OracleSignatures:
             List[OracleVersionSignature]: Matching signatures
         """
         matches = []
-        text_lower = text.lower()
+        text.lower()
 
         for sig in cls.VERSION_SIGNATURES:
             for pattern in sig.patterns:
@@ -282,7 +282,7 @@ class OracleSignatures:
             List[OracleEditionSignature]: Matching signatures
         """
         matches = []
-        text_lower = text.lower()
+        text.lower()
 
         for sig in cls.EDITION_SIGNATURES:
             for pattern in sig.patterns:

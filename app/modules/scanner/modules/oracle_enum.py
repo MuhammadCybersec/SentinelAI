@@ -196,7 +196,6 @@ class OracleEnum:
         """Enumerate tables using UNION SELECT table_name,NULL FROM user_tables."""
         tables: list[str] = []
         seen: set[str] = set()
-        consecutive_empty = 0
 
         # Try user_tables first
         self._log("[OracleEnum] Enumerating from user_tables...")

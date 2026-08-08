@@ -255,7 +255,7 @@ class TestOracleBlindBooleanEngine(unittest.TestCase):
 
         engine = OracleBlindBooleanEngine(self.session, self.base_url)
         engine.union_sqli = mock_instance
-        engine._send_payload = mock_send_payload = lambda inj, p: (
+        engine._send_payload = lambda inj, p: (
             true_response if "1=1" in p else false_response
         )
 

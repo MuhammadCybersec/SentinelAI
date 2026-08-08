@@ -270,7 +270,7 @@ class OracleTimeBlindEngine:
                 _, elapsed = self._send_payload_with_timing(injection_point, payload)
             else:
                 # Baseline measurement
-                baseline = self._get_baseline(injection_point)
+                self._get_baseline(injection_point)
                 start_time = time.time()
                 self.union_sqli.get_baseline(injection_point)
                 elapsed = time.time() - start_time
@@ -339,7 +339,7 @@ class OracleTimeBlindEngine:
     def detect_time_blind(
         self,
         injection_point: str,
-        delays: list[int] = None,
+        delays: list[int] | None = None,
         num_measurements: int = MEASUREMENTS_PER_TEST,
     ) -> TimeBlindResult:
         """
@@ -393,7 +393,6 @@ class OracleTimeBlindEngine:
             best_delay = 0
             best_payload = None
             best_confidence = 0
-            best_measurements = []
 
             for delay in delays:
                 self.logger.info(f"[TimeBlind] Testing {delay}s delay...")
@@ -429,7 +428,6 @@ class OracleTimeBlindEngine:
                             best_confidence = confidence
                             best_delay = measured_delay
                             best_payload = payload
-                            best_measurements = measurements
                             result.add_working_payload(payload)
 
                             self.logger.info(
@@ -584,7 +582,7 @@ class OracleTimeBlindEngine:
         self.logger.info(f"[TimeBlind] Verifying {expected_delay}s delay...")
 
         baseline = self.measure_baseline(injection_point, 3)
-        avg_time, measurements = self._measure_response_time(
+        avg_time, _measurements = self._measure_response_time(
             injection_point, payload, num_measurements
         )
 
@@ -649,7 +647,7 @@ class OracleTimeBlindEngine:
         return payloads
 
     def find_best_payload(
-        self, injection_point: str, delays: list[int] = None
+        self, injection_point: str, delays: list[int] | None = None
     ) -> tuple[str | None, float, int]:
         """
         Find the best payload.

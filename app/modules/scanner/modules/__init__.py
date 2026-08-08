@@ -100,20 +100,37 @@ try:
 except ImportError:
     PathTraversalScanner = None
 
-try:
-    from app.modules.scanner.modules.ssrf import SSRFScanner
-except ImportError:
-    SSRFScanner = None
+# ===========================================================
+# SSRF, LFI, RFI Scanners (Updated Imports)
+# ===========================================================
 
 try:
-    from app.modules.scanner.modules.lfi import LFIScanner
+    from app.modules.scanner.modules.ssrf_scanner import SSRFScanner
 except ImportError:
-    LFIScanner = None
+    try:
+        from app.modules.scanner.modules.ssrf import SSRFScanner
+    except ImportError:
+        SSRFScanner = None
 
 try:
-    from app.modules.scanner.modules.rfi import RFIScanner
+    from app.modules.scanner.modules.lfi_scanner import LFIScanner
 except ImportError:
-    RFIScanner = None
+    try:
+        from app.modules.scanner.modules.lfi import LFIScanner
+    except ImportError:
+        LFIScanner = None
+
+try:
+    from app.modules.scanner.modules.rfi_scanner import RFIScanner
+except ImportError:
+    try:
+        from app.modules.scanner.modules.rfi import RFIScanner
+    except ImportError:
+        RFIScanner = None
+
+# ===========================================================
+# XML & Template Injection
+# ===========================================================
 
 try:
     from app.modules.scanner.modules.xxe import XXEInjectionScanner
@@ -213,40 +230,40 @@ except ImportError:
 # ===========================================================
 
 __all__ = [
-    # SQL Injection
-    "SQLiScanner",
-    # XSS
-    "XSSScanner",
-    "LegacyXSSScanner",
+    "BlindBooleanScanner",
     # Blind Injection
     "BlindSQLiScanner",
-    "BlindBooleanScanner",
-    "TimeBasedScanner",
-    # Error Based
-    "ErrorBasedScanner",
-    # Injection Types
-    "CommandInjectionScanner",
-    "PathTraversalScanner",
-    "SSRFScanner",
-    "LFIScanner",
-    "RFIScanner",
-    "XXEInjectionScanner",
-    "SSTIScanner",
-    "LDAPInjectionScanner",
-    "NoSQLInjectionScanner",
-    # Authentication
-    "LoginBypassScanner",
-    "IDORScanner",
-    "JWTHijackingScanner",
-    # File & Upload
-    "FileUploadScanner",
     # Web Vulnerabilities
     "CORSScanner",
     "CSRFScanner",
     "ClickjackingScanner",
+    # Injection Types
+    "CommandInjectionScanner",
+    # Error Based
+    "ErrorBasedScanner",
+    # File & Upload
+    "FileUploadScanner",
     "HostHeaderScanner",
+    "IDORScanner",
+    "JWTHijackingScanner",
+    "LDAPInjectionScanner",
+    "LFIScanner",
+    "LegacyXSSScanner",
+    # Authentication
+    "LoginBypassScanner",
+    "NoSQLInjectionScanner",
     "OpenRedirectScanner",
+    "PathTraversalScanner",
     "PrototypePollutionScanner",
+    "RFIScanner",
+    # SQL Injection
+    "SQLiScanner",
+    "SSRFScanner",
+    "SSTIScanner",
+    "TimeBasedScanner",
     # WAF
     "WAFBypassScanner",
+    # XSS
+    "XSSScanner",
+    "XXEInjectionScanner",
 ]

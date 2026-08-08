@@ -296,7 +296,7 @@ class AttackPlanner:
 
             # Select fallback
             if len(sorted_strategies) > 1:
-                fallback_strategy, fallback_score = sorted_strategies[1]
+                fallback_strategy, _fallback_score = sorted_strategies[1]
                 result.fallback_strategy = fallback_strategy
 
             # Build execution order

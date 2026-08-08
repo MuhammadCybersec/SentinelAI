@@ -6,6 +6,7 @@ HTML parsing utilities for SQL injection detection.
 import re
 
 from bs4 import BeautifulSoup
+from typing import Any
 
 
 class HTMLParser:
@@ -86,7 +87,7 @@ class HTMLParser:
             return None
 
     @staticmethod
-    def response_diff(baseline: str, response: str) -> Dict[str, any]:
+    def response_diff(baseline: str, response: str) -> dict[str, Any]:
         """
         Compare two HTML responses and return differences.
 

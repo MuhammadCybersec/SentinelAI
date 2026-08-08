@@ -41,7 +41,7 @@ def discover_parameters(urls: list[str]) -> dict[str, list[str]]:
 
             query = parse_qs(parsed.query)
 
-            for parameter in query.keys():
+            for parameter in query:
                 if parameter not in parameters:
                     parameters[parameter] = []
 

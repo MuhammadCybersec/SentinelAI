@@ -794,7 +794,7 @@ class TestBlindExtractorEdgeCases(unittest.TestCase):
     def test_extract_character_invalid_technique(self):
         """Test character extraction with invalid technique."""
         # Should default to boolean
-        char, confidence = self.extractor.extract_character(
+        char, _confidence = self.extractor.extract_character(
             "SELECT 'A' FROM dual", position=0, technique=None
         )
 

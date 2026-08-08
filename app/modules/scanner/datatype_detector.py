@@ -61,7 +61,7 @@ class DataTypeDetectionResult:
             parts.append(f"Columns: {self.column_count}")
         if self.column_types:
             type_summary = {}
-            for idx, dtype in self.column_types.items():
+            for dtype in self.column_types.values():
                 type_summary[dtype] = type_summary.get(dtype, 0) + 1
             type_str = ", ".join([f"{k}: {v}" for k, v in type_summary.items()])
             parts.append(f"Types: {type_str}")

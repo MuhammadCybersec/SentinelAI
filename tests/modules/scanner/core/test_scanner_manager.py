@@ -260,7 +260,7 @@ class TestScannerManager:
         assert manager._statistics.low == 1
 
     @patch("app.modules.scanner.core.scanner_manager.XSSScanner")
-    @patch("app.modules.scanner.core.scanner_manager.SQLiV2Scanner")
+    @patch("app.modules.scanner.modules.sqli.SQLiScanner")
     def test_run_scanners_parallel(self, mock_sqli, mock_xss, manager, sample_target):
         """Test parallel scanner execution."""
         # Setup XSS Scanner mock with scan method

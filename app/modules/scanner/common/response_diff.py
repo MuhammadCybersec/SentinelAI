@@ -5,6 +5,7 @@ Response diff utilities for SQL injection detection.
 """
 
 import difflib
+from typing import Any
 
 from .html_parser import HTMLParser
 
@@ -103,7 +104,7 @@ class ResponseDiff:
 
         return list(new_texts)
 
-    def get_diff_stats(self, baseline: str, payload: str) -> Dict[str, any]:
+    def get_diff_stats(self, baseline: str, payload: str) -> dict[str, Any]:
         """
         Get comprehensive diff statistics.
 

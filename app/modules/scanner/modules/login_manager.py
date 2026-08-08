@@ -17,6 +17,7 @@ Features:
 - Multi-signal authentication verification
 - Confidence scoring
 - Session storage for future modules
+- DVWA security level changer
 """
 
 from __future__ import annotations
@@ -26,6 +27,10 @@ import re
 from dataclasses import dataclass, field
 from urllib.parse import urljoin, urlparse
 
+import requests
+from bs4 import BeautifulSoup
+
+from app.modules.browser import session
 from app.modules.scanner.core.request_engine import RequestEngine, ResponseData
 from app.modules.scanner.core.session_manager import SessionManager
 
@@ -186,9 +191,12 @@ class LoginManager:
             result = self._verify_login_response(response)
 
             if result.success:
+                self._set_dvwa_security_low()
                 logger.info(
                     f"  ✅ Login successful (confidence: {result.confidence:.0%})"
                 )
+                # Step 6: Set DVWA security level to LOW if DVWA detected
+                self._set_dvwa_security_low()
                 return result
 
         return LoginResult(
@@ -196,6 +204,40 @@ class LoginManager:
             error_message="All login attempts failed",
             evidence=["Max attempts reached without success"],
         )
+
+    def dvwa_login(base_url: str):
+        print(f"[DEBUG] Base URL: {base_url}")
+        print(f"[DEBUG] Login URL: {login_url}")
+
+        session = requests.Session()
+
+        login_url = f"{base_url}/login.php"
+
+        # Login page kholo
+        r = session.get(login_url, timeout=20)
+
+        soup = BeautifulSoup(r.text, "html.parser")
+
+        token = soup.find("input", {"name": "user_token"})["value"]
+
+        # print("Token:", token)
+
+        payload = {
+            "username": "admin",
+            "password": "password",
+            "Login": "Login",
+            "user_token": token,
+        }
+
+        response = session.post(
+            login_url, data=payload, timeout=20, allow_redirects=False
+        )
+
+        # print("POST status:", response.status_code)
+        # print("Location:", response.headers.get("Location"))
+        # print("Cookies:", session.cookies.get_dict())
+
+        return session
 
     def _discover_login_page(self, base_url: str) -> str | None:
         """
@@ -431,7 +473,7 @@ class LoginManager:
         ]
         has_session_cookie = False
         for keyword in session_keywords:
-            for cookie_name in cookies.keys():
+            for cookie_name in cookies:
                 if keyword in cookie_name.lower():
                     has_session_cookie = True
                     confidence += 0.30

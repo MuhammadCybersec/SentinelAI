@@ -455,7 +455,7 @@ class TestOracleErrorBasedEngine(unittest.TestCase):
     @patch("app.modules.scanner.error_based.UnionSQLi")
     def test_multiple_error_codes(self, mock_union_sqli):
         """Test detection of multiple error codes."""
-        engine = OracleErrorBasedEngine(self.session, self.base_url)
+        OracleErrorBasedEngine(self.session, self.base_url)
 
         error_text = (
             "ORA-00933: SQL command not properly ended and ORA-01722: invalid number"

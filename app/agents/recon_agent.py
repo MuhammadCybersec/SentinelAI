@@ -130,7 +130,7 @@ class ReconAgent:
                             result = future.result()
                             if result:
                                 subdomains.append(result)
-                report["subdomains"] = sorted(list(set(subdomains)))
+                report["subdomains"] = sorted(set(subdomains))
 
                 # Sensitive Files
                 sensitive_files = []
@@ -205,7 +205,7 @@ class ReconAgent:
                 technologies.append("Vue.js")
             if "angular" in html:
                 technologies.append("Angular")
-            report["technologies"] = sorted(list(set(technologies)))
+            report["technologies"] = sorted(set(technologies))
 
             report["status"] = response.status_code
             report["server"] = response.headers.get("Server", "Unknown")

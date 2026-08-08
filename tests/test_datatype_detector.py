@@ -428,7 +428,7 @@ class TestOracleDataTypeDetector(unittest.TestCase):
         detector = OracleDataTypeDetector(self.session, self.base_url)
         detector.union_sqli = mock_instance
 
-        dtype, confidence = detector._detect_column_type(
+        dtype, _confidence = detector._detect_column_type(
             self.injection_point, 1, 3, baseline_response
         )
 

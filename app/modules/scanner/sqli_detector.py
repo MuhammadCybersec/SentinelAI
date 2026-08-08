@@ -540,7 +540,7 @@ class SQLiDetector:
         self.logger.info("[SQLiDetector] Detecting Boolean injection...")
         start_time = time.time()
 
-        baseline, baseline_size, _ = self._get_baseline(injection_point)
+        baseline, _baseline_size, _ = self._get_baseline(injection_point)
 
         # Test true/false conditions
         true_payloads = [
@@ -833,7 +833,9 @@ class SQLiDetector:
         try:
             # Step 1: Get baseline
             self.logger.info("[SQLiDetector] Step 1: Establishing baseline...")
-            baseline, baseline_size, baseline_time = self._get_baseline(injection_point)
+            baseline, _baseline_size, _baseline_time = self._get_baseline(
+                injection_point
+            )
             result.baseline_response = baseline.text if baseline else None
             result.techniques_tested.append("baseline")
 

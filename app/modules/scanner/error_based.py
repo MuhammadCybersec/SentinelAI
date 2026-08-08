@@ -401,7 +401,6 @@ class OracleErrorBasedEngine:
             self.logger.info(f"[ErrorBased] Testing {len(payloads)} payloads...")
 
             working_payloads = []
-            error_messages = []
             error_codes = []
             extracted_values = []
 
@@ -455,7 +454,7 @@ class OracleErrorBasedEngine:
             result.confidence = self._calculate_confidence(
                 len(error_codes),
                 len(extracted_values) > 0,
-                len(set(p["type"] for p in ranked if "type" in p)),
+                len({p["type"] for p in ranked if "type" in p}),
             )
 
             # Determine vulnerability

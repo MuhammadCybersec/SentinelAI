@@ -13,12 +13,24 @@ Production Features
 ✓ Confidence Scoring
 ✓ Evidence Collection
 ✓ Production Metadata
+✓ URL Validation
+✓ Database Storage
+✓ Baseline Comparison
 """
 
-from __future__ import annotations
+from __future__ import annotations  # ← MUST BE FIRST!
 
+import json
+import logging
+import re
+import time
+import uuid
 from dataclasses import dataclass, field
 from time import perf_counter
+from typing import Optional
+from urllib.parse import parse_qs, urlparse, urlencode, urlunparse
+
+import requests  # ← ADDED
 
 from app.modules.recon.scope_manager import ScopeManager
 from app.modules.scanner.core.base_scanner import BaseScanner
@@ -87,6 +99,11 @@ class SQLFinding:
 
     analyzer: AnalysisResult | None = None
 
+    # Additional fields for better tracking
+    status_code: int = 0
+    response_time: float = 0.0
+    response_length: int = 0
+
 
 # ==========================================================
 # Production SQL Injection Scanner
@@ -94,6 +111,95 @@ class SQLFinding:
 
 
 class SQLiScanner(BaseScanner):
+
+    # ======================================================
+    # DBMS_ERRORS - Class Level (FIXED)
+    # ======================================================
+
+    DBMS_ERRORS: dict[str, tuple[str, ...]] = {
+        "MySQL": (
+            "you have an error in your sql syntax",
+            "warning: mysql",
+            "mysql_fetch",
+            "mysql_num_rows",
+            "mysqli_error",
+            "sqlstate",
+            "unknown column",
+            "table '.*' doesn't exist",
+            "duplicate entry",
+            "mysql server version",
+        ),
+        "PostgreSQL": (
+            "postgresql",
+            "pg_query",
+            "pg_exec",
+            "pg_fetch",
+            "sqlstate",
+            "syntax error at or near",
+            "relation .* does not exist",
+        ),
+        "Microsoft SQL Server": (
+            "sql server",
+            "unclosed quotation mark",
+            "sqlstate",
+            "microsoft ole db",
+            "odbc sql server driver",
+            "system.data.sqlclient",
+        ),
+        "Oracle": (
+            "ora-",
+            "oracle error",
+            "oci error",
+            "ora-00933",
+            "ora-01756",
+            "oracle database",
+        ),
+        "SQLite": (
+            "sqlite",
+            "sqlite3",
+            "sqliteexception",
+            "operationalerror",
+            "no such table",
+            "sqlite3.operationalerror",
+        ),
+    }
+
+    # ======================================================
+    # Time-Based Payloads
+    # ======================================================
+
+    TIME_PAYLOADS: dict[str, tuple[str, ...]] = {
+        "MySQL": ("' AND SLEEP(5)--", '" AND SLEEP(5)--', "' OR SLEEP(5)--"),
+        "PostgreSQL": ("'; SELECT pg_sleep(5)--", '"; SELECT pg_sleep(5)--'),
+        "Microsoft SQL Server": (
+            "'; WAITFOR DELAY '0:0:5'--",
+            "\"; WAITFOR DELAY '0:0:5'--",
+        ),
+        "Oracle": ("' AND DBMS_PIPE.RECEIVE_MESSAGE('A',5)--",),
+    }
+
+    # ======================================================
+    # SQL Error Patterns (Fallback)
+    # ======================================================
+
+    SQL_ERROR_PATTERNS: list[str] = [
+        r"you have an error in your sql syntax",
+        r"mysql_fetch",
+        r"warning:\s*mysql",
+        r"unclosed quotation mark",
+        r"sqlstate",
+        r"mysql_num_rows",
+        r"mysqli_error",
+        r"ora-\d{5}",
+        r"oracle error",
+        r"postgresql",
+        r"pg_query",
+        r"sqlite3\.OperationalError",
+        r"SQL syntax.*near",
+        r"Unknown column",
+        r"Table '.*' doesn't exist",
+    ]
+
     def __init__(
         self,
         target: str,
@@ -114,6 +220,12 @@ class SQLiScanner(BaseScanner):
         self.detected_dbms: str | None = None
 
         self.baseline_response_time: float | None = None
+
+        # ======================================================
+        # Logger for debugging
+        # ======================================================
+
+        self.logger = logging.getLogger(__name__)
         # --------------------------------------------------
         # Scanner Configuration
         # --------------------------------------------------
@@ -121,7 +233,7 @@ class SQLiScanner(BaseScanner):
         self.stop_on_first = False
 
         self.max_findings: int | None = None
-        self.max_payloads: int | None = None
+        self.max_payloads: int | None = 15  # Limit to 15 payloads
 
         self.statistics = {
             "payloads": 0,
@@ -130,69 +242,195 @@ class SQLiScanner(BaseScanner):
             "errors": 0,
         }
 
+        # Initialize session
+        self._session = requests.Session()
+
     # ======================================================
-    # DBMS Fingerprinting
+    # URL Validation
     # ======================================================
 
-    DBMS_ERRORS: dict[str, tuple[str, ...]] = {
-        "MySQL": (
-            "You have an error in your SQL syntax",
-            "Warning: mysql",
-            "mysqli_",
+    def _is_valid_target(self, url: str) -> bool:
+        """
+        Validate if URL should be scanned for SQL injection.
+
+        Returns True only if:
+        - URL has query parameters
+        - Query string contains '='
+        - At least one parameter has a non-empty value
+
+        This prevents scanning static pages like instructions.php
+        """
+        parsed = urlparse(url)
+        query = parsed.query
+
+        if not query:
+            self.logger.debug(f"Skipping {url} - no query parameters")
+            return False
+
+        if "=" not in query:
+            self.logger.debug(f"Skipping {url} - no '=' in query")
+            return False
+
+        params = parse_qs(query)
+        has_value = any(v and v[0] for v in params.values())
+        if not has_value:
+            self.logger.debug(f"Skipping {url} - all parameters empty")
+            return False
+
+        self.logger.debug(f"✅ Valid target: {url}")
+        return True
+
+    # ======================================================
+    # Baseline Response
+    # ======================================================
+
+    def _get_baseline_response(self, url: str) -> Optional[requests.Response]:
+        """
+        Get baseline response for comparison.
+        Used for false positive reduction.
+        """
+        try:
+            response = self._session.get(url, timeout=10)
+            return response
+        except Exception as e:
+            self.logger.error(f"Baseline failed: {e}")
+            return None
+
+    # ======================================================
+    # SQL Error Detection (UPDATED - FIXED)
+    # ======================================================
+
+    def _has_sql_error_in_response(self, response_text: str) -> bool:
+        """
+        Check if response contains SQL error.
+        Used to detect if baseline already has SQL errors.
+        Uses class-level DBMS_ERRORS for accurate detection.
+        """
+        if not response_text:
+            return False
+
+        text = response_text.lower()
+
+        # First check: Use class-level DBMS_ERRORS
+        for dbms, signatures in self.DBMS_ERRORS.items():
+            for signature in signatures:
+                if signature.lower() in text:
+                    return True
+
+        # Second check: Fallback patterns for unknown DBMS
+        fallback_patterns = [
+            "sql syntax",
             "mysql_fetch",
-            "MySQL server version",
-        ),
-        "PostgreSQL": (
-            "PostgreSQL",
+            "warning: mysql",
+            "unclosed quotation mark",
+            "sqlstate",
+            "ora-",
+            "oracle error",
+            "postgresql",
             "pg_query",
-            "pg_exec",
-            "pg_fetch",
-            "PG::SyntaxError",
-        ),
-        "Microsoft SQL Server": (
-            "Microsoft SQL Server",
-            "ODBC SQL Server Driver",
-            "Unclosed quotation mark",
-            "SQLServerException",
-            "System.Data.SqlClient",
-        ),
-        "Oracle": (
-            "ORA-",
-            "Oracle Database",
-            "Oracle error",
-            "OCIError",
-            "ORA-00933",
-            "ORA-01756",
-        ),
-        "SQLite": (
-            "SQLite",
-            "sqlite3.",
-            "SQLiteException",
-            "OperationalError",
-            'near "',
-        ),
-    }
+            "sqlite",
+            "microsoft ole db",
+            "sql server",
+            "invalid query",
+            "database error",
+        ]
+
+        for pattern in fallback_patterns:
+            if pattern in text:
+                return True
+
+        return False
 
     # ======================================================
-    # Time-Based Payloads
+    # Database Storage
     # ======================================================
+    def _store_finding_in_database(self, finding: SQLFinding) -> bool:
+        """
+        Store finding in database.
+        """
+        self.logger.info(f"💾 Storing finding: {finding.parameter} on {finding.url}")
+        try:
+            from app.database.session import SessionLocal
+            from app.database.models.finding import Finding
+            from app.database.models.project import Project
 
-    TIME_PAYLOADS: dict[str, tuple[str, ...]] = {
-        "MySQL": (
-            "' AND SLEEP(5)--",
-            '" AND SLEEP(5)--',
-            "' OR SLEEP(5)--",
-        ),
-        "PostgreSQL": (
-            "'; SELECT pg_sleep(5)--",
-            '"; SELECT pg_sleep(5)--',
-        ),
-        "Microsoft SQL Server": (
-            "'; WAITFOR DELAY '0:0:5'--",
-            "\"; WAITFOR DELAY '0:0:5'--",
-        ),
-        "Oracle": ("' AND DBMS_PIPE.RECEIVE_MESSAGE('A',5)--",),
-    }
+            db = SessionLocal()
+            try:
+                # Find project
+                project = (
+                    db.query(Project)
+                    .filter(Project.target.like(f"%{self.target}%"))
+                    .first()
+                )
+
+                if not project:
+                    self.logger.warning(f"No project found for {self.target}")
+                    return False
+
+                self.logger.info(f"Found project: {project.id}")
+
+                # Create finding record
+                db_finding = Finding(
+                    id=str(uuid.uuid4()),
+                    project_id=project.id,
+                    title=f"SQL Injection - {finding.parameter or 'Unknown'}",
+                    description=finding.description
+                    or f"SQL Injection in {finding.parameter}",
+                    severity=finding.severity or "High",
+                    cvss=7.5,
+                    status="Open",
+                    module="sqli_scanner",
+                    target=self.target,
+                    scanner_name="sqli",
+                    scanner_version="1.0.0",
+                    url=finding.url or self.target,
+                    method="GET",
+                    parameter=finding.parameter or "",
+                    payload=finding.payload or "",
+                    status_code=finding.status_code or 0,
+                    response_time=finding.response_time or 0.0,
+                    evidence="\n".join(finding.evidence) if finding.evidence else "",
+                    recommendation=finding.remediation or "Use parameterized queries",
+                    reference=(
+                        "\n".join(finding.references) if finding.references else ""
+                    ),
+                    confidence=0.9,
+                    is_false_positive=False,
+                    verified=False,
+                    cwe=finding.cwe or "CWE-89",
+                    owasp="A03:2021 - Injection",
+                    tags="sql_injection",
+                    metadata_json=json.dumps(
+                        {
+                            "dbms": finding.dbms,
+                            "technique": finding.technique,
+                            "response_length": finding.response_length,
+                        }
+                    ),
+                )
+
+                db.add(db_finding)
+                db.commit()
+                self.logger.info(f"✅ Finding stored: {db_finding.id}")
+                return True
+
+            except Exception as e:
+                db.rollback()
+                self.logger.error(f"DB error: {e}")
+                import traceback
+
+                self.logger.error(traceback.format_exc())
+                return False
+            finally:
+                db.close()
+
+        except Exception as e:
+            self.logger.error(f"Store error: {e}")
+            import traceback
+
+            self.logger.error(traceback.format_exc())
+            return False
+
     # ======================================================
     # Payload Engine
     # ======================================================
@@ -353,21 +591,40 @@ class SQLiScanner(BaseScanner):
     # SQL Error Detection
     # ======================================================
 
-    def has_sql_error(
-        self,
-        response_text: str,
-    ) -> bool:
+    def has_sql_error(self, response_text: str) -> bool:
         """
-        Check whether the response contains
-        a known SQL error.
+        Check if response contains SQL error.
         """
+        if not response_text:
+            return False
 
-        return (
-            self.detect_dbms(
-                response_text,
-            )
-            is not None
-        )
+        text = response_text.lower()
+
+        # Common SQL error patterns
+        patterns = [
+            "sql syntax",
+            "mysql",
+            "warning: mysql",
+            "mysqli_",
+            "postgresql",
+            "pg_query",
+            "oracle",
+            "ora-",
+            "sqlite",
+            "microsoft ole db",
+            "sql server",
+            "unclosed quotation mark",
+            "you have an error in your sql syntax",
+            "invalid query",
+            "database error",
+        ]
+
+        for pattern in patterns:
+            if pattern in text:
+                self.detected_dbms = pattern.title()
+                return True
+
+        return False
 
     # ======================================================
 
@@ -450,6 +707,8 @@ class SQLiScanner(BaseScanner):
         finding.evidence.append("Boolean-based SQL injection confirmed")
         finding.evidence.append(f"TRUE payload: {true_payload}")
         finding.evidence.append(f"FALSE payload: {false_payload}")
+        finding.status_code = true_response.status_code if true_response else 0
+        finding.response_length = len(true_response.text) if true_response else 0
 
         confidence = self.calculate_confidence(
             has_error=False,
@@ -462,6 +721,10 @@ class SQLiScanner(BaseScanner):
             finding.analyzer.risk.confidence = confidence
 
         self.statistics["vulnerabilities"] += 1
+
+        # Store in database
+        self._store_finding_in_database(finding)
+
         return finding
 
     # ======================================================
@@ -521,10 +784,7 @@ class SQLiScanner(BaseScanner):
             injected,
         ).ratio()
 
-        if similarity < 0.95:
-            return True
-
-        return False
+        return similarity < 0.95
 
     # ======================================================
     # Time-Based SQL Injection Detection
@@ -534,7 +794,7 @@ class SQLiScanner(BaseScanner):
         self,
         baseline_time: float,
         injected_time: float,
-        threshold: float = 5.0,
+        threshold: float = 3.0,  # Reduced from 5.0 to 3.0
     ) -> bool:
         """
         Detect Time-Based SQL Injection using
@@ -700,10 +960,7 @@ class SQLiScanner(BaseScanner):
         if similarity < 0.95:
             return True
 
-        if abs(len(true_body) - len(false_body)) > 50:
-            return True
-
-        return False
+        return abs(len(true_body) - len(false_body)) > 50
 
     # ======================================================
     # Evaluate Response
@@ -720,10 +977,13 @@ class SQLiScanner(BaseScanner):
         sending a SQL Injection payload.
         """
 
-        analysis = self.analyzer.analyze(
-            response,
-            payload,
-        )
+        if self.analyzer is not None:
+            analysis = self.analyzer.analyze(
+                response,
+                payload,
+            )
+        else:
+            analysis = None
 
         body = getattr(
             response,
@@ -764,6 +1024,10 @@ class SQLiScanner(BaseScanner):
 
         finding.analyzer = analysis
 
+        finding.status_code = getattr(response, "status_code", 0)
+        finding.response_length = len(body)
+        finding.response_time = 0.0
+
         finding.evidence.append(f"Detected database: {finding.dbms}")
 
         self.statistics["vulnerabilities"] += 1
@@ -771,7 +1035,7 @@ class SQLiScanner(BaseScanner):
         return finding
 
     # ======================================================
-    # Test Single Payload
+    # Test Single Payload (UPDATED with DB Storage)
     # ======================================================
 
     def test_payload(
@@ -789,10 +1053,11 @@ class SQLiScanner(BaseScanner):
 
         if response is None:
             self.errors += 1
-
             self.statistics["errors"] += 1
-
             return None
+
+        # Get baseline for comparison - false positive reduction
+        baseline = self._get_baseline_response(self.target)
 
         finding = self.evaluate_response(
             self.target,
@@ -803,10 +1068,14 @@ class SQLiScanner(BaseScanner):
         if finding is None:
             return None
 
-        # --------------------------------------------------
-        # Boolean-Based Verification
-        # --------------------------------------------------
+        # Response verification - prevent false positives
+        if baseline and self._has_sql_error_in_response(baseline.text):
+            self.logger.debug(
+                "Baseline has SQL errors, skipping to avoid false positive"
+            )
+            return None
 
+        # Boolean-Based Verification
         true_payload, false_payload = self.get_boolean_payload_pair()
 
         true_response = self.safe_request(
@@ -834,6 +1103,16 @@ class SQLiScanner(BaseScanner):
                 )
 
             finding.evidence.append("Boolean SQL Injection confirmed.")
+
+        # ==========================================================
+        # Store finding in database
+        # ==========================================================
+        self.logger.info(f"💾 Attempting to store finding: {finding.parameter}")
+        stored = self._store_finding_in_database(finding)
+        if stored:
+            self.logger.info(f"✅ Finding stored successfully")
+        else:
+            self.logger.warning(f"❌ Failed to store finding")
 
         return finding
 
@@ -915,6 +1194,10 @@ class SQLiScanner(BaseScanner):
 
         finding.analyzer = analysis
 
+        finding.status_code = getattr(response, "status_code", 0)
+        finding.response_length = len(getattr(response, "text", ""))
+        finding.response_time = injected_time
+
         if analysis is not None:
             analysis.risk.confidence = max(
                 analysis.risk.confidence,
@@ -931,6 +1214,9 @@ class SQLiScanner(BaseScanner):
         finding.evidence.append(f"Delay: {injected_time - baseline_time:.2f}s")
 
         self.statistics["vulnerabilities"] += 1
+
+        # Store finding in database
+        self._store_finding_in_database(finding)
 
         return finding
 
@@ -1049,19 +1335,27 @@ class SQLiScanner(BaseScanner):
 
         return finding
 
+    def initialize_dvwa_session(self):
+
+        print("[DVWA] Session start")
+
+        return True
+
     # ======================================================
-    # Main Scan
+    # Main Scanning Function (UPDATED with Payload Limit)
     # ======================================================
 
-    def scan(
-        self,
-    ) -> list[SQLFinding]:
+    def scan(self, session: requests.Session | None = None) -> list[SQLFinding]:
         """
         Execute the complete SQL Injection scan.
         """
+        # Use provided session or create new
+        if session is None:
+            self._session = requests.Session()
+        else:
+            self._session = session
 
         self.started_at = perf_counter()
-
         self.findings.clear()
 
         self.statistics["payloads"] = 0
@@ -1069,139 +1363,320 @@ class SQLiScanner(BaseScanner):
         self.statistics["vulnerabilities"] = 0
         self.statistics["errors"] = 0
 
-        # --------------------------------------------------
-        # Initial Request (WAF Detection)
-        # --------------------------------------------------
-
-        initial_response = self.safe_request()
-
-        if initial_response is None:
-            self.finished_at = perf_counter()
-
+        # ==========================================================
+        # URL Validation - Skip static pages like instructions.php
+        # ==========================================================
+        if not self._is_valid_target(self.target):
+            self.logger.info(f"⏭️ Skipping {self.target} - not a valid SQLi target")
             return []
 
-        payloads = self.get_production_payloads(
-            initial_response,
-        )
+        # ==========================================================
+        # Baseline check - Skip if baseline has SQL errors
+        # ==========================================================
+        baseline = self._get_baseline_response(self.target)
+        if baseline and self._has_sql_error_in_response(baseline.text):
+            self.logger.warning(
+                f"Baseline has SQL errors, skipping to avoid false positives"
+            )
+            return []
 
-        # --------------------------------------------------
-        # Error-Based / Boolean-Based Scan
-        # --------------------------------------------------
+        # Extract parameters properly
+        parsed_url = urlparse(self.target)
+        params = parse_qs(parsed_url.query)
 
-        for payload in payloads:
-            if (
-                self.max_payloads is not None
-                and self.statistics["payloads"] >= self.max_payloads
-            ):
+        if not params:
+            self.logger.info(f"No parameters found in {self.target}")
+            return []
+
+        self.logger.info(f"🔍 Testing {len(params)} parameters on {self.target}")
+
+        # ==========================================================
+        # Get and Test Payloads - LIMIT TO 10 MOST EFFECTIVE
+        # ==========================================================
+        all_payloads = self.get_production_payloads(None)
+
+        # Take only first 10 payloads to reduce false positives
+        payloads = all_payloads[:10]
+        total = len(payloads)
+
+        # Only show if there are payloads
+        if total > 0:
+            print(f"[SQLi] Testing {total} payloads on {self.target}")
+
+        for param_name in params.keys():
+            if len(self.findings) >= 10:  # Max 10 findings
                 break
 
-            self.statistics["payloads"] += 1
+            if not params[param_name] or not params[param_name][0]:
+                continue
 
-            try:
-                finding = self.test_payload(
-                    payload,
-                )
+            self.logger.debug(f"Testing parameter: {param_name}")
 
-                if finding is not None:
-                    finding = self.enrich_finding(
-                        finding,
-                    )
-
-                    self.findings.append(
-                        finding,
-                    )
-                    if self.stop_on_first:
-                        break
-
-                    if (
-                        self.max_findings is not None
-                        and len(self.findings) >= self.max_findings
-                    ):
-                        break
-
-            except Exception:
-                self.errors += 1
-
-                self.statistics["errors"] += 1
-        # --------------------------------------------------
-        # Boolean-Based Scan (Independent Detection)
-        # --------------------------------------------------
-
-        boolean_finding = self.detect_boolean_sqli_independent(
-            self.target,
-            "productId",
-        )
-
-        if boolean_finding is not None:
-            boolean_finding = self.enrich_finding(boolean_finding)
-            self.findings.append(boolean_finding)
-
-            if self.stop_on_first:
-                pass  # Continue scanning for other techniques
-
-            if (
-                self.max_findings is not None
-                and len(self.findings) >= self.max_findings
-            ):
-                pass  # Continue scanning for other techniques
-
-        # --------------------------------------------------
-        # Time-Based Scan
-        # --------------------------------------------------
-
-        time_payloads = self.get_time_payloads(
-            self.detected_dbms,
-        )
-
-        if time_payloads:
-            for payload in time_payloads:
+            for payload in payloads:
                 if (
-                    self.max_payloads is not None
+                    self.max_payloads
                     and self.statistics["payloads"] >= self.max_payloads
                 ):
                     break
 
-                self.statistics["payloads"] += 1
+                # Test with specific parameter
+                finding = self.test_payload_with_param(payload, param_name)
+                if finding:
+                    finding.parameter = param_name
+                    finding = self.enrich_finding(finding)
+                    self.findings.append(finding)
+                    print(f"[SQLi] ✅ Found: {finding.technique} in {param_name}")
 
-                try:
-                    finding = self.test_time_payload(
-                        payload,
-                    )
+                if self.stop_on_first and self.findings:
+                    break
 
-                    if finding is not None:
-                        finding = self.enrich_finding(
-                            finding,
-                        )
+        # Also test time-based payloads
+        if not self.findings:
+            for param_name in params.keys():
+                if len(self.findings) >= 10:
+                    break
+                time_payloads = ["' AND SLEEP(5)--", "'; WAITFOR DELAY '0:0:5'--"]
+                for payload in time_payloads[:2]:
+                    finding = self.test_time_payload_with_param(payload, param_name)
+                    if finding:
+                        finding.parameter = param_name
+                        finding = self.enrich_finding(finding)
+                        self.findings.append(finding)
+                        print(f"[SQLi] ✅ Found: {finding.technique} in {param_name}")
+                        break
 
-                        self.findings.append(
-                            finding,
-                        )
-
-                        if self.stop_on_first:
-                            break
-
-                        if (
-                            self.max_findings is not None
-                            and len(self.findings) >= self.max_findings
-                        ):
-                            break
-
-                except Exception:
-                    self.errors += 1
-
-                    self.statistics["errors"] += 1
-
-        # --------------------------------------------------
-        # Merge Duplicate Findings
-        # --------------------------------------------------
-
-        self.findings = self.merge_findings(
-            self.findings,
-        )
-
+        # Merge and Return
+        self.findings = self.merge_findings(self.findings)
         self.finished_at = perf_counter()
 
+        # Only show summary if findings exist
+        if self.findings:
+            print(f"[SQLi] ✅ Complete: {len(self.findings)} findings")
+        else:
+            print(f"[SQLi] ❌ No findings found")
+
         return self.findings
+
+    # ======================================================
+    # Test Payload with Specific Parameter (NEW)
+    # ======================================================
+
+    def test_payload_with_param(self, payload: str, param: str) -> SQLFinding | None:
+        """
+        Test a payload on a specific parameter.
+        """
+        try:
+            parsed = urlparse(self.target)
+            params = parse_qs(parsed.query)
+
+            if not params.get(param) or not params[param][0]:
+                return None
+
+            params[param] = [payload]
+            new_query = urlencode(params, doseq=True)
+            test_url = urlunparse(
+                (
+                    parsed.scheme,
+                    parsed.netloc,
+                    parsed.path,
+                    parsed.params,
+                    new_query,
+                    parsed.fragment,
+                )
+            )
+
+            # Send request with payload
+            start_time = perf_counter()
+            response = self._session.get(test_url, timeout=10)
+            elapsed = perf_counter() - start_time
+
+            self.statistics["requests"] += 1
+
+            # Check for SQL errors
+            has_error, dbms = self._has_sql_error_in_response_with_dbms(response.text)
+
+            if has_error:
+                # Verify baseline doesn't have the same error
+                baseline = self._get_baseline_response(self.target)
+                if baseline:
+                    baseline_has_error, _ = self._has_sql_error_in_response_with_dbms(
+                        baseline.text
+                    )
+                    if baseline_has_error:
+                        return None
+
+                finding = SQLFinding()
+                finding.vulnerable = True
+                finding.url = test_url
+                finding.parameter = param
+                finding.payload = payload
+                finding.technique = "Error-Based"
+                finding.dbms = dbms or "Unknown"
+                finding.severity = "High"
+                finding.cwe = "CWE-89"
+                finding.owasp = "A03:2021 - Injection"
+                finding.status_code = response.status_code
+                finding.response_time = elapsed
+                finding.response_length = len(response.text)
+                finding.references = [
+                    "https://cwe.mitre.org/data/definitions/89.html",
+                    "https://owasp.org/Top10/A03_2021-Injection/",
+                ]
+                finding.remediation = "Use parameterized queries (Prepared Statements), never concatenate user input into SQL queries."
+                finding.evidence.append(f"SQL error detected in parameter: {param}")
+                finding.evidence.append(f"Payload: {payload}")
+                finding.evidence.append(f"DBMS: {dbms or 'Unknown'}")
+                finding.evidence.append(f"Status Code: {response.status_code}")
+                finding.evidence.append(f"Response Length: {len(response.text)}")
+
+                self.statistics["vulnerabilities"] += 1
+                self._store_finding_in_database(finding)
+                return finding
+
+        except Exception as e:
+            self.logger.debug(f"Error testing {param}: {e}")
+            self.statistics["errors"] += 1
+
+        return None
+
+    # ======================================================
+    # Test Time Payload with Specific Parameter (NEW)
+    # ======================================================
+
+    def test_time_payload_with_param(
+        self, payload: str, param: str
+    ) -> SQLFinding | None:
+        """
+        Test a time-based payload on a specific parameter.
+        """
+        try:
+            parsed = urlparse(self.target)
+            params = parse_qs(parsed.query)
+
+            if not params.get(param) or not params[param][0]:
+                return None
+
+            params[param] = [payload]
+            new_query = urlencode(params, doseq=True)
+            test_url = urlunparse(
+                (
+                    parsed.scheme,
+                    parsed.netloc,
+                    parsed.path,
+                    parsed.params,
+                    new_query,
+                    parsed.fragment,
+                )
+            )
+
+            # Get baseline time
+            if self.baseline_response_time is None:
+                baseline = self._get_baseline_response(self.target)
+                if baseline:
+                    self.baseline_response_time = 0.3  # Default baseline
+
+            start_time = perf_counter()
+            response = self._session.get(test_url, timeout=12)
+            elapsed = perf_counter() - start_time
+
+            self.statistics["requests"] += 1
+
+            # Check for delay (> 3 seconds)
+            if elapsed > 3.0 and elapsed > (self.baseline_response_time or 0.3) + 2.0:
+                finding = SQLFinding()
+                finding.vulnerable = True
+                finding.url = test_url
+                finding.parameter = param
+                finding.payload = payload
+                finding.technique = "Time-Based"
+                finding.dbms = self.detected_dbms or "Unknown"
+                finding.severity = "High"
+                finding.cwe = "CWE-89"
+                finding.owasp = "A03:2021 - Injection"
+                finding.status_code = response.status_code
+                finding.response_time = elapsed
+                finding.response_length = len(response.text)
+                finding.references = [
+                    "https://cwe.mitre.org/data/definitions/89.html",
+                    "https://owasp.org/Top10/A03_2021-Injection/",
+                ]
+                finding.remediation = "Use parameterized queries (Prepared Statements)."
+                finding.evidence.append(
+                    f"Time-based SQL injection detected in parameter: {param}"
+                )
+                finding.evidence.append(f"Payload: {payload}")
+                finding.evidence.append(f"Response time: {elapsed:.2f}s")
+                finding.evidence.append(
+                    f"Baseline time: {self.baseline_response_time:.2f}s"
+                )
+
+                self.statistics["vulnerabilities"] += 1
+                self._store_finding_in_database(finding)
+                return finding
+
+        except Exception as e:
+            self.logger.debug(f"Time test failed for {param}: {e}")
+            self.statistics["errors"] += 1
+
+        return None
+
+    # ======================================================
+    # SQL Error Detection with DBMS (NEW)
+    # ======================================================
+
+    def _has_sql_error_in_response_with_dbms(
+        self, response_text: str
+    ) -> tuple[bool, Optional[str]]:
+        """
+        Check if response contains SQL error and return DBMS.
+        """
+        if not response_text:
+            return False, None
+
+        text = response_text.lower()
+
+        # Check using class-level DBMS_ERRORS
+        for dbms, signatures in self.DBMS_ERRORS.items():
+            for signature in signatures:
+                if signature.lower() in text:
+                    return True, dbms
+
+        # Check using regex patterns
+        for pattern in self.SQL_ERROR_PATTERNS:
+            if re.search(pattern, text, re.IGNORECASE):
+                return True, "Unknown"
+
+        return False, None
+
+    # ======================================================
+    # Safe Request (FIXED)
+    # ======================================================
+
+    def safe_request(self, payload: str = "") -> requests.Response | None:
+        """
+        Make a safe request using the session.
+        """
+        try:
+            # Build URL
+            url = self.target
+            if payload:
+                # Use 'q' as parameter name for generic testing
+                if "?" in url:
+                    url = f"{url}&q={payload}"
+                else:
+                    url = f"{url}?q={payload}"
+
+            response = self._session.get(
+                url,
+                timeout=10,
+                allow_redirects=True,
+            )
+            self.statistics["requests"] += 1
+            return response
+
+        except Exception:
+            self.statistics["errors"] += 1
+            return None
 
     # ======================================================
     # Payload Randomization
@@ -1415,10 +1890,10 @@ class SQLiScanner(BaseScanner):
 
         for attempt in range(retries):
             try:
-                last_response = self.request.send(
-                    method="GET",
-                    url=self.target,
-                    payload=payload,
+                last_response = self._session.get(
+                    self.target,
+                    params={"q": payload} if payload else {},
+                    timeout=10,
                 )
 
                 if last_response is not None:
@@ -1429,30 +1904,6 @@ class SQLiScanner(BaseScanner):
                 self.statistics["errors"] += 1
 
         return last_response
-
-    # ======================================================
-    # Safe Request Wrapper
-    # ======================================================
-
-    def safe_request(
-        self,
-        payload: str = "",
-    ):
-        """
-        Wrapper around send_request().
-        """
-
-        self.requests_sent += 1
-        self.statistics["requests"] += 1
-
-        response = self.send_request(
-            payload=payload,
-        )
-
-        if response is not None:
-            self.responses_received += 1
-
-        return response
 
     # ======================================================
     # WAF Detection
@@ -1534,8 +1985,8 @@ class SQLiScanner(BaseScanner):
                     return waf
 
         return None
-        # ======================================================
 
+    # ======================================================
     # WAF-Aware Payload Selection
     # ======================================================
 

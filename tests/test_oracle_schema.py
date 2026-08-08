@@ -415,11 +415,11 @@ class TestOracleSchemaEnumerator(unittest.TestCase):
         mock_instance = Mock()
         baseline_response = self._create_mock_response("Baseline")
         info_response = self._create_mock_response("TESTUSER")
-        schemas_response = self._create_mock_response("SCHEMA1")
-        tables_response = self._create_mock_response("TABLE1 TABLE2")
-        columns_response = self._create_mock_response("COL1 COL2 COL3")
-        indexes_response = self._create_mock_response("IDX1")
-        constraints_response = self._create_mock_response("PK1 P")
+        self._create_mock_response("SCHEMA1")
+        self._create_mock_response("TABLE1 TABLE2")
+        self._create_mock_response("COL1 COL2 COL3")
+        self._create_mock_response("IDX1")
+        self._create_mock_response("PK1 P")
 
         mock_instance.get_baseline.return_value = baseline_response
         mock_instance.test_payload.return_value = {

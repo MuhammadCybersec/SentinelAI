@@ -130,7 +130,7 @@ class TestWAFDetector(unittest.TestCase):
         logging.disable(logging.NOTSET)
 
     def _create_mock_response(
-        self, text: str, status_code: int = 200, headers: dict = None
+        self, text: str, status_code: int = 200, headers: dict | None = None
     ):
         """Helper to create a proper mock response."""
         mock_response = Mock(spec=requests.Response)

@@ -6,6 +6,7 @@ Phase 2: Oracle Version Fingerprinting (ADDED)
 """
 
 from dataclasses import dataclass
+from typing import Any
 
 
 @dataclass
@@ -139,6 +140,6 @@ class OracleDetectionPayloads:
     # Phase 2: Version Payload Methods (ADDED)
     # ============================================================
 
-    def get_version_payloads(self) -> list[dict[str, any]]:
+    def get_version_payloads(self) -> list[dict[str, Any]]:
         """Get version fingerprinting payloads."""
         return self.version_payloads

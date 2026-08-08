@@ -19,11 +19,10 @@ from __future__ import annotations
 import time
 from typing import Any
 
-from app.modules.scanner.payloads.xss_payloads import get_payloads
-
 from app.modules.scanner.core.base_scanner import BaseScanner
 from app.modules.scanner.core.request_engine import RequestEngine
 from app.modules.scanner.core.response_analyzer_v2 import ResponseAnalyzer
+from app.modules.scanner.payload.xss_payloads import get_payloads
 
 
 class XSSScanner(BaseScanner):
@@ -98,7 +97,8 @@ class XSSScanner(BaseScanner):
             self.end_time - self.start_time,
             2,
         )
-        # =======================================================
+
+    # =======================================================
 
     # Collect Parameters
     # =======================================================
@@ -517,41 +517,36 @@ class XSSScanner(BaseScanner):
 
     def scan(
         self,
-        target: dict[str, Any],
+        project_id: str,
+        url: str,
     ) -> list[dict[str, Any]]:
         """
         Execute complete XSS scan.
         """
+        target = {
+            "project_id": project_id,
+            "url": url,
+        }
 
         self.reset()
 
         self.start_time = time.time()
 
         try:
-            test_cases = self._prepare_scan(
-                target,
-            )
+            test_cases = self._prepare_scan(target)
 
             if not test_cases:
                 self.end_time = time.time()
 
                 return []
 
-            responses = self._run_test_cases(
-                test_cases,
-            )
+            responses = self._run_test_cases(test_cases)
 
-            analyzed = self._analyze_responses(
-                responses,
-            )
+            analyzed = self._analyze_responses(responses)
 
-            candidates = self._find_candidates(
-                analyzed,
-            )
+            candidates = self._find_candidates(analyzed)
 
-            findings = self._build_findings(
-                candidates,
-            )
+            findings = self._build_findings(candidates)
 
             self.end_time = time.time()
 

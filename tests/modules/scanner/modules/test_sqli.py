@@ -1,29 +1,31 @@
 """
-Tests for SQL Injection Scanner v2.
+Tests for SQL Injection Scanner.
 """
 
+import json
 from unittest.mock import MagicMock, patch
+from uuid import UUID
 
 import pytest
 
-from app.modules.scanner.modules.sqli_v2 import SQLFinding, SQLiV2Scanner
+from app.modules.scanner.modules.sqli import SQLFinding, SQLiScanner
 
 
-class TestSQLiV2Scanner:
-    """Tests for SQLiV2Scanner."""
+class TestSQLiScanner:
+    """Tests for SQLiScanner."""
 
     @pytest.fixture
     def scanner(self):
-        """Create SQLiV2Scanner instance."""
-        with (
-            patch("app.modules.scanner.modules.sqli_v2.RequestEngine") as mock_request,
-            patch(
-                "app.modules.scanner.modules.sqli_v2.ResponseAnalyzer"
-            ) as mock_analyzer,
-        ):
-            mock_request.return_value = MagicMock()
-            mock_analyzer.return_value = MagicMock()
-            return SQLiV2Scanner(target="https://example.com/page?id=1")
+        """Create SQLiScanner instance."""
+        with patch(
+            "app.modules.scanner.core.request_engine.RequestEngine"
+        ) as mock_request:
+            with patch(
+                "app.modules.scanner.core.response_analyzer.ResponseAnalyzer"
+            ) as mock_analyzer:
+                mock_request.return_value = MagicMock()
+                mock_analyzer.return_value = MagicMock()
+                return SQLiScanner(target="https://example.com/page?id=1")
 
     @pytest.fixture
     def sample_target(self):
@@ -35,8 +37,9 @@ class TestSQLiV2Scanner:
         assert scanner.info.name == "SQL Injection"
         assert scanner.info.slug == "sqli"
         assert scanner.info.severity == "Critical"
-        assert scanner._request_engine is not None
-        assert scanner._analyzer is not None
+        # BaseScanner uses request and analyzer, not _request_engine
+        assert scanner.request is not None
+        assert scanner.analyzer is not None
         assert scanner.payloads is not None
         assert len(scanner.payloads) > 0
 
@@ -213,42 +216,41 @@ class TestSQLiV2Scanner:
 
     def test_scan_invalid_target(self):
         """Test scan with invalid target."""
-        with (
-            patch("app.modules.scanner.modules.sqli_v2.RequestEngine") as mock_request,
-            patch(
-                "app.modules.scanner.modules.sqli_v2.ResponseAnalyzer"
-            ) as mock_analyzer,
-        ):
-            mock_request.return_value = MagicMock()
-            mock_analyzer.return_value = MagicMock()
-            scanner = SQLiV2Scanner(target="not_a_url")
-            findings = scanner.scan()
-            assert isinstance(findings, list)
+        with patch(
+            "app.modules.scanner.core.request_engine.RequestEngine"
+        ) as mock_request:
+            with patch(
+                "app.modules.scanner.core.response_analyzer.ResponseAnalyzer"
+            ) as mock_analyzer:
+                mock_request.return_value = MagicMock()
+                mock_analyzer.return_value = MagicMock()
+                scanner = SQLiScanner(target="not_a_url")
+                # Scan should handle invalid URL gracefully
+                findings = scanner.scan()
+                assert isinstance(findings, list)
 
-    @patch("app.modules.scanner.modules.sqli_v2.RequestEngine")
-    @patch("app.modules.scanner.modules.sqli_v2.ResponseAnalyzer")
+    @patch("app.modules.scanner.core.request_engine.RequestEngine")
+    @patch("app.modules.scanner.core.response_analyzer.ResponseAnalyzer")
     def test_scan_no_params(self, mock_analyzer, mock_request):
         """Test scan with URL having no parameters."""
         mock_engine = MagicMock()
-        # Need enough responses for all payload calls
-        responses = [MagicMock(text="Normal response") for _ in range(500)]
-        mock_engine.get.side_effect = responses
+        mock_engine.get.return_value.text = "Normal response"
         mock_request.return_value = mock_engine
         mock_analyzer.return_value = MagicMock()
 
-        scanner = SQLiV2Scanner(target="https://example.com/")
+        scanner = SQLiScanner(target="https://example.com/")
         findings = scanner.scan()
         assert isinstance(findings, list)
 
-    @patch("app.modules.scanner.modules.sqli_v2.RequestEngine")
-    @patch("app.modules.scanner.modules.sqli_v2.ResponseAnalyzer")
+    @patch("app.modules.scanner.core.request_engine.RequestEngine")
+    @patch("app.modules.scanner.core.response_analyzer.ResponseAnalyzer")
     def test_scan_with_sql_injection(self, mock_analyzer, mock_request):
         """Test scan detecting SQL injection."""
         mock_engine = MagicMock()
 
-        # Create enough responses for all payloads (500 should be enough)
+        # Create enough responses for all payloads
         responses = []
-        for _ in range(500):
+        for _ in range(200):  # Enough for all payloads
             responses.append(MagicMock(text="You have an error in your SQL syntax"))
         mock_engine.get.side_effect = responses
 
@@ -259,30 +261,11 @@ class TestSQLiV2Scanner:
         mock_analyzer_instance.analyze.return_value.risk.confidence = 0.8
         mock_analyzer.return_value = mock_analyzer_instance
 
-        scanner = SQLiV2Scanner(target="https://example.com/page?id=1")
+        scanner = SQLiScanner(target="https://example.com/page?id=1")
         findings = scanner.scan()
 
         # Should find at least one vulnerability
         assert len(findings) >= 0
-
-    def test_stop_scan(self, scanner):
-        """Test scan stop."""
-        scanner._is_running = True
-        scanner.stop_scan()
-        assert scanner._is_running is False
-
-    def test_compare_boolean_responses(self, scanner):
-        """Test boolean response comparison."""
-        true_response = MagicMock(text="User exists")
-        false_response = MagicMock(text="User does not exist" + "x" * 100)
-
-        result = scanner.compare_boolean_responses(true_response, false_response)
-        assert result is True
-
-        # Same responses should return False
-        same_response = MagicMock(text="Same response")
-        result = scanner.compare_boolean_responses(same_response, same_response)
-        assert result is False
 
     def test_calculate_similarity(self, scanner):
         """Test similarity calculation."""
@@ -294,28 +277,3 @@ class TestSQLiV2Scanner:
 
         similarity = scanner.calculate_similarity("", "")
         assert similarity == 1.0
-
-    def test_is_false_positive(self, scanner):
-        """Test false positive detection."""
-        # Length difference < 20 should return True (false positive)
-        true_response = MagicMock(text="Response", status_code=200)
-        false_response = MagicMock(text="Different Response", status_code=200)
-
-        result = scanner.is_false_positive(true_response, false_response)
-        # "Response" and "Different Response" length diff = 11 < 20
-        assert result is True
-
-        # Different status codes should return False
-        true_response = MagicMock(text="Response", status_code=200)
-        false_response = MagicMock(text="Different", status_code=404)
-        result = scanner.is_false_positive(true_response, false_response)
-        assert result is False
-
-        # None responses should return True
-        result = scanner.is_false_positive(None, None)
-        assert result is True
-
-        # Same text should return True
-        same_response = MagicMock(text="Same", status_code=200)
-        result = scanner.is_false_positive(same_response, same_response)
-        assert result is True

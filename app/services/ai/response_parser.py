@@ -858,9 +858,8 @@ class ResponseParser:
         for i, line in enumerate(lines):
             if re.search(
                 r"(?:summary|overview|conclusion)\s*[:]?\s*", line, re.IGNORECASE
-            ):
-                if i + 1 < len(lines):
-                    return lines[i + 1].strip()
+            ) and i + 1 < len(lines):
+                return lines[i + 1].strip()
 
         # Take first non-empty line as summary
         for line in lines:

@@ -19,6 +19,7 @@ from app.tools.http_client import http
 
 def crawl_target(
     target: str,
+    session=None,
     max_links: int = 500,
 ) -> list[str]:
     """
@@ -30,45 +31,105 @@ def crawl_target(
 
     discovered: set[str] = set()
 
-    response = http.get(
-        target,
-        timeout=20,
-    )
+    try:
 
-    if response is None:
+        # --------------------------------
+        # Session request
+        # --------------------------------
+
+        if session is not None:
+
+            print("[DEBUG] Session mode enabled")
+
+            response = session.get(
+                target,
+                timeout=20,
+                allow_redirects=True,
+            )
+
+        else:
+
+            # print("[DEBUG] Normal mode enabled")
+
+            response = http.get(
+                target,
+                timeout=20,
+            )
+
+        # --------------------------------
+        # Debug output
+        # --------------------------------
+
+        # print("[DEBUG] Requested URL :", target)
+        # print("[DEBUG] Response URL  :", response.url)
+        # print("[DEBUG] Status Code   :", response.status_code)
+
+        if response is None:
+            print("[DEBUG] Response is None")
+            return []
+
+        if response.status_code != 200:
+            print("[DEBUG] Invalid status code")
+            return []
+
+        soup = BeautifulSoup(
+            response.text,
+            "html.parser",
+        )
+
+        links = soup.find_all("a", href=True)
+
+        # print(f"[DEBUG] Total links found: {len(links)}")
+
+        base_domain = urlparse(response.url).netloc
+
+        for tag in links:
+
+            href = str(tag["href"]).strip()
+
+            if not href:
+                continue
+
+            absolute = urljoin(
+                response.url,
+                href,
+            )
+
+            absolute = normalize_url(
+                absolute,
+            )
+
+            parsed = urlparse(
+                absolute,
+            )
+
+            if parsed.scheme not in (
+                "http",
+                "https",
+            ):
+                continue
+
+            if parsed.netloc != base_domain:
+                continue
+
+            discovered.add(
+                absolute,
+            )
+
+            if len(discovered) >= max_links:
+                break
+
+        # print(f"[DEBUG] Internal URLs: {len(discovered)}")
+
+        return sorted(
+            discovered,
+        )
+
+    except Exception as e:
+
+        print(f"[CRAWLER ERROR] {e}")
+
         return []
-
-    if response.status_code != 200:
-        return []
-
-    soup = BeautifulSoup(response.text, "html.parser")
-
-    base_domain = urlparse(response.url).netloc
-
-    for tag in soup.find_all("a", href=True):
-        href = str(tag["href"]).strip()
-
-        if not href:
-            continue
-
-        absolute = urljoin(response.url, href)
-
-        absolute = normalize_url(absolute)
-
-        parsed = urlparse(absolute)
-
-        if parsed.scheme not in ("http", "https"):
-            continue
-
-        if parsed.netloc != base_domain:
-            continue
-
-        discovered.add(absolute)
-
-        if len(discovered) >= max_links:
-            break
-
-    return sorted(discovered)
 
 
 # ==========================================================
