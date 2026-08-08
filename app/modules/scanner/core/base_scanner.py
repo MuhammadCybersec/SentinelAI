@@ -121,8 +121,6 @@ class ScanResult:
     vulnerable: bool = False
 
     # New fields for SecretsScanner
-    success: bool = True
-    findings: List[Dict[str, Any]] = field(default_factory=list)
 
     def __post_init__(self) -> None:
         """Validate and normalize fields after initialization."""
@@ -384,6 +382,82 @@ class BaseScanner:
         if self.scope is None:
             return True
         return self.scope.is_allowed(url)
+
+    def create_finding(
+        self,
+        *,
+        vulnerability_type: str,
+        severity: str,
+        description: str,
+        confidence: float,
+        url: str | None = None,
+        method: str = "GET",
+        parameter: str = "",
+        payload: str = "",
+        evidence: str = "",
+        remediation: str = "",
+        references: list[str] | None = None,
+        cwe_id: str = "",
+        cvss_score: float = 0.0,
+        status_code: int = 0,
+        response_time: float = 0.0,
+        tags: list[str] | None = None,
+        metadata: dict[str, Any] | None = None,
+        # Backward compatibility
+        vulnerable: bool = False,
+        scanner_name: str | None = None,
+    ) -> ScanResult:
+        """
+        Create a standardized ScanResult instance.
+
+        Args:
+            vulnerability_type: Type of vulnerability
+            severity: Severity level
+            description: Description of the vulnerability
+            confidence: Confidence score (0-100)
+            url: Target URL (defaults to self.target)
+            method: HTTP method used
+            parameter: Vulnerable parameter
+            payload: Payload used
+            evidence: Evidence of vulnerability
+            remediation: Remediation steps
+            references: Reference URLs or CVE IDs
+            cwe_id: CWE ID
+            cvss_score: CVSS score
+            status_code: HTTP status code
+            response_time: Response time in seconds
+            tags: Tags for categorization
+            metadata: Additional metadata
+            vulnerable: For backward compatibility
+            scanner_name: Scanner name (defaults to class name)
+
+        Returns:
+            ScanResult: ScanResult instance
+        """
+        return ScanResult(
+            scanner_name=scanner_name or self.__class__.__name__,
+            scanner_version=getattr(self, "version", "1.0.0"),
+            vulnerability_type=vulnerability_type,
+            severity=severity,
+            confidence=confidence,
+            url=url or self.target,
+            method=method,
+            parameter=parameter,
+            payload=payload,
+            evidence=evidence,
+            description=description,
+            remediation=remediation,
+            references=references or [],
+            cwe_id=cwe_id,
+            cvss_score=cvss_score,
+            status_code=status_code,
+            response_time=response_time,
+            tags=tags or [],
+            metadata=metadata or {},
+            vulnerable=vulnerable,
+            scanner=self.__class__.__name__,
+            target=url or self.target,
+        )
 
     # ===========================================================
     # GET Request
