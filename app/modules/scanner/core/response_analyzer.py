@@ -285,7 +285,7 @@ class ResponseAnalyzer:
 
         before = response_text[:position]
 
-        after = response_text[position:]
+        response_text[position:]
 
         # ------------------------------------------------------
         # Script Context
@@ -331,7 +331,7 @@ class ResponseAnalyzer:
 
         stripped = before.strip()
 
-        if stripped.endswith(":") or stripped.endswith("{"):
+        if stripped.endswith((":", "{")):
             result.context = "json"
 
             result.inside_json = True
