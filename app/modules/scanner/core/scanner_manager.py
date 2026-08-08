@@ -17,8 +17,9 @@ from pathlib import Path
 from typing import Any
 from uuid import UUID, uuid4
 
+from app.agents.planner_agent import PlannerAgent
 from app.modules.scanner.modules.secrets_scanner import SecretsScanner
-from app.modules.scanner.modules.sqli_v2 import SQLiV2Scanner
+from app.modules.scanner.modules.sqli import SQLiScanner
 from app.modules.scanner.modules.xss_scanner import XSSScanner
 
 
@@ -161,6 +162,7 @@ class ScannerManager:
         self._timeout = timeout
         self._db_path = db_path or "scan_results.json"
         self._logger = logging.getLogger(__name__)
+        self._planner = PlannerAgent()
 
         # Thread-safe state
         self._lock = threading.RLock()
@@ -172,7 +174,7 @@ class ScannerManager:
         # Scanner registry - only existing scanners
         self._scanners = {
             "xss": XSSScanner,
-            "sqli": SQLiV2Scanner,
+            "sqli": SQLiScanner,
             "secrets": SecretsScanner,
         }
         self._scanner_names = list(self._scanners.keys())
@@ -184,36 +186,51 @@ class ScannerManager:
         save_to_db: bool = True,
         generate_report: bool = True,
     ) -> tuple[list[ScanFinding], ScanStatistics]:
-        """
-        Run a complete security scan using all or specified scanners.
 
-        Args:
-            target: Target URL to scan
-            scanners: List of scanner names to run (default: all)
-            save_to_db: Whether to save findings to database
-            generate_report: Whether to generate PDF report
-
-        Returns:
-            Tuple of (findings, statistics)
-
-        Raises:
-            ValueError: If target is empty
-            RuntimeError: If a scan is already running
-        """
         if not target or not target.strip():
             raise ValueError("Target URL cannot be empty")
+
+        try:
+            analysis = self._planner.analyze_target(target)
+            recommended_scanners = analysis.recommended_scanners
+
+            self._logger.info(f"Recommended scanners: {recommended_scanners}")
+
+        except Exception as exc:
+            self._logger.warning(f"Planner analysis failed: {exc}")
+
+            recommended_scanners = []
+
+        if scanners is None and recommended_scanners:
+            scanners = recommended_scanners
+
+        if scanners is not None:
+            valid_scanners = [
+                scanner for scanner in scanners if scanner in self._scanners
+            ]
+
+            if not valid_scanners:
+                self._logger.warning(f"No valid scanners found in: {scanners}")
+
+                valid_scanners = self._scanner_names
+        else:
+            valid_scanners = self._scanner_names
 
         with self._lock:
             if self._is_running:
                 raise RuntimeError("A scan is already running")
+
             self._is_running = True
             self._scan_id = uuid4()
             self._findings.clear()
+
             self._statistics = ScanStatistics(
                 start_time=datetime.now(timezone.utc),
-                scanners_used=scanners or self._scanner_names,
-                total_scanners=len(scanners or self._scanner_names),
+                scanners_used=valid_scanners,
+                total_scanners=len(valid_scanners),
             )
+
+        return self._findings, self._statistics
 
     def _run_scanners_parallel(
         self, target: str, scanners: list[str] | None = None
@@ -276,7 +293,11 @@ class ScannerManager:
                 # Collect results
                 for i, (name, _) in enumerate(tasks.items()):
                     result = done[i]
+                    print("=" * 50)
+                    print(f"[DEBUG] Scanner Name: {name}")
+                    print(f"[DEBUG] Result Type: {type(result)}")
                     if isinstance(result, Exception):
+
                         self._logger.error(f"Scanner '{name}' failed: {result}")
                         results[name] = {"error": str(result), "findings": []}
                     else:
