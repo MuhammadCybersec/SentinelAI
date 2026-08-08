@@ -16,6 +16,10 @@ Application entry point for Sentinel AI.
 # Imports
 # ===========================================================
 
+import argparse
+import logging
+import sys
+
 from dotenv import load_dotenv
 
 from app.agents.manager_agent import ManagerAgent
@@ -27,7 +31,6 @@ from app.database.repositories.finding_repository import FindingRepository
 from app.database.repositories.project_repository import ProjectRepository
 from app.database.repositories.recon_result_repository import ReconResultRepository
 from app.database.session import get_session
-from app.modules.recon import TargetValidator
 from app.services.finding_service import FindingService
 from app.services.project_service import ProjectService
 from app.services.recon_service import ReconService
@@ -51,6 +54,55 @@ MODEL = config.MODEL
 
 # ===========================================================
 # MAIN-004
+# Logging Configuration
+# ===========================================================
+
+
+def setup_logging(debug: bool = False) -> None:
+    """
+    Configure logging for SentinelAI.
+
+    Args:
+        debug: Enable debug logging if True
+    """
+    # Set root logger level
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.DEBUG if debug else logging.INFO)
+
+    # Configure SQLAlchemy logging - COMPLETELY SILENT in production
+    if debug:
+        logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
+        logging.getLogger("sqlalchemy.pool").setLevel(logging.INFO)
+        logging.getLogger("sqlalchemy.engine.Engine").setLevel(logging.INFO)
+    else:
+        logging.getLogger("sqlalchemy.engine").setLevel(logging.ERROR)
+        logging.getLogger("sqlalchemy.pool").setLevel(logging.ERROR)
+        logging.getLogger("sqlalchemy.engine.Engine").setLevel(logging.ERROR)
+        logging.getLogger("sqlalchemy.engine.base.Engine").setLevel(logging.ERROR)
+
+    # Configure urllib3
+    logging.getLogger("urllib3").setLevel(logging.WARNING)
+
+    # Configure scanner modules
+    logging.getLogger("app.modules.scanner").setLevel(
+        logging.DEBUG if debug else logging.INFO
+    )
+    logging.getLogger("app.services.recon_service").setLevel(
+        logging.DEBUG if debug else logging.INFO
+    )
+
+    # Configure HTTP logging
+    logging.getLogger("urllib3.connectionpool").setLevel(logging.WARNING)
+    logging.getLogger("requests").setLevel(logging.WARNING)
+
+    if debug:
+        print("[DEBUG] Logging mode: VERBOSE")
+    else:
+        print("[INFO] Logging mode: PRODUCTION")
+
+
+# ===========================================================
+# MAIN-005
 # Main Application
 # ===========================================================
 
@@ -59,6 +111,15 @@ def main() -> None:
     """
     Sentinel AI Entry Point
     """
+    # Parse command line arguments
+    parser = argparse.ArgumentParser(
+        description="SentinelAI - Security Assessment Platform"
+    )
+    parser.add_argument("--debug", action="store_true", help="Enable debug logging")
+    args = parser.parse_args()
+
+    # Setup logging
+    setup_logging(args.debug)
 
     sentinel_logger.info("Starting Sentinel AI...")
 
@@ -68,71 +129,44 @@ def main() -> None:
     print(f"Model   : {MODEL}")
     print("=" * 50)
 
-    # Initialize Database
+    # Initialize Database - Silent
     Base.metadata.create_all(bind=engine)
-
-    print("Database tables created successfully.")
+    sentinel_logger.debug("Database initialized.")
 
     db = get_session()
 
     try:
         project_repo = ProjectRepository(db)
-
         recon_repo = ReconResultRepository(db)
 
-        # ==========================================
-        # Create Manager Agent
-        # ==========================================
-
+        # Create Services
         project_service = ProjectService(project_repo)
         finding_repo = FindingRepository(db)
-        finding_service = FindingService(
-            finding_repo,
-        )
-        recon_service = ReconService(
-            recon_repo,
-            finding_service,
-        )
+        finding_service = FindingService(finding_repo)
+        recon_service = ReconService(recon_repo, finding_service)
 
-        manager = ManagerAgent(
-            project_service,
-            recon_service,
-        )
+        manager = ManagerAgent(project_service, recon_service)
 
         # ==========================================
-        # Recon Validator Test
-        # ==========================================
-
-        print("\nRecon Validator Test")
-        print("-" * 40)
-
-        print(
-            "https://bugcrowd.com :", TargetValidator.is_valid("https://bugcrowd.com")
-        )
-
-        print("bugcrowd.com :", TargetValidator.is_valid("bugcrowd.com"))
-
-        print("hello world :", TargetValidator.is_valid("hello world"))
-
-        # ==========================================
-        # Start Interactive CLI
+        # Start Interactive CLI - No validator test
         # ==========================================
 
         cli = CLI(manager)
-
         cli.start()
 
+    except KeyboardInterrupt:
+        sentinel_logger.info("Shutdown requested by user")
     except Exception as e:
-        sentinel_logger.exception(e)
-
+        sentinel_logger.exception(f"Application error: {e}")
+        raise
     finally:
         db.close()
 
-    sentinel_logger.success("Application started successfully.")
+    sentinel_logger.info("Application shutdown complete.")
 
 
 # ===========================================================
-# MAIN-005
+# MAIN-006
 # Program Entry
 # ===========================================================
 

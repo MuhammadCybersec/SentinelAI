@@ -7,16 +7,19 @@ Version : 0.1.0
 ===========================================================
 """
 
+import json
+import logging
+
 from app.core.logger import sentinel_logger
+
+logger = logging.getLogger(__name__)
 
 
 class CLI:
     def __init__(self, manager):
-
         self.manager = manager
 
     def start(self):
-
         sentinel_logger.info("CLI Started")
 
         print("\n")
@@ -26,16 +29,16 @@ class CLI:
         print("=" * 60)
 
         while True:
-            command = input("\nSentinelAI> ").strip()
-
-            if command.lower() == "exit":
-                print("Goodbye!")
-                break
-
-            if command == "":
-                continue
-
             try:
+                command = input("\nSentinelAI> ").strip()
+
+                if command.lower() == "exit":
+                    print("Goodbye!")
+                    break
+
+                if command == "":
+                    continue
+
                 result = self.manager.handle(command)
 
                 # ============================================
@@ -45,10 +48,8 @@ class CLI:
                 if hasattr(result, "id"):
                     if command.lower().startswith("create"):
                         print("\nProject Created Successfully")
-
                     elif command.lower() == "current project":
                         print("\nCurrent Project")
-
                     else:
                         print("\nProject Information")
 
@@ -68,7 +69,6 @@ class CLI:
 
                     if not result:
                         print("No projects found.")
-
                     else:
                         for project in result:
                             print(f"ID          : {project.id}")
@@ -78,157 +78,37 @@ class CLI:
                             print("-" * 60)
 
                 # ============================================
-                # Recon Report
+                # Recon Report - CLEAN (No raw dict dumps)
                 # ============================================
 
                 elif isinstance(result, dict):
-                    print("\nRecon Report")
-                    print("-" * 40)
+                    # Check if it's a help/commands response
                     if "commands" in result:
                         print("\nAvailable Commands")
                         print("-" * 40)
-
                         for cmd in result["commands"]:
                             print(f"  - {cmd}")
-
                         continue
+
+                    # Check if it's a scan report
+                    if "summary" in result and "recon" in result:
+                        self._print_scan_report(result)
+                        continue
+
+                    # Check if it's recon results
+                    if "urls" in result or "crawler" in result:
+                        self._print_recon_report(result)
+                        continue
+
+                    # Default: print clean key-value pairs
+                    print("\n" + "=" * 60)
                     for key, value in result.items():
-                        # Skip raw headers
-                        if key == "headers":
+                        if key in ["headers", "dns_records", "waf", "http_methods"]:
                             continue
-
-                        if key == "dns_records":
-                            print("\nDNS Records")
-                            print("-" * 40)
-
-                            for record_type, records in value.items():
-                                print(f"\n{record_type}")
-                                if records:
-                                    for record in records:
-                                        print(f"  - {record}")
-
-                                else:
-                                    print("  No records found.")
+                        if isinstance(value, (list, dict)):
                             continue
-
-                        if key == "waf":
-                            print("\nWAF Detection")
-                            print("-" * 40)
-                            print(f"Provider : {value['provider']}")
-                            print(f"Enabled  : {value['enabled']}")
-                            continue
-
-                        if key == "http_methods":
-                            print("\nHTTP Methods")
-                            print("-" * 40)
-                            if value:
-                                for method in value:
-                                    print(f"  - {method}")
-                            else:
-                                print("No methods detected.")
-                            continue
-
-                        if key == "javascript_files":
-                            print("\nJavaScript Files")
-                            print("-" * 40)
-                            if value:
-                                for js_file in value:
-                                    print(js_file)
-                            else:
-                                print("No JavaScript files found.")
-                            continue
-
-                        if key == "javascript_endpoints":
-                            print("\nJavaScript Endpoints")
-                            print("-" * 40)
-                            if value:
-                                for endpoint in value:
-                                    print(endpoint)
-                            else:
-                                print("No JavaScript endpoints found.")
-                            continue
-
-                        if key == "javascript_secrets":
-                            print("\nJavaScript Secrets")
-                            print("-" * 40)
-                            if value:
-                                for secret in value:
-                                    print(f"[{secret['type']}]")
-                                    print(f"Value  : {secret['value']}")
-                                    print(f"Source : {secret['source']}")
-                                    print()
-
-                                print("No secrets found.")
-                                continue
-
-                            else:
-                                print("No JavaScript secrets found.")
-                            continue
-
-                        if key == "api_discovery":
-                            print("\nAPI Discovery")
-                            print("-" * 40)
-                            if value:
-                                for api in value:
-                                    print(f"{api['status']}  {api['path']}")
-                                    print(f"      {api['url']}")
-
-                            else:
-                                print("No API endpoints found.")
-                            continue
-
-                        # Print Security Headers
-                        if key == "security_headers":
-                            print("\nSecurity Headers")
-                            print("-" * 40)
-
-                            if isinstance(value, dict):
-                                for h, v in value.items():
-                                    print(f"{h:30}: {v}")
-
-                            continue
-
-                        # Print Open Ports
-                        if key == "open_ports":
-                            print("\nOpen Ports")
-                            print("-" * 40)
-                            if value:
-                                for port in value:
-                                    print(f"Port {port} is open.")
-
-                            else:
-                                print("No common ports found.")
-                            continue
-
-                        if key == "subdomains":
-                            print("\nSubdomains")
-                            print("-" * 40)
-                            if value:
-                                for subdomain in value:
-                                    print(subdomain)
-                            else:
-                                print("No subdomains found.")
-                            continue
-
-                        if key == "sensitive_files":
-                            print("\nSensitive Files")
-                            print("-" * 40)
-                            if value:
-                                for item in value:
-                                    print(f"{item['file']:30} {item['status']}")
-                            else:
-                                print("No sensitive files found.")
-                            continue
-
-                        # Print Technologies
-                        if key == "technologies":
-                            techs = ", ".join(value) if value else "Unknown"
-                            print(f"Technologies : {techs}")
-
-                            continue
-
-                        # Print remaining values
                         print(f"{key.capitalize():12}: {value}")
+                    print("=" * 60)
 
                 # ============================================
                 # Normal Text Response
@@ -237,5 +117,76 @@ class CLI:
                 else:
                     print(result)
 
+            except KeyboardInterrupt:
+                print("\nGoodbye!")
+                break
             except Exception as e:
+                logger.error(f"CLI Error: {e}")
+                if logger.isEnabledFor(logging.DEBUG):
+                    import traceback
+
+                    traceback.print_exc()
                 print(f"Error: {e}")
+
+    # ==========================================================
+    # CLEAN SCAN REPORT - No raw dict dumps
+    # ==========================================================
+
+    def _print_scan_report(self, report: dict) -> None:
+        """Print clean scan report - NO raw dict dumps."""
+        print("\n" + "=" * 60)
+        print("Scan Complete")
+        print("=" * 60)
+
+        summary = report.get("summary", {})
+        recon = report.get("recon", {})
+
+        print("\nReconnaissance:")
+        print(f"  URLs discovered   : {recon.get('urls', 0)}")
+        print(f"  Interesting URLs  : {recon.get('interesting', 0)}")
+        print(f"  Parameters found  : {recon.get('parameters', 0)}")
+        print(f"  Forms discovered  : {recon.get('forms', 0)}")
+        print(f"  Technology        : {recon.get('technology', 'Unknown')}")
+
+        print("\nVulnerability Scanning:")
+        print(f"  Raw findings       : {summary.get('raw_findings', 0)}")
+        print(f"  VERIFIED           : {summary.get('verified', 0)}")
+        print(f"  INCONCLUSIVE       : {summary.get('inconclusive', 0)}")
+        print(f"  REJECTED           : {summary.get('rejected', 0)}")
+        print(f"  NOT_APPLICABLE     : {summary.get('not_applicable', 0)}")
+        print(f"  ERRORS             : {summary.get('verification_errors', 0)}")
+        print(f"  Duplicates removed : {summary.get('duplicates_removed', 0)}")
+        print(f"  Unique findings    : {summary.get('unique_findings', 0)}")
+
+        scanner_results = report.get("scanner_results", {})
+        if scanner_results:
+            print("\nFindings by type:")
+            for scanner, count in scanner_results.items():
+                print(f"  {scanner.upper()} : {count}")
+
+        print(f"\nDatabase saved     : {summary.get('saved_findings', 0)}")
+        print(f"Errors             : {summary.get('errors', 0)}")
+        print("\n" + "=" * 60)
+        print("SentinelAI> Scan completed successfully")
+
+    def _print_recon_report(self, result: dict) -> None:
+        """Print clean recon report."""
+        print("\n" + "=" * 60)
+        print("Recon Report")
+        print("=" * 60)
+
+        urls = result.get("urls", [])
+        print(f"URLs discovered   : {len(urls)}")
+        print(f"Interesting URLs  : {len(result.get('interesting_urls', []))}")
+        print(f"Parameters found  : {len(result.get('parameters', {}))}")
+        print(f"Forms discovered  : {len(result.get('forms', []))}")
+
+        tech = result.get("technologies", {})
+        if tech:
+            print(f"Technology        : {tech.get('Server', 'Unknown')}")
+
+        waf = result.get("waf", {})
+        if waf:
+            print(f"WAF Detected      : {waf.get('detected', False)}")
+
+        print("=" * 60)
