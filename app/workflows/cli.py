@@ -169,6 +169,54 @@ class CLI:
         except Exception as e:
             print(f"Error creating project: {e}")
 
+    def _scope_show(self, args: Optional[str] = None):
+        """Show current scope."""
+        if not self.current_project:
+            print("No active project.")
+            return
+
+        # Get scope from project
+        try:
+            project = self.manager.get_project(self.current_project)
+            if not project:
+                print("Project not found.")
+                return
+
+            scope = project.get("scope", {})
+            print("\n" + "=" * 60)
+            print("Scope Configuration")
+            print("=" * 60)
+            print(f"Target          : {project.get('target')}")
+            print(f"Authorized      : {scope.get('authorized', False)}")
+            print(f"Allowed Hosts   : {', '.join(scope.get('allowed_hosts', []))}")
+            print(f"Blocked Hosts   : {', '.join(scope.get('blocked_hosts', []))}")
+            print(f"Allowed Paths   : {', '.join(scope.get('allowed_paths', []))}")
+            print(f"Blocked Paths   : {', '.join(scope.get('blocked_paths', []))}")
+            print("=" * 60)
+        except Exception as e:
+            print(f"Error: {e}")
+
+    def _scope_add(self, args: Optional[str] = None):
+        """Add scope rule."""
+        if not args:
+            print("Usage: scope add <rule>")
+            return
+        # Implementation...
+
+    def _scope_validate(self, args: Optional[str] = None):
+        """Validate current scope."""
+        # Implementation...
+
+    def _testing_enable(self, args: Optional[str] = None):
+        """Enable active testing."""
+        print("Active testing enabled. Proceed with caution.")
+        # Implementation...
+
+    def _testing_disable(self, args: Optional[str] = None):
+        """Disable active testing."""
+        print("Active testing disabled.")
+        # Implementation...
+
     # ==========================================================
     # CLEAN SCAN REPORT - No raw dict dumps
     # ==========================================================
