@@ -209,7 +209,59 @@ class CLI:
 
     def _testing_enable(self, args: Optional[str] = None):
         """Enable active testing."""
-        print("Active testing enabled. Proceed with caution.")
+        if not self.current_project:
+            print("No active project.")
+            return
+
+        try:
+            project = self.manager.get_project(self.current_project)
+            if not project:
+                print("Project not found.")
+                return
+
+            target = project.get("target")
+            scope_manager = project.get("scope_manager")
+
+            if not target or not scope_manager:
+                print("Project not configured properly.")
+                return
+
+            # Create or get safety gate
+            from app.core.safety_gate import SafetyGate
+
+            safety_gate = SafetyGate()
+
+            if safety_gate.enable_active(target, scope_manager):
+                self.safety_gate = safety_gate
+                print("Active testing enabled.")
+            else:
+                print("Active testing not enabled.")
+
+        except Exception as e:
+            print(f"Error: {e}")
+
+    def _testing_disable(self, args: Optional[str] = None):
+        """Disable active testing."""
+        if hasattr(self, "safety_gate"):
+            self.safety_gate.disable()
+        else:
+            print("Testing already disabled.")
+
+    def _testing_status(self, args: Optional[str] = None):
+        """Show testing status."""
+        if hasattr(self, "safety_gate") and self.safety_gate:
+            status = self.safety_gate.get_status()
+            print("\n" + "=" * 60)
+            print("Testing Status")
+            print("=" * 60)
+            print(f"Mode      : {status['mode']}")
+            print(f"Authorized: {status['authorized']}")
+            print(f"Confirmed : {status['confirmed']}")
+            print(f"Target    : {status['target']}")
+            print(f"Can Test  : {status['can_test']}")
+            print("=" * 60)
+        else:
+            print("Testing is DISABLED.")
         # Implementation...
 
     def _testing_disable(self, args: Optional[str] = None):
