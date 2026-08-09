@@ -381,7 +381,6 @@ class ReconService:
     # ==========================================================
     # VERIFICATION - FIXED RFI and LFI
     # ==========================================================
-
     def _verify_finding(self, finding: Dict) -> Dict:
         """
         Verify finding with vulnerability-specific evidence.
@@ -495,7 +494,8 @@ class ReconService:
         # ==========================================================
         elif vulnerability_type == "RFI":
             # Check if finding has canary information from scanner
-            canary_found, canary_value = self._get_rfi_canary_from_finding(finding)
+            canary_found = finding.get("canary_found", False)
+            canary_value = finding.get("canary", None)
 
             # Check for remote content indicators
             has_remote_content, remote_matches = self._has_rfi_remote_content(

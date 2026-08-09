@@ -1,0 +1,286 @@
+[1mdiff --git a/app/core/config.py b/app/core/config.py[m
+[1mindex 02fea83..fa7a243 100644[m
+[1m--- a/app/core/config.py[m
+[1m+++ b/app/core/config.py[m
+[36m@@ -39,15 +39,106 @@[m [mclass Config:[m
+     Central configuration for Sentinel AI.[m
+     """[m
+ [m
+[32m+[m[32m    # Project Settings[m
+     PROJECT_NAME: str = os.getenv("PROJECT_NAME", "SentinelAI")[m
+     VERSION: str = os.getenv("VERSION", "0.0.1")[m
+     MODEL: str = os.getenv("OLLAMA_MODEL", "llama3")[m
+     DEBUG: bool = os.getenv("DEBUG", "False").lower() == "true"[m
+[31m-    DATABASE_TYPE: str = os.getenv("DATABASE_TYPE", "sqlite")[m
+ [m
+[32m+[m[32m    # Database Settings[m
+[32m+[m[32m    DATABASE_TYPE: str = os.getenv("DATABASE_TYPE", "sqlite")[m
+     DATABASE_NAME: str = os.getenv("DATABASE_NAME", "sentinel.db")[m
+     DATABASE_PATH: str = os.getenv("DATABASE_PATH", "data/sentinel.db")[m
+ [m
+[32m+[m[32m    # ==========================================================[m
+[32m+[m[32m    # Scanner Settings[m
+[32m+[m[32m    # ==========================================================[m
+[32m+[m
+[32m+[m[32m    VERBOSE_MODE: bool = os.getenv("VERBOSE_MODE", "False").lower() == "true"[m
+[32m+[m
+[32m+[m[32m    SCANNER_TIMEOUT: int = int(os.getenv("SCANNER_TIMEOUT", "30"))[m
+[32m+[m[32m    SCANNER_MAX_PAYLOADS: int = int(os.getenv("SCANNER_MAX_PAYLOADS", "50"))[m
+[32m+[m[32m    SCANNER_REQUEST_DELAY: float = float(os.getenv("SCANNER_REQUEST_DELAY", "0.1"))[m
+[32m+[m
+[32m+[m[32m    # ==========================================================[m
+[32m+[m[32m    # Confidence Scoring Settings[m
+[32m+[m[32m    # ==========================================================[m
+[32m+[m
+[32m+[m[32m    CONFIDENCE_THRESHOLD_VERIFIED: float = float([m
+[32m+[m[32m        os.getenv("CONFIDENCE_THRESHOLD_VERIFIED", "70.0")[m
+[32m+[m[32m    )[m
+[32m+[m[32m    CONFIDENCE_CRITICAL_MIN: float = float(os.getenv("CONFIDENCE_CRITICAL_MIN", "90.0"))[m
+[32m+[m[32m    CONFIDENCE_HIGH_MIN: float = float(os.getenv("CONFIDENCE_HIGH_MIN", "70.0"))[m
+[32m+[m[32m    CONFIDENCE_MEDIUM_MIN: float = float(os.getenv("CONFIDENCE_MEDIUM_MIN", "40.0"))[m
+[32m+[m
+[32m+[m[32m    # ==========================================================[m
+[32m+[m[32m    # Deduplication Settings[m
+[32m+[m[32m    # ==========================================================[m
+[32m+[m
+[32m+[m[32m    DEDUPLICATION_ENABLED: bool = ([m
+[32m+[m[32m        os.getenv("DEDUPLICATION_ENABLED", "True").lower() == "true"[m
+[32m+[m[32m    )[m
+[32m+[m
+[32m+[m[32m    # ==========================================================[m
+[32m+[m[32m    # Reporting Settings[m
+[32m+[m[32m    # ==========================================================[m
+[32m+[m
+[32m+[m[32m    SHOW_FINDINGS_IN_TERMINAL: bool = ([m
+[32m+[m[32m        os.getenv("SHOW_FINDINGS_IN_TERMINAL", "False").lower() == "true"[m
+[32m+[m[32m    )[m
+[32m+[m
+[32m+[m[32m    # ==========================================================[m
+[32m+[m[32m    # Scope & Safety Settings (ADD THIS SECTION)[m
+[32m+[m[32m    # ==========================================================[m
+[32m+[m
+[32m+[m[32m    SCOPE_ENABLED: bool = os.getenv("SCOPE_ENABLED", "True").lower() == "true"[m
+[32m+[m[32m    RATE_LIMIT_ENABLED: bool = os.getenv("RATE_LIMIT_ENABLED", "True").lower() == "true"[m
+[32m+[m[32m    RATE_LIMIT_REQUESTS_PER_SECOND: float = float([m
+[32m+[m[32m        os.getenv("RATE_LIMIT_REQUESTS_PER_SECOND", "1.0")[m
+[32m+[m[32m    )[m
+[32m+[m[32m    MAX_URLS: int = int(os.getenv("MAX_URLS", "1000"))[m
+[32m+[m[32m    MAX_REQUESTS: int = int(os.getenv("MAX_REQUESTS", "5000"))[m
+[32m+[m[32m    DRY_RUN: bool = os.getenv("DRY_RUN", "False").lower() == "true"[m
+[32m+[m
+[32m+[m[32m    # ==========================================================[m
+[32m+[m[32m    # Methods[m
+[32m+[m[32m    # ==========================================================[m
+[32m+[m
+[32m+[m[32m    def is_verbose(self) -> bool:[m
+[32m+[m[32m        """Check if verbose mode is enabled."""[m
+[32m+[m[32m        return self.VERBOSE_MODE or self.DEBUG[m
+[32m+[m
+[32m+[m[32m    def get_confidence_level(self, score: float) -> str:[m
+[32m+[m[32m        """Get confidence level string from score."""[m
+[32m+[m[32m        if score >= self.CONFIDENCE_CRITICAL_MIN:[m
+[32m+[m[32m            return "Critical"[m
+[32m+[m[32m        elif score >= self.CONFIDENCE_HIGH_MIN:[m
+[32m+[m[32m            return "High"[m
+[32m+[m[32m        elif score >= self.CONFIDENCE_MEDIUM_MIN:[m
+[32m+[m[32m            return "Medium"[m
+[32m+[m[32m        else:[m
+[32m+[m[32m            return "Low"[m
+[32m+[m
+[32m+[m[32m    def to_dict(self) -> dict:[m
+[32m+[m[32m        """Convert config to dictionary."""[m
+[32m+[m[32m        return {[m
+[32m+[m[32m            "PROJECT_NAME": self.PROJECT_NAME,[m
+[32m+[m[32m            "VERSION": self.VERSION,[m
+[32m+[m[32m            "MODEL": self.MODEL,[m
+[32m+[m[32m            "DEBUG": self.DEBUG,[m
+[32m+[m[32m            "VERBOSE_MODE": self.VERBOSE_MODE,[m
+[32m+[m[32m            "DATABASE_PATH": self.DATABASE_PATH,[m
+[32m+[m[32m            "SCANNER_TIMEOUT": self.SCANNER_TIMEOUT,[m
+[32m+[m[32m            "CONFIDENCE_THRESHOLD_VERIFIED": self.CONFIDENCE_THRESHOLD_VERIFIED,[m
+[32m+[m[32m            "DEDUPLICATION_ENABLED": self.DEDUPLICATION_ENABLED,[m
+[32m+[m[32m            "SCOPE_ENABLED": self.SCOPE_ENABLED,[m
+[32m+[m[32m            "RATE_LIMIT_ENABLED": self.RATE_LIMIT_ENABLED,[m
+[32m+[m[32m            "RATE_LIMIT_REQUESTS_PER_SECOND": self.RATE_LIMIT_REQUESTS_PER_SECOND,[m
+[32m+[m[32m            "MAX_URLS": self.MAX_URLS,[m
+[32m+[m[32m            "MAX_REQUESTS": self.MAX_REQUESTS,[m
+[32m+[m[32m            "DRY_RUN": self.DRY_RUN,[m
+[32m+[m[32m        }[m
+[32m+[m
+ [m
+ # ===========================================================[m
+ # CONFIG-004[m
+[36m@@ -56,11 +147,37 @@[m [mclass Config:[m
+ [m
+ config = Config()[m
+ [m
+[32m+[m[32m# ===========================================================[m
+[32m+[m[32m# CONFIG-005[m
+[32m+[m[32m# Convenience Functions[m
+[32m+[m[32m# ===========================================================[m
+[32m+[m
+[32m+[m
+[32m+[m[32mdef get_config() -> Config:[m
+[32m+[m[32m    """Get the global config instance."""[m
+[32m+[m[32m    return config[m
+[32m+[m
+[32m+[m
+[32m+[m[32mdef set_verbose_mode(enabled: bool = True) -> None:[m
+[32m+[m[32m    """Enable or disable verbose mode at runtime."""[m
+[32m+[m[32m    config.VERBOSE_MODE = enabled[m
+[32m+[m
+[32m+[m
+[32m+[m[32mdef is_verbose() -> bool:[m
+[32m+[m[32m    """Check if verbose mode is enabled."""[m
+[32m+[m[32m    return config.is_verbose()[m
+[32m+[m
+[32m+[m
+ """[m
+ ===========================================================[m
+ Changelog[m
+ [m
+[31m-0.0.1[m
+[31m-- Initial configuration manager.[m
+[32m+[m[32m0.0.1 - Initial configuration manager.[m
+[32m+[m[32m0.0.2 - Added scanner settings (VERBOSE_MODE, timeout, etc.)[m
+[32m+[m[32m       - Added confidence scoring settings[m
+[32m+[m[32m       - Added deduplication settings[m
+[32m+[m[32m       - Added reporting settings[m
+[32m+[m[32m       - Added convenience functions[m
+[32m+[m[32m0.0.3 - Added scope & safety settings (SCOPE_ENABLED, RATE_LIMIT_ENABLED, etc.)[m
+ ===========================================================[m
+ """[m
+[1mdiff --git a/app/core/rate_limiter.py b/app/core/rate_limiter.py[m
+[1mnew file mode 100644[m
+[1mindex 0000000..9635f34[m
+[1m--- /dev/null[m
+[1m+++ b/app/core/rate_limiter.py[m
+[36m@@ -0,0 +1,41 @@[m
+[32m+[m[32m"""[m
+[32m+[m[32mRate Limiting Module[m
+[32m+[m[32m"""[m
+[32m+[m
+[32m+[m[32mimport time[m
+[32m+[m[32mfrom collections import defaultdict[m
+[32m+[m[32mfrom typing import Dict, Optional[m
+[32m+[m
+[32m+[m
+[32m+[m[32mclass RateLimiter:[m
+[32m+[m[32m    """Simple rate limiter for requests."""[m
+[32m+[m
+[32m+[m[32m    def __init__(self, requests_per_second: float = 1.0):[m
+[32m+[m[32m        self.requests_per_second = requests_per_second[m
+[32m+[m[32m        self._last_request_time: Dict[str, float] = defaultdict(float)[m
+[32m+[m[32m        self._enabled = True[m
+[32m+[m
+[32m+[m[32m    def enable(self) -> None:[m
+[32m+[m[32m        self._enabled = True[m
+[32m+[m
+[32m+[m[32m    def disable(self) -> None:[m
+[32m+[m[32m        self._enabled = False[m
+[32m+[m
+[32m+[m[32m    def wait(self, key: str = "default") -> None:[m
+[32m+[m[32m        """Wait if needed to maintain rate limit."""[m
+[32m+[m[32m        if not self._enabled:[m
+[32m+[m[32m            return[m
+[32m+[m
+[32m+[m[32m        now = time.time()[m
+[32m+[m[32m        last = self._last_request_time[key][m
+[32m+[m[32m        min_interval = 1.0 / self.requests_per_second[m
+[32m+[m
+[32m+[m[32m        if last and (now - last) < min_interval:[m
+[32m+[m[32m            sleep_time = min_interval - (now - last)[m
+[32m+[m[32m            time.sleep(sleep_time)[m
+[32m+[m
+[32m+[m[32m        self._last_request_time[key] = time.time()[m
+[32m+[m
+[32m+[m[32m    def reset(self) -> None:[m
+[32m+[m[32m        """Reset rate limiter state."""[m
+[32m+[m[32m        self._last_request_time.clear()[m
+[1mdiff --git a/app/core/scope.py b/app/core/scope.py[m
+[1mnew file mode 100644[m
+[1mindex 0000000..6fd1e42[m
+[1m--- /dev/null[m
+[1m+++ b/app/core/scope.py[m
+[36m@@ -0,0 +1,81 @@[m
+[32m+[m[32m"""[m
+[32m+[m[32mScope Enforcement Module[m
+[32m+[m[32m"""[m
+[32m+[m
+[32m+[m[32mimport re[m
+[32m+[m[32mfrom typing import List, Optional[m
+[32m+[m[32mfrom urllib.parse import urlparse[m
+[32m+[m
+[32m+[m
+[32m+[m[32mclass ScopeManager:[m
+[32m+[m[32m    """Manages scope for authorized targets."""[m
+[32m+[m
+[32m+[m[32m    def __init__(self):[m
+[32m+[m[32m        self.allowed_hosts: List[str] = [][m
+[32m+[m[32m        self.allowed_paths: List[str] = [][m
+[32m+[m[32m        self.blocked_hosts: List[str] = [][m
+[32m+[m[32m        self.blocked_paths: List[str] = [][m
+[32m+[m[32m        self._initialized = False[m
+[32m+[m
+[32m+[m[32m    def configure([m
+[32m+[m[32m        self,[m
+[32m+[m[32m        target: str,[m
+[32m+[m[32m        allowed_hosts: Optional[List[str]] = None,[m
+[32m+[m[32m        blocked_hosts: Optional[List[str]] = None,[m
+[32m+[m[32m        allowed_paths: Optional[List[str]] = None,[m
+[32m+[m[32m        blocked_paths: Optional[List[str]] = None,[m
+[32m+[m[32m    ) -> None:[m
+[32m+[m[32m        """Configure scope from target and optional rules."""[m
+[32m+[m[32m        parsed = urlparse(target)[m
+[32m+[m[32m        host = parsed.netloc or target[m
+[32m+[m
+[32m+[m[32m        # Default: only target host is allowed[m
+[32m+[m[32m        self.allowed_hosts = [host][m
+[32m+[m[32m        self.allowed_paths = allowed_paths or [][m
+[32m+[m[32m        self.blocked_hosts = blocked_hosts or [][m
+[32m+[m[32m        self.blocked_paths = blocked_paths or [][m
+[32m+[m[32m        self._initialized = True[m
+[32m+[m
+[32m+[m[32m    def is_allowed(self, url: str) -> bool:[m
+[32m+[m[32m        """Check if URL is in scope."""[m
+[32m+[m[32m        if not self._initialized:[m
+[32m+[m[32m            return True  # Allow if not configured (safe default for local)[m
+[32m+[m
+[32m+[m[32m        parsed = urlparse(url)[m
+[32m+[m[32m        host = parsed.netloc or url[m
+[32m+[m
+[32m+[m[32m        # Check blocked hosts[m
+[32m+[m[32m        for blocked in self.blocked_hosts:[m
+[32m+[m[32m            if blocked in host:[m
+[32m+[m[32m                return False[m
+[32m+[m
+[32m+[m[32m        # Check allowed hosts[m
+[32m+[m[32m        allowed = False[m
+[32m+[m[32m        for allowed_host in self.allowed_hosts:[m
+[32m+[m[32m            if allowed_host in host:[m
+[32m+[m[32m                allowed = True[m
+[32m+[m[32m                break[m
+[32m+[m
+[32m+[m[32m        if not allowed:[m
+[32m+[m[32m            return False[m
+[32m+[m
+[32m+[m[32m        # Check path restrictions[m
+[32m+[m[32m        if self.allowed_paths:[m
+[32m+[m[32m            path_allowed = False[m
+[32m+[m[32m            for path in self.allowed_paths:[m
+[32m+[m[32m                if parsed.path.startswith(path):[m
+[32m+[m[32m                    path_allowed = True[m
+[32m+[m[32m                    break[m
+[32m+[m[32m            if not path_allowed:[m
+[32m+[m[32m                return False[m
+[32m+[m
+[32m+[m[32m        # Check blocked paths[m
+[32m+[m[32m        for blocked in self.blocked_paths:[m
+[32m+[m[32m            if parsed.path.startswith(blocked):[m
+[32m+[m[32m                return False[m
+[32m+[m
+[32m+[m[32m        return True[m
+[32m+[m
+[32m+[m[32m    def is_out_of_scope(self, url: str) -> bool:[m
+[32m+[m[32m        """Check if URL is out of scope."""[m
+[32m+[m[32m        return not self.is_allowed(url)[m

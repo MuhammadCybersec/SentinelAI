@@ -616,6 +616,42 @@ class BaseScanner:
         )
 
     # ===========================================================
+    # Enrich Finding with Response Metadata
+    # ===========================================================
+
+    # ===========================================================
+    # Enrich Finding with Response Metadata
+    # ===========================================================
+
+    def _enrich_finding_with_response(self, finding: Dict, response) -> None:
+        """
+        Enrich finding with full response metadata.
+
+        FIX: Capture all HTTP response metadata for evidence.
+        """
+        if response is None:
+            finding["status_code"] = 0
+            finding["response_time"] = 0.0
+            finding["response_length"] = 0
+            finding["error"] = "No response received"
+            return
+
+        # Capture response metadata
+        finding["status_code"] = getattr(response, "status_code", 0)
+        finding["response_time"] = getattr(response, "elapsed", 0.0)
+        finding["response_length"] = len(getattr(response, "text", ""))
+        finding["headers"] = dict(getattr(response, "headers", {}))
+        finding["final_url"] = getattr(response, "url", "")
+
+        # Capture redirect history if available
+        if hasattr(response, "history") and response.history:
+            finding["redirect_chain"] = [r.url for r in response.history]
+
+        # Capture response body preview for evidence
+        if hasattr(response, "text") and response.text:
+            finding["response_preview"] = response.text[:1000]
+
+    # ===========================================================
     # Start Scan
     # ===========================================================
 

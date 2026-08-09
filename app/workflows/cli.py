@@ -128,6 +128,47 @@ class CLI:
                     traceback.print_exc()
                 print(f"Error: {e}")
 
+    def _create_project(self, args: Optional[str] = None):
+        """Create a new project."""
+        if not args:
+            print("Usage: create <name> <target> [description]")
+            print("Example: create local http://localhost/DVWA")
+            return
+
+        parts = args.split(maxsplit=2)
+        if len(parts) < 2:
+            print("Error: Project name and target required")
+            print("Example: create local http://localhost/DVWA")
+            return
+
+        name = parts[0]
+        target = parts[1]
+        description = parts[2] if len(parts) > 2 else "No description provided"
+
+        # ==========================================================
+        # FIX: Normalize target URL before sending to manager
+        # ==========================================================
+        from app.services.recon_service import ReconService
+
+        recon_service = ReconService(None, None)
+        target = recon_service.normalize_target_url(target)
+
+        try:
+            result = self.manager.create_project(name, target, description)
+            self.current_project = result.get("id")
+
+            print("\n" + "=" * 60)
+            print("Project Created Successfully")
+            print("=" * 60)
+            print(f"ID          : {result.get('id')}")
+            print(f"Name        : {result.get('name')}")
+            print(f"Target      : {result.get('target')}")
+            print(f"Description : {result.get('description')}")
+            print("=" * 60 + "\n")
+
+        except Exception as e:
+            print(f"Error creating project: {e}")
+
     # ==========================================================
     # CLEAN SCAN REPORT - No raw dict dumps
     # ==========================================================
